@@ -80,4 +80,4 @@ class MeshSimulator:
             u, v = self.rk4_step(u, v, dt, t, stimulus_func=stimulus_func)
             if step % record_every == 0:
                 traces.append(u.copy())
-        return np.array(traces)
+        return np.array(traces), u, v

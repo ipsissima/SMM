@@ -19,7 +19,7 @@ def compute_modal_eigenmode(nx=32, ny=32, dx=1.0):
 def validate_single_mode(simulator, e_star, A0=1e-3, T=1.0, dt=0.001):
     u0 = (A0 * e_star).reshape(simulator.ny, simulator.nx)
     v0 = np.zeros_like(u0)
-    traces = simulator.run(T=T, dt=dt, u0=u0, v0=v0, record_every=1)
+    traces, _, _ = simulator.run(T=T, dt=dt, u0=u0, v0=v0, record_every=1)
     A = project_onto_mode(traces, e_star)
     energies = np.array([np.sum(tr**2) for tr in traces])
     modal = np.array([(np.sum(tr * e_star.reshape(tr.shape)) ** 2) for tr in traces])

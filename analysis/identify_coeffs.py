@@ -19,7 +19,7 @@ def numeric_identify_coeffs(simulator: MeshSimulator, e_star, A0_list=None, Tsho
     for A0 in A0_list:
         u0 = (A0 * e_star).reshape(simulator.ny, simulator.nx)
         v0 = np.zeros_like(u0)
-        traces = simulator.run(T=Tshort, dt=dt, u0=u0, v0=v0, record_every=1)
+        traces, _, _ = simulator.run(T=Tshort, dt=dt, u0=u0, v0=v0, record_every=1)
         A = project_onto_mode(traces, e_star)
         start = max(1, int(0.05 * len(A)))
         window = slice(start, len(A))

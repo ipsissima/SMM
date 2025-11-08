@@ -17,20 +17,29 @@ def sweep_parameter_for_hysteresis(
     if sweep_values_down is None:
         sweep_values_down = sweep_values_up[::-1]
 
-    def run_sweep(svals):
+    e_field = e_star.reshape((simulator.ny, simulator.nx))
+
+    def run_sweep(svals, u_init=None, v_init=None):
         A_trace = []
+        u_state, v_state = u_init, v_init
         for val in svals:
             setattr(simulator, param_name, val)
             if param_name == "gamma_bg":
                 simulator._build_gamma()
-            traces = simulator.run(T=TperStep, dt=dt, record_every=1)
+            traces, u_state, v_state = simulator.run(
+                T=TperStep,
+                dt=dt,
+                u0=u_state,
+                v0=v_state,
+                record_every=1,
+            )
             last = traces[-1]
-            A = float(np.sum(last * e_star.reshape(last.shape)))
+            A = float(np.sum(last * e_field))
             A_trace.append(A)
-        return np.array(A_trace)
+        return np.array(A_trace), u_state, v_state
 
-    A_up = run_sweep(sweep_values_up)
-    A_down = run_sweep(sweep_values_down)
+    A_up, u_last, v_last = run_sweep(sweep_values_up)
+    A_down, _, _ = run_sweep(sweep_values_down, u_init=u_last, v_init=v_last)
     return sweep_values_up, A_up, sweep_values_down, A_down
 
 
