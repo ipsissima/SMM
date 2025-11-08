@@ -23,11 +23,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Thom diagnostic analysis
-        run: python analysis/run_analysis.py --outdir analysis_results
+      - name: Run bifurcation probe smoke sweep
+        run: |
+          python bifurcation_probe.py \
+            --nx 8 \
+            --ny 8 \
+            --n-kappa 3 \
+            --n-h 5 \
+            --dt 0.05 \
+            --tmax 5.0 \
+            --results-dir bifurcation_results_ci \
+            --no-plots \
+            --log-level WARNING
 
-      - name: Upload analysis artifacts
+      - name: Upload bifurcation probe artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thom-analysis-results
-          path: analysis_results
+          name: bifurcation-probe-results
+          path: bifurcation_results_ci
