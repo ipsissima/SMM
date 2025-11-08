@@ -1,17 +1,24 @@
-"""bifurcation_probe
-======================
+"""Bifurcation probe for the Syncytial Mesh Model (SMM).
 
-Probe the Syncytial Mesh Model (SMM) for a Thom cusp-type catastrophe by
-projecting the mesh dynamics onto the principal soft eigenmode of the linearized
-operator.  The script constructs the same nine-point periodic Laplacian used by
-``simulate_mesh_psd.py`` and performs quasi-static hysteresis ramps over applied
-field strength ``h`` and coupling ``kappa``.  The reduced equilibria are fit to a
-cubic Thom normal form, providing a decisive check for the existence of the cusp
-wedge in ``(kappa, h)`` space.
+This module sweeps the parameter plane spanned by the mesh coupling ``kappa``
+and external drive ``h`` in order to detect cusp-type bifurcation structure.
+The workflow matches the project specification:
 
-The implementation follows the high-level requirements described in the project
-prompt and saves all numerical and graphical outputs to a
-``bifurcation_results/`` directory.
+* build the nine-point periodic Laplacian used by :mod:`simulate_mesh_psd`,
+* compute the leading eigenmode of the linearized operator ``kappa * Lap + rI``,
+* run quasi-static hysteresis ramps in ``h`` for each ``kappa`` using an RK4
+  gradient-flow integrator,
+* project equilibria onto the leading mode to obtain reduced amplitude traces,
+* fit the Thom cubic normal form ``u A^3 + alpha A + s h = 0`` via least squares,
+* emit diagnostic CSV files and summary figures in ``bifurcation_results/``.
+
+The Thom parameters ``(u, alpha, s)`` reported here correspond to the original
+SMM variables as follows: ``u`` inherits the cubic nonlinearity ``u`` from the
+full dynamics, ``alpha`` captures the softening of the linear term as ``kappa``
+varies, and ``s`` quantifies how the drive ``h`` tilts the cusp.  The parameters
+are returned up to a common multiplicative factor; we normalise the solution so
+that the coefficient vector has unit Euclidean norm with ``s >= 0`` to remove the
+sign ambiguity.
 """
 
 from __future__ import annotations
@@ -21,30 +28,24 @@ import logging
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Iterable, List, Sequence, Tuple
 
 import matplotlib
+
+matplotlib.use("Agg")  # headless-friendly backend
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
-from numpy.linalg import lstsq
-
-matplotlib.use("Agg")  # ensure headless-friendly back-end
-import matplotlib.pyplot as plt
-
-try:
-    from tqdm import tqdm
-except ImportError:  # pragma: no cover - tqdm is optional
-    tqdm = None
-
+import seaborn as sns
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class ProbeConfig:
-    """Container for runtime configuration parameters."""
+    """Configuration parameters for the bifurcation probe."""
 
     nx: int
     ny: int
@@ -60,35 +61,34 @@ class ProbeConfig:
     dt: float
     tmax: float
     tol: float
-    seed: int
-    results_dir: Path
-    save_plots: bool
-    kappa_plot: float | None
+    outdir: Path
+    smoke: bool
+    make_plots: bool
+    seed: int = 0
 
     @property
     def dx(self) -> float:
         return self.length / float(self.nx)
 
     @property
-    def total_nodes(self) -> int:
+    def grid_shape(self) -> Tuple[int, int]:
+        return (self.nx, self.ny)
+
+    @property
+    def grid_size(self) -> int:
         return self.nx * self.ny
 
 
 def laplacian_9pt_matrix(nx: int, ny: int, dx: float) -> sp.csr_matrix:
-    """Construct the nine-point periodic Laplacian used by ``simulate_mesh_psd``.
+    """Construct a nine-point Laplacian with periodic boundaries.
 
-    Parameters
-    ----------
-    nx, ny:
-        Grid dimensions along ``x`` and ``y`` respectively.
-    dx:
-        Spatial step size (assumed identical along both axes).
+    The stencil matches the implementation in :mod:`simulate_mesh_psd`:
 
-    Returns
-    -------
-    scipy.sparse.csr_matrix
-        Symmetric sparse matrix encoding the nine-point Laplacian with periodic
-        wrap-around boundary conditions.
+    * centre weight ``-20``
+    * orthogonal neighbours ``+4``
+    * diagonal neighbours ``+1``
+
+    All coefficients are scaled by ``1 / (6 * dx**2)``.
     """
 
     coeff_center = -20.0
@@ -96,80 +96,83 @@ def laplacian_9pt_matrix(nx: int, ny: int, dx: float) -> sp.csr_matrix:
     coeff_diag = 1.0
     scale = 1.0 / (6.0 * dx * dx)
 
-    rows: list[int] = []
-    cols: list[int] = []
-    data: list[float] = []
+    rows: List[int] = []
+    cols: List[int] = []
+    data: List[float] = []
 
-    def idx(ix: int, iy: int) -> int:
+    def index(ix: int, iy: int) -> int:
         return iy * nx + ix
 
     for iy in range(ny):
         for ix in range(nx):
-            center = idx(ix, iy)
+            center = index(ix, iy)
             rows.append(center)
             cols.append(center)
             data.append(coeff_center)
 
-            orth_neighbors = [
+            orthogonal = [
                 ((ix + 1) % nx, iy),
                 ((ix - 1) % nx, iy),
                 (ix, (iy + 1) % ny),
                 (ix, (iy - 1) % ny),
             ]
-            for jx, jy in orth_neighbors:
+            for jx, jy in orthogonal:
                 rows.append(center)
-                cols.append(idx(jx, jy))
+                cols.append(index(jx, jy))
                 data.append(coeff_orth)
 
-            diag_neighbors = [
+            diagonal = [
                 ((ix + 1) % nx, (iy + 1) % ny),
                 ((ix + 1) % nx, (iy - 1) % ny),
                 ((ix - 1) % nx, (iy + 1) % ny),
                 ((ix - 1) % nx, (iy - 1) % ny),
             ]
-            for jx, jy in diag_neighbors:
+            for jx, jy in diagonal:
                 rows.append(center)
-                cols.append(idx(jx, jy))
+                cols.append(index(jx, jy))
                 data.append(coeff_diag)
 
-    matrix = sp.coo_matrix((np.array(data) * scale, (rows, cols)), shape=(nx * ny, nx * ny))
-    return matrix.tocsr()
+    lap = sp.coo_matrix((np.array(data) * scale, (rows, cols)), shape=(nx * ny, nx * ny))
+    return lap.tocsr()
 
 
 def effective_operator(lap: sp.csr_matrix, kappa: float, r: float) -> sp.csr_matrix:
-    """Return the linearized operator ``L_eff = kappa * Lap + r * I``."""
+    """Linear operator ``H = kappa * Lap + r * I`` in sparse CSR form."""
 
     n = lap.shape[0]
     return kappa * lap + r * sp.eye(n, format="csr")
 
 
-def leading_mode(l_eff: sp.csr_matrix) -> Tuple[float, np.ndarray]:
-    """Compute the smallest eigenvalue and corresponding normalized eigenmode."""
+def leading_mode(operator: sp.csr_matrix) -> Tuple[float, np.ndarray]:
+    """Return the smallest eigenvalue and normalised eigenmode of ``operator``."""
 
-    n = l_eff.shape[0]
     try:
-        eigvals, eigvecs = spla.eigsh(l_eff, k=1, which="SA")
-        eigenvalue = float(np.real(eigvals[0]))
+        eigvals, eigvecs = spla.eigsh(operator, k=1, which="SA")
+        lambda_min = float(np.real(eigvals[0]))
         mode = np.real(eigvecs[:, 0])
-    except Exception as exc:  # pragma: no cover - fallback path
-        LOGGER.warning("eigsh failed (%s); switching to dense solver", exc)
-        dense = l_eff.toarray()
+    except Exception as exc:  # pragma: no cover - dense fallback
+        LOGGER.warning("eigsh failed (%s); falling back to dense eigh", exc)
+        dense = operator.toarray()
         eigvals_dense, eigvecs_dense = np.linalg.eigh(dense)
-        idx_min = int(np.argmin(eigvals_dense))
-        eigenvalue = float(eigvals_dense[idx_min])
-        mode = np.real(eigvecs_dense[:, idx_min])
+        idx = int(np.argmin(eigvals_dense))
+        lambda_min = float(eigvals_dense[idx])
+        mode = np.real(eigvecs_dense[:, idx])
 
     norm = np.linalg.norm(mode)
     if not math.isfinite(norm) or norm == 0.0:
-        raise RuntimeError("Failed to obtain a finite eigenmode norm")
+        raise RuntimeError("Non-finite eigenmode norm encountered")
     mode /= norm
-    return eigenvalue, mode
+    return lambda_min, mode
 
 
-def project_onto_mode(phi: np.ndarray, mode: np.ndarray) -> float:
-    """Return the scalar projection of ``phi`` onto the normalized ``mode``."""
+def rk4_step(phi: np.ndarray, dt: float, func) -> np.ndarray:
+    """Perform a single RK4 step using callable ``func`` returning derivatives."""
 
-    return float(np.dot(phi, mode))
+    k1 = func(phi)
+    k2 = func(phi + 0.5 * dt * k1)
+    k3 = func(phi + 0.5 * dt * k2)
+    k4 = func(phi + dt * k3)
+    return phi + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
 
 
 def integrate_to_steady(
@@ -183,7 +186,13 @@ def integrate_to_steady(
     tmax: float,
     tol: float,
 ) -> np.ndarray:
-    """Integrate the gradient-flow equation to a steady state using RK4."""
+    """Integrate the gradient flow ``dphi/dt = -∂V/∂phi`` until steady state.
+
+    The potential derivative is ``kappa * Lap @ phi + r * phi + u * phi**3 - h``.
+    The routine stops when the Euclidean norm of successive iterates is smaller
+    than ``tol`` or when the maximum number of RK4 steps implied by ``tmax`` is
+    reached.
+    """
 
     phi = phi0.astype(float, copy=True)
     max_steps = max(1, int(math.ceil(tmax / dt)))
@@ -194,81 +203,82 @@ def integrate_to_steady(
         return -(linear + nonlinear - h)
 
     for _ in range(max_steps):
-        k1 = rhs(phi)
-        k2 = rhs(phi + 0.5 * dt * k1)
-        k3 = rhs(phi + 0.5 * dt * k2)
-        k4 = rhs(phi + dt * k3)
-        phi_new = phi + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
-        if np.linalg.norm(phi_new - phi) < tol:
-            phi = phi_new
+        updated = rk4_step(phi, dt, rhs)
+        if np.linalg.norm(updated - phi) < tol:
+            phi = updated
             break
-        phi = phi_new
+        phi = updated
     return phi
 
 
-def hysteresis_for_kappa(
-    kappa: float,
+def hysteresis_sweep(
     lap: sp.csr_matrix,
-    h_values: np.ndarray,
-    mode: np.ndarray,
+    kappa: float,
     r: float,
     u: float,
+    h_values: np.ndarray,
+    mode: np.ndarray,
     dt: float,
     tmax: float,
     tol: float,
     rng: np.random.Generator,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Perform an up-down hysteresis sweep over ``h`` for a fixed ``kappa``."""
+) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+    """Compute up/down hysteresis amplitudes for a fixed ``kappa``.
+
+    Returns ``(A_up, A_down, states)`` where ``states`` contains the final field
+    for each ``h`` in the up sweep followed by the mirrored down sweep.
+    """
 
     n = lap.shape[0]
-    phi = 0.01 * rng.standard_normal(n)
-    amplitudes_up = []
+    phi = 1e-3 * rng.standard_normal(n)
+    amplitudes_up: List[float] = []
+    states: List[np.ndarray] = []
 
     for h in h_values:
         phi = integrate_to_steady(phi, lap, kappa, r, u, h, dt, tmax, tol)
-        amplitudes_up.append(project_onto_mode(phi, mode))
+        amplitudes_up.append(float(np.dot(phi, mode)))
+        states.append(phi.copy())
 
-    amplitudes_down = []
-    # Start from the final state reached at the largest ``h``
+    amplitudes_down: List[float] = []
     for h in reversed(h_values):
         phi = integrate_to_steady(phi, lap, kappa, r, u, h, dt, tmax, tol)
-        amplitudes_down.append(project_onto_mode(phi, mode))
+        amplitudes_down.append(float(np.dot(phi, mode)))
+        states.append(phi.copy())
     amplitudes_down.reverse()
 
-    return np.array(amplitudes_up), np.array(amplitudes_down)
+    return np.array(amplitudes_up), np.array(amplitudes_down), states
 
 
-def fit_thom_normal_form(amplitudes: np.ndarray, h_values: np.ndarray) -> Tuple[float, float, float]:
-    """Fit the cubic Thom normal form ``u * A^3 + alpha * A + h = 0``.
+def fit_thom_normal_form(amplitudes: np.ndarray, h_values: np.ndarray) -> Tuple[float, float, float, float]:
+    """Fit the Thom cubic normal form ``u A^3 + alpha A + s h = 0``.
 
-    Returns ``(u_fit, alpha_fit, rmse)``.
+    The design matrix is homogeneous; we extract the (unit-norm) null-space
+    vector via singular value decomposition and report the corresponding RMS
+    residual.
     """
 
-    if amplitudes.size != h_values.size:
-        raise ValueError("Amplitudes and field arrays must have identical sizes")
+    if amplitudes.shape != h_values.shape:
+        raise ValueError("Amplitude and field arrays must share the same shape")
 
-    X = np.column_stack((np.power(amplitudes, 3), amplitudes))
-    y = -h_values
-    solution, residuals, rank, _ = lstsq(X, y, rcond=None)
-    u_fit, alpha_fit = solution
-    if residuals.size > 0:
-        rss = residuals[0]
-        rmse = math.sqrt(rss / float(len(amplitudes)))
-    else:
-        residual = X @ solution - y
-        rmse = math.sqrt(float(np.mean(np.square(residual))))
-    return float(u_fit), float(alpha_fit), rmse
+    X = np.column_stack((np.power(amplitudes, 3), amplitudes, h_values))
+    # SVD returns right-singular vectors as rows of ``vh``; the vector associated
+    # with the smallest singular value spans the null-space of X.
+    _, svals, vh = np.linalg.svd(X, full_matrices=False)
+    coef = vh[-1, :]
+    norm = np.linalg.norm(coef)
+    if norm == 0.0:
+        raise RuntimeError("Degenerate null-space during Thom form fit")
+    coef /= norm
+    # Fix overall sign so that the drive coefficient is non-negative.
+    if coef[2] < 0:
+        coef = -coef
+    residual = X @ coef
+    rms = float(np.linalg.norm(residual) / math.sqrt(len(h_values)))
+    u_fit, alpha_fit, s_fit = map(float, coef)
+    return u_fit, alpha_fit, s_fit, rms
 
 
-def save_hysteresis_csv(
-    results_dir: Path,
-    kappa: float,
-    h_values: np.ndarray,
-    up: np.ndarray,
-    down: np.ndarray,
-) -> Path:
-    """Persist a per-kappa hysteresis sweep to CSV and return its path."""
-
+def save_hysteresis(results_dir: Path, kappa: float, h_values: Sequence[float], up: np.ndarray, down: np.ndarray) -> Path:
     df = pd.DataFrame({"h": h_values, "A_up": up, "A_down": down})
     csv_path = results_dir / f"hysteresis_kappa_{kappa:.3f}.csv"
     df.to_csv(csv_path, index=False)
@@ -276,163 +286,239 @@ def save_hysteresis_csv(
 
 
 def save_mode(results_dir: Path, kappa: float, mode: np.ndarray) -> Path:
-    """Save a normalized eigenmode to disk."""
-
-    mode_path = results_dir / f"mode_kappa_{kappa:.3f}.npy"
-    np.save(mode_path, mode)
-    return mode_path
+    path = results_dir / f"mode_kappa_{kappa:.3f}.npy"
+    np.save(path, mode)
+    return path
 
 
-def plot_hysteresis(results_dir: Path, kappa: float, h_values: np.ndarray, up: np.ndarray, down: np.ndarray) -> None:
-    plt.figure(figsize=(6, 4))
-    plt.plot(h_values, up, label="A_up", marker="o")
-    plt.plot(h_values, down, label="A_down", marker="s")
-    plt.xlabel("h")
-    plt.ylabel("Mode amplitude A")
-    plt.title(f"Hysteresis for kappa={kappa:.3f}")
-    plt.legend()
-    plt.grid(True, alpha=0.4)
-    plt.tight_layout()
-    plt.savefig(results_dir / f"hysteresis_kappa_{kappa:.3f}.png", dpi=200)
-    plt.close()
+def save_discriminant(results_dir: Path, kappa: float, h_values: np.ndarray, s_coeff: float, alpha_coeff: float) -> Path:
+    beta = s_coeff * h_values
+    delta = -4.0 * (alpha_coeff ** 3) - 27.0 * np.square(beta)
+    df = pd.DataFrame({"h": h_values, "beta": beta, "Delta": delta})
+    path = results_dir / f"discriminant_kappa_{kappa:.3f}.csv"
+    df.to_csv(path, index=False)
+    return path
+
+
+def ensure_figures_dir(base_dir: Path) -> Path:
+    fig_dir = base_dir / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    return fig_dir
 
 
 def plot_summary(results_dir: Path, summary_df: pd.DataFrame) -> None:
+    """Generate diagnostic summary figures for the cusp grid sweep."""
+
+    fig_dir = ensure_figures_dir(results_dir)
+    sns.set_theme(style="whitegrid")
+
     plt.figure(figsize=(6, 4))
-    plt.plot(summary_df["kappa"], summary_df["max_hysteresis_A_diff"], marker="o")
-    plt.xlabel("kappa")
-    plt.ylabel("max |A_up - A_down|")
-    plt.title("Cusp wedge extent")
-    plt.grid(True, alpha=0.4)
+    sns.lineplot(x="kappa", y="lambda_min", data=summary_df, marker="o")
+    plt.title("Leading eigenvalue vs. kappa")
     plt.tight_layout()
-    plt.savefig(results_dir / "cusp_grid_summary.png", dpi=200)
+    plt.savefig(fig_dir / "lambda_vs_kappa.png", dpi=200)
     plt.close()
 
     plt.figure(figsize=(6, 4))
-    plt.plot(summary_df["kappa"], summary_df["alpha_fit"], marker="s")
-    plt.xlabel("kappa")
-    plt.ylabel("alpha_fit")
-    plt.title("Normal form alpha(kappa)")
-    plt.grid(True, alpha=0.4)
+    sns.lineplot(x="kappa", y="maxdiff", data=summary_df, marker="s")
+    plt.ylabel("max |A_up - A_down|")
+    plt.title("Hysteresis extent")
     plt.tight_layout()
-    plt.savefig(results_dir / "alpha_vs_kappa.png", dpi=200)
+    plt.savefig(fig_dir / "maxdiff_vs_kappa.png", dpi=200)
     plt.close()
+
+    plt.figure(figsize=(6, 4))
+    sns.lineplot(x="kappa", y="alpha_fit", data=summary_df, marker="^")
+    plt.title("Normal form alpha vs. kappa")
+    plt.tight_layout()
+    plt.savefig(fig_dir / "alpha_vs_kappa.png", dpi=200)
+    plt.close()
+
+
+def warn_if_slow_relaxation(lambda_min: float, tmax: float, kappa: float) -> None:
+    if lambda_min == 0:
+        return
+    char_time = abs(1.0 / lambda_min)
+    if char_time > 5.0 * tmax:
+        LOGGER.warning(
+            "Potential slow relaxation at kappa=%.3f: characteristic time %.2f exceeds Tmax %.2f.",
+            kappa,
+            char_time,
+            tmax,
+        )
 
 
 def run_probe(config: ProbeConfig) -> pd.DataFrame:
-    LOGGER.info("Constructing Laplacian for %dx%d grid (dx=%.3f)", config.nx, config.ny, config.dx)
+    LOGGER.info(
+        "Building 9-point Laplacian for grid %dx%d (dx=%.3f)", config.nx, config.ny, config.dx
+    )
     lap = laplacian_9pt_matrix(config.nx, config.ny, config.dx)
-    h_values = np.linspace(config.h_min, config.h_max, config.n_h)
-    kappas = np.linspace(config.kappa_min, config.kappa_max, config.n_kappa)
 
-    results_dir = config.results_dir
+    kappas = np.linspace(config.kappa_min, config.kappa_max, config.n_kappa)
+    h_values = np.linspace(config.h_min, config.h_max, config.n_h)
+
+    results_dir = config.outdir
     results_dir.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(config.seed)
 
     rows = []
     iterator: Iterable[float]
-    if tqdm is not None:
+    try:
+        from tqdm import tqdm
+
         iterator = tqdm(kappas, desc="kappa sweep")
-    else:  # pragma: no cover - tqdm not installed
+    except Exception:  # pragma: no cover - tqdm optional
         iterator = kappas
 
+    mode_ref: np.ndarray | None = None
     for kappa in iterator:
-        l_eff = effective_operator(lap, kappa, config.r)
-        lambda_min, mode = leading_mode(l_eff)
-        rayleigh = float(mode @ (l_eff @ mode))
+        operator = effective_operator(lap, kappa, config.r)
+        lambda_min, mode = leading_mode(operator)
+        warn_if_slow_relaxation(lambda_min, config.tmax, kappa)
 
-        up, down = hysteresis_for_kappa(
-            kappa=kappa,
+        if mode_ref is None:
+            mode_ref = mode.copy()
+        elif float(np.dot(mode_ref, mode)) < 0.0:
+            mode = -mode
+        mode_ref = mode_ref / np.linalg.norm(mode_ref)
+
+        save_mode(results_dir, kappa, mode)
+
+        up, down, _ = hysteresis_sweep(
             lap=lap,
-            h_values=h_values,
-            mode=mode,
+            kappa=kappa,
             r=config.r,
             u=config.u,
+            h_values=h_values,
+            mode=mode,
             dt=config.dt,
             tmax=config.tmax,
             tol=config.tol,
             rng=rng,
         )
 
-        save_hysteresis_csv(results_dir, kappa, h_values, up, down)
-        save_mode(results_dir, kappa, mode)
+        save_hysteresis(results_dir, kappa, h_values, up, down)
 
-        # Use both branches for fitting the normal form
-        amplitudes = np.concatenate((up, down))
-        fields = np.concatenate((h_values, h_values))
-        u_fit, alpha_fit, rmse = fit_thom_normal_form(amplitudes, fields)
+        amplitudes = np.concatenate([up, down])
+        fields = np.concatenate([h_values, h_values])
+        u_fit, alpha_fit, s_fit, rms = fit_thom_normal_form(amplitudes, fields)
 
-        max_diff = float(np.max(np.abs(up - down)))
+        save_discriminant(results_dir, kappa, h_values, s_fit, alpha_fit)
+
+        maxdiff = float(np.max(np.abs(up - down)))
         rows.append(
             {
-                "kappa": kappa,
+                "kappa": float(kappa),
                 "lambda_min": lambda_min,
-                "rayleigh": rayleigh,
-                "max_hysteresis_A_diff": max_diff,
+                "maxdiff": maxdiff,
                 "u_fit": u_fit,
                 "alpha_fit": alpha_fit,
-                "fit_rmse": rmse,
+                "s_fit": s_fit,
+                "rms": rms,
             }
         )
 
-        if config.save_plots and (config.kappa_plot is None or math.isclose(kappa, config.kappa_plot, rel_tol=1e-6, abs_tol=1e-6)):
-            plot_hysteresis(results_dir, kappa, h_values, up, down)
-
-    summary_df = pd.DataFrame(rows)
+    summary = pd.DataFrame(rows)
     summary_path = results_dir / "cusp_grid_summary.csv"
-    summary_df.to_csv(summary_path, index=False)
-    LOGGER.info("Saved summary to %s", summary_path)
+    summary.to_csv(summary_path, index=False)
+    LOGGER.info("Wrote summary to %s", summary_path)
 
-    if config.save_plots:
-        plot_summary(results_dir, summary_df)
+    if config.make_plots:
+        plot_summary(results_dir, summary)
 
-    return summary_df
+    # Report approximate cusp location if lambda crosses zero.
+    lambda_vals = summary["lambda_min"].to_numpy()
+    kappas_np = summary["kappa"].to_numpy()
+    signs = np.sign(lambda_vals)
+    crossings = np.where(np.diff(signs))[0]
+    if crossings.size:
+        idx = crossings[0]
+        # Linear interpolation around zero crossing
+        lam1, lam2 = lambda_vals[idx], lambda_vals[idx + 1]
+        kap1, kap2 = kappas_np[idx], kappas_np[idx + 1]
+        if lam2 != lam1:
+            kappa_c = kap1 + (0 - lam1) * (kap2 - kap1) / (lam2 - lam1)
+            LOGGER.info("Estimated kappa_c ≈ %.4f where lambda_min crosses zero", kappa_c)
+        else:
+            LOGGER.info("lambda_min changes sign near kappa=%.4f", kap1)
+    else:
+        LOGGER.info("No sign change detected in lambda_min over sampled kappa range")
+
+    return summary
 
 
-def parse_args() -> ProbeConfig:
-    parser = argparse.ArgumentParser(description="Probe the SMM for a Thom cusp catastrophe")
-    parser.add_argument("--nx", type=int, default=16, help="Number of grid points along x")
-    parser.add_argument("--ny", type=int, default=16, help="Number of grid points along y")
-    parser.add_argument("--length", type=float, default=32.0, help="Physical domain length")
-    parser.add_argument("--kappa-min", type=float, default=0.0, help="Minimum coupling strength")
-    parser.add_argument("--kappa-max", type=float, default=0.6, help="Maximum coupling strength")
-    parser.add_argument("--n-kappa", type=int, default=5, help="Number of kappa samples")
-    parser.add_argument("--h-min", type=float, default=-0.8, help="Minimum applied field h")
-    parser.add_argument("--h-max", type=float, default=0.8, help="Maximum applied field h")
-    parser.add_argument("--n-h", type=int, default=9, help="Number of h samples")
-    parser.add_argument("--r", type=float, default=0.2, help="Linear growth coefficient r")
+def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
+    parser = argparse.ArgumentParser(description="Run the SMM bifurcation probe")
+    parser.add_argument("--nx", "--n-x", type=int, default=32, help="Number of grid points along x")
+    parser.add_argument("--ny", "--n-y", type=int, default=32, help="Number of grid points along y")
+    parser.add_argument("--L", "--length", type=float, default=32.0, help="Domain length (assumed square)")
+    parser.add_argument("--kappa_min", "--kappa-min", type=float, default=0.0, help="Minimum coupling kappa")
+    parser.add_argument("--kappa_max", "--kappa-max", type=float, default=0.6, help="Maximum coupling kappa")
+    parser.add_argument("--n_kappa", "--n-kappa", type=int, default=13, help="Number of kappa samples")
+    parser.add_argument("--h_min", "--h-min", type=float, default=-0.8, help="Minimum field h")
+    parser.add_argument("--h_max", "--h-max", type=float, default=0.8, help="Maximum field h")
+    parser.add_argument("--n_h", "--n-h", type=int, default=33, help="Number of h samples")
+    parser.add_argument("--r", type=float, default=0.2, help="Linear coefficient r")
     parser.add_argument("--u", type=float, default=1.0, help="Cubic coefficient u")
-    parser.add_argument("--dt", type=float, default=0.02, help="Time step for RK4 integrator")
-    parser.add_argument("--tmax", type=float, default=20.0, help="Maximum simulated time per ramp step")
-    parser.add_argument("--tol", type=float, default=1e-7, help="Absolute convergence tolerance")
-    parser.add_argument("--seed", type=int, default=0, help="Random seed for initial condition")
+    parser.add_argument("--dt", type=float, default=0.02, help="RK4 time step")
+    parser.set_defaults(make_plots=True)
+
     parser.add_argument(
+        "--Tmax",
+        "--tmax",
+        type=float,
+        default=120.0,
+        help="Maximum integration time per h",
+    )
+    parser.add_argument(
+        "--tol",
+        type=float,
+        default=1e-7,
+        help="Convergence tolerance on ||phi_{n+1}-phi_n||",
+    )
+    parser.add_argument(
+        "--outdir",
         "--results-dir",
         type=Path,
         default=Path("bifurcation_results"),
-        help="Directory to store CSVs and plots",
+        help="Output directory",
+    )
+    parser.add_argument("--seed", type=int, default=0, help="Random seed for initial perturbations")
+    parser.add_argument("--smoke", action="store_true", help="Run a quick deterministic smoke test")
+    parser.add_argument(
+        "--log_level",
+        "--log-level",
+        default="INFO",
+        help="Logging level (case-insensitive)",
     )
     parser.add_argument(
         "--no-plots",
-        action="store_true",
-        help="Disable generation of PNG plots (useful for automated tests)",
+        dest="make_plots",
+        action="store_false",
+        help="Disable generation of summary figure PNGs",
     )
-    parser.add_argument(
-        "--kappa-plot",
-        type=float,
-        default=None,
-        help="Specific kappa value to plot hysteresis for (defaults to every kappa if omitted)",
-    )
-    parser.add_argument("--log-level", default="INFO", help="Python logging level")
 
-    args = parser.parse_args()
-    logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO), format="[%(levelname)s] %(message)s")
+    args = parser.parse_args(argv)
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper(), logging.INFO),
+        format="[%(levelname)s] %(message)s",
+    )
+
+    if args.smoke:
+        LOGGER.info("Activating smoke-test settings")
+        args.nx = args.ny = 16
+        args.n_kappa = min(args.n_kappa, 5)
+        args.n_h = min(args.n_h, 9)
+        args.Tmax = min(args.Tmax, 10.0)
+        args.dt = max(args.dt, 0.02)
+        args.seed = 0
 
     return ProbeConfig(
         nx=args.nx,
         ny=args.ny,
-        length=args.length,
+        length=args.L,
         kappa_min=args.kappa_min,
         kappa_max=args.kappa_max,
         n_kappa=args.n_kappa,
@@ -442,23 +528,20 @@ def parse_args() -> ProbeConfig:
         r=args.r,
         u=args.u,
         dt=args.dt,
-        tmax=args.tmax,
+        tmax=args.Tmax,
         tol=args.tol,
+        outdir=args.outdir,
+        smoke=args.smoke,
+        make_plots=args.make_plots,
         seed=args.seed,
-        results_dir=args.results_dir,
-        save_plots=not args.no_plots,
-        kappa_plot=args.kappa_plot,
     )
 
 
-def main() -> None:
-    config = parse_args()
-    LOGGER.info("Starting cusp probe with config: %s", config)
-    summary = run_probe(config)
-    LOGGER.info("Completed sweep over %d kappa values", len(summary))
-    LOGGER.info("Minimum lambda_min: %.6f", float(summary["lambda_min"].min()))
-    LOGGER.info("Maximum hysteresis amplitude difference: %.6f", float(summary["max_hysteresis_A_diff"].max()))
+def main(argv: Sequence[str] | None = None) -> None:
+    config = parse_args(argv)
+    LOGGER.info("Starting bifurcation probe with configuration: %s", config)
+    run_probe(config)
 
 
-if __name__ == "__main__":  # pragma: no cover - manual execution path
+if __name__ == "__main__":  # pragma: no cover
     main()
