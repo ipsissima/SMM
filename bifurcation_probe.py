@@ -63,7 +63,6 @@ class ProbeConfig:
     tol: float
     outdir: Path
     smoke: bool
-    make_plots: bool
     seed: int = 0
 
     @property
@@ -424,8 +423,7 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
     summary.to_csv(summary_path, index=False)
     LOGGER.info("Wrote summary to %s", summary_path)
 
-    if config.make_plots:
-        plot_summary(results_dir, summary)
+    plot_summary(results_dir, summary)
 
     # Report approximate cusp location if lambda crosses zero.
     lambda_vals = summary["lambda_min"].to_numpy()
@@ -450,61 +448,28 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
 
 def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
     parser = argparse.ArgumentParser(description="Run the SMM bifurcation probe")
-    parser.add_argument("--nx", "--n-x", type=int, default=32, help="Number of grid points along x")
-    parser.add_argument("--ny", "--n-y", type=int, default=32, help="Number of grid points along y")
-    parser.add_argument("--L", "--length", type=float, default=32.0, help="Domain length (assumed square)")
-    parser.add_argument("--kappa_min", "--kappa-min", type=float, default=0.0, help="Minimum coupling kappa")
-    parser.add_argument("--kappa_max", "--kappa-max", type=float, default=0.6, help="Maximum coupling kappa")
-    parser.add_argument("--n_kappa", "--n-kappa", type=int, default=13, help="Number of kappa samples")
-    parser.add_argument("--h_min", "--h-min", type=float, default=-0.8, help="Minimum field h")
-    parser.add_argument("--h_max", "--h-max", type=float, default=0.8, help="Maximum field h")
-    parser.add_argument("--n_h", "--n-h", type=int, default=33, help="Number of h samples")
+    parser.add_argument("--nx", type=int, default=32, help="Number of grid points along x")
+    parser.add_argument("--ny", type=int, default=32, help="Number of grid points along y")
+    parser.add_argument("--L", type=float, default=32.0, help="Domain length (assumed square)")
+    parser.add_argument("--kappa_min", type=float, default=0.0, help="Minimum coupling kappa")
+    parser.add_argument("--kappa_max", type=float, default=0.6, help="Maximum coupling kappa")
+    parser.add_argument("--n_kappa", type=int, default=13, help="Number of kappa samples")
+    parser.add_argument("--h_min", type=float, default=-0.8, help="Minimum field h")
+    parser.add_argument("--h_max", type=float, default=0.8, help="Maximum field h")
+    parser.add_argument("--n_h", type=int, default=33, help="Number of h samples")
     parser.add_argument("--r", type=float, default=0.2, help="Linear coefficient r")
     parser.add_argument("--u", type=float, default=1.0, help="Cubic coefficient u")
     parser.add_argument("--dt", type=float, default=0.02, help="RK4 time step")
-    parser.set_defaults(make_plots=True)
-
-    parser.add_argument(
-        "--Tmax",
-        "--tmax",
-        type=float,
-        default=120.0,
-        help="Maximum integration time per h",
-    )
-    parser.add_argument(
-        "--tol",
-        type=float,
-        default=1e-7,
-        help="Convergence tolerance on ||phi_{n+1}-phi_n||",
-    )
-    parser.add_argument(
-        "--outdir",
-        "--results-dir",
-        type=Path,
-        default=Path("bifurcation_results"),
-        help="Output directory",
-    )
+    parser.add_argument("--Tmax", type=float, default=120.0, help="Maximum integration time per h")
+    parser.add_argument("--tol", type=float, default=1e-7, help="Convergence tolerance on ||phi_{n+1}-phi_n||")
+    parser.add_argument("--outdir", type=Path, default=Path("bifurcation_results"), help="Output directory")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for initial perturbations")
     parser.add_argument("--smoke", action="store_true", help="Run a quick deterministic smoke test")
-    parser.add_argument(
-        "--log_level",
-        "--log-level",
-        default="INFO",
-        help="Logging level (case-insensitive)",
-    )
-    parser.add_argument(
-        "--no-plots",
-        dest="make_plots",
-        action="store_false",
-        help="Disable generation of summary figure PNGs",
-    )
+    parser.add_argument("--log_level", default="INFO", help="Logging level")
 
     args = parser.parse_args(argv)
 
-    logging.basicConfig(
-        level=getattr(logging, args.log_level.upper(), logging.INFO),
-        format="[%(levelname)s] %(message)s",
-    )
+    logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO), format="[%(levelname)s] %(message)s")
 
     if args.smoke:
         LOGGER.info("Activating smoke-test settings")
@@ -532,7 +497,6 @@ def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
         tol=args.tol,
         outdir=args.outdir,
         smoke=args.smoke,
-        make_plots=args.make_plots,
         seed=args.seed,
     )
 
