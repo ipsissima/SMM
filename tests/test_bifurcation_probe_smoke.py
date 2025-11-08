@@ -1,4 +1,4 @@
-"""Smoke-test the bifurcation probe on a tiny grid to ensure outputs exist."""
+"""Smoke-test the bifurcation probe using the dedicated ``--smoke`` mode."""
 
 from __future__ import annotations
 
@@ -10,38 +10,34 @@ import pandas as pd
 
 
 def test_bifurcation_probe_smoke(tmp_path: Path) -> None:
-    results_dir = tmp_path / "bifurcation_results"
+    """Run the probe with the smoke-test shortcut and validate core outputs."""
+
+    results_dir = tmp_path / "bifurcation_smoke"
     cmd = [
         sys.executable,
         "bifurcation_probe.py",
-        "--nx",
-        "8",
-        "--ny",
-        "8",
-        "--n-kappa",
-        "3",
-        "--n-h",
-        "5",
-        "--dt",
-        "0.05",
-        "--tmax",
-        "5.0",
-        "--results-dir",
+        "--smoke",
+        "--outdir",
         str(results_dir),
-        "--no-plots",
-        "--log-level",
+        "--log_level",
         "WARNING",
     ]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, timeout=300)
 
     summary_path = results_dir / "cusp_grid_summary.csv"
     assert summary_path.exists(), "Expected cusp_grid_summary.csv to be created"
 
     summary_df = pd.read_csv(summary_path)
     assert not summary_df.empty
-    assert len(summary_df) == 3
-    assert {"kappa", "lambda_min", "u_fit", "alpha_fit"}.issubset(summary_df.columns)
+    assert {"kappa", "lambda_min", "u_fit", "alpha_fit", "s_fit", "rms"}.issubset(
+        summary_df.columns
+    )
 
-    # Ensure at least one hysteresis CSV has been produced
     hysteresis_files = list(results_dir.glob("hysteresis_kappa_*.csv"))
     assert hysteresis_files, "Expected hysteresis CSV outputs"
+
+    mode_files = list(results_dir.glob("mode_kappa_*.npy"))
+    assert mode_files, "Expected eigenmode artifacts"
+
+    discriminant_files = list(results_dir.glob("discriminant_kappa_*.csv"))
+    assert discriminant_files, "Expected discriminant diagnostics"

@@ -27,52 +27,46 @@ pip install mne mne-bids numpy pandas matplotlib seaborn scipy
 If you use this code, please cite the associated preprint.
 
 
-## Thom cusp bifurcation probe
+## Bifurcation probe
 
-The repository now contains a mesh bifurcation probe that projects the SMM
-dynamics onto the softest linear mode and verifies the appearance of a Thom
-cusp-type catastrophe.  The workflow is fully scripted in `bifurcation_probe.py`
-and produces numerical tables as well as diagnostic plots.
+The mesh bifurcation probe projects the SMM dynamics onto the softest eigenmode
+of the linearised operator and fits the resulting equilibria to the Thom cubic
+normal form `u*A^3 + alpha*A + s*h = 0`.  This reveals the cusp wedge in the
+`(kappa, h)` plane and quantifies how the external drive tilts the bifurcation.
 
-### Quick smoke run
+### Running locally
 
-The default parameters execute a small stability scan that finishes quickly on a
-laptop.  Run the probe from the repository root:
-
-```bash
-python bifurcation_probe.py
-```
-
-Outputs are written to `bifurcation_results/` and include a
-`cusp_grid_summary.csv` file plus one hysteresis CSV per sampled coupling
-strength `kappa`.  Disable figures during automated runs by adding
-`--no-plots`.
-
-### Full cusp mapping
-
-To explore the full cusp wedge suggested in the project prompt, increase the
-resolution of the parameter sweeps.  Example:
+Install the scientific dependencies once:
 
 ```bash
-python bifurcation_probe.py \
-  --nx 32 --ny 32 --kappa-min 0.0 --kappa-max 0.6 --n-kappa 13 \
-  --h-min -0.8 --h-max 0.8 --n-h 33 --tmax 120.0
+pip install -r requirements.txt
 ```
 
-The script reports the smallest eigenvalue of the effective operator, the peak
-hysteresis amplitude difference `max |A_up - A_down|`, and the fitted Thom
-normal-form coefficients.  The coefficient `alpha_fit(kappa)` traces how the
-projected linear stiffness changes with coupling, while the field `h` plays the
-role of `beta` in the reduced cubic equation `u*A^3 + alpha*A + beta = 0`.
-
-### Plotting results separately
-
-`plot_bifurcation_summary.py` regenerates the summary figures from saved CSVs.
-It is useful when working from archival data:
+Then launch the default probe (32×32 grid, 13 coupling samples, 33 field
+samples):
 
 ```bash
-python plot_bifurcation_summary.py --results-dir bifurcation_results --kappa 0.30
+python bifurcation_probe.py --nx 32 --ny 32
 ```
 
-This command reproduces the cusp wedge and alpha trajectories, and generates a
-hysteresis plot for the specified `kappa` if available.
+The smoke-test shortcut `python bifurcation_probe.py --smoke` performs a small
+deterministic scan suitable for CI or quick validation.
+
+### Outputs
+
+Numerical artifacts live in `bifurcation_results/`:
+
+* `cusp_grid_summary.csv` summarises each `kappa` with the leading eigenvalue,
+  hysteresis span, and fitted Thom parameters.
+* `hysteresis_kappa_*.csv` and `mode_kappa_*.npy` store amplitude traces and
+  eigenmodes.
+* `discriminant_kappa_*.csv` tabulates the Thom discriminant `Δ(h)` for each
+  coupling.
+* `figures/` contains publication-ready PNGs of the eigenvalue, hysteresis, and
+  parameter trends.
+
+Regenerate plots from archived CSVs at any time with:
+
+```bash
+python plot_bifurcation_summary.py --outdir bifurcation_results --hysteresis
+```
