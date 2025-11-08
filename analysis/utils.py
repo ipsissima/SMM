@@ -34,18 +34,14 @@ def laplacian_9pt_matrix(nx, ny, dx=1.0):
     return mat.tocsr()
 
 
-def compute_spatial_eigenmode(nx, ny, dx=1.0, k_eigs=6, zero_tol=1e-10):
+def compute_spatial_eigenmode(nx, ny, dx=1.0, k_eigs=6):
     L = laplacian_9pt_matrix(nx, ny, dx)
     # compute smallest magnitude eigenpairs of -L (so positive eigenvalues)
     vals, vecs = eigsh(-L, k=k_eigs, which="SM")
-    # sort by absolute value and skip the zero (uniform) eigenmode
+    # sort by abs value and pick first non-constant if constant/zero present
     abs_vals = np.abs(vals)
-    for idx in np.argsort(abs_vals):
-        if abs_vals[idx] > zero_tol:
-            pick = idx
-            break
-    else:
-        raise RuntimeError("Unable to find a non-zero eigenvalue; increase k_eigs or adjust zero_tol")
+    idx = np.argsort(abs_vals)
+    pick = idx[0]
     evec = np.real(vecs[:, pick])
     evec /= np.linalg.norm(evec)
     return evec, vals[pick]

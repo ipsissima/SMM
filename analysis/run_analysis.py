@@ -2,20 +2,9 @@
 import os
 import argparse
 import json
-import sys
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-if __package__ is None or __package__ == "":
-    # When executed as ``python analysis/run_analysis.py`` the script directory
-    # is ``analysis``. Ensure the repository root (which contains the
-    # ``analysis`` package) is importable so absolute imports succeed.
-    repo_root = Path(__file__).resolve().parent.parent
-    if str(repo_root) not in sys.path:
-        sys.path.insert(0, str(repo_root))
 
 from analysis.utils import compute_spatial_eigenmode, laplacian_9pt_matrix
 from analysis.simulation_engine import MeshSimulator
