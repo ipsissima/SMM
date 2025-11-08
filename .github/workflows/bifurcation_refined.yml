@@ -1,0 +1,52 @@
+name: Refined bifurcation probe
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        required: false
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - full
+
+jobs:
+  refined-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run refined probe
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.mode }}" = "full" ]; then
+            python bifurcation_probe_refined.py --outdir bifurcation_results_refined_full
+          else
+            python bifurcation_probe_refined.py --smoke --outdir bifurcation_results_refined
+          fi
+      - name: Pytest
+        run: pytest tests/test_bifurcation_probe_refined_smoke.py
+      - name: Zip artifacts
+        run: |
+          if [ -d bifurcation_results_refined ]; then
+            zip -r bifurcation_results_refined.zip bifurcation_results_refined
+          elif [ -d bifurcation_results_refined_full ]; then
+            zip -r bifurcation_results_refined.zip bifurcation_results_refined_full
+          else
+            echo "No results directory found" && exit 1
+          fi
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bifurcation_results_refined
+          path: bifurcation_results_refined.zip
