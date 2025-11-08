@@ -37,23 +37,16 @@ jobs:
       - name: Pytest
         run: pytest tests/test_bifurcation_probe_refined_smoke.py
       - name: Zip artifacts
-        if: always()
         run: |
-          archive="bifurcation_results_refined.zip"
-          rm -f "$archive"
           if [ -d bifurcation_results_refined ]; then
-            zip -r "$archive" bifurcation_results_refined
+            zip -r bifurcation_results_refined.zip bifurcation_results_refined
           elif [ -d bifurcation_results_refined_full ]; then
-            zip -r "$archive" bifurcation_results_refined_full
+            zip -r bifurcation_results_refined.zip bifurcation_results_refined_full
           else
-            echo "No results directory found; creating placeholder archive"
-            echo "No results were produced" > NO_RESULTS.txt
-            zip "$archive" NO_RESULTS.txt
+            echo "No results directory found" && exit 1
           fi
-          rm -f NO_RESULTS.txt
       - name: Upload artifact
-        if: always()
-        uses: actions/upload-artifact@v4.3.0
+        uses: actions/upload-artifact@v3
         with:
           name: bifurcation_results_refined
           path: bifurcation_results_refined.zip

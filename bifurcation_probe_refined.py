@@ -155,48 +155,6 @@ def align_vector(vec: np.ndarray, ref: np.ndarray | None) -> Tuple[np.ndarray, i
     return vec, 1
 
 
-def fit_nullspace_svd(
-    matrix: np.ndarray,
-    prefer_positive_index: int | None = 0,
-) -> Tuple[np.ndarray, float, float]:
-    """Return unit-norm nullspace vector and RMS residual using SVD.
-
-    Parameters
-    ----------
-    matrix:
-        Design matrix whose near-nullspace captures the steady-state constraints.
-    prefer_positive_index:
-        Optional coefficient index that should be non-negative. If the selected
-        coefficient ends up negative the vector is flipped to fix the sign.
-
-    Returns
-    -------
-    coeffs:
-        Unit-norm coefficient vector spanning the smallest singular subspace.
-    rms:
-        Root-mean-square residual of ``matrix @ coeffs``.
-    cond:
-        Effective condition number ``s_max / s_min``. ``np.inf`` when ill-posed.
-    """
-
-    if matrix.size == 0:
-        return np.full(matrix.shape[1], np.nan), math.nan, math.inf
-    _, s, vh = np.linalg.svd(matrix, full_matrices=False)
-    coeffs = vh[-1]
-    norm = float(np.linalg.norm(coeffs))
-    if norm == 0.0:
-        return coeffs, math.inf, math.inf
-    coeffs /= norm
-    if prefer_positive_index is not None and 0 <= prefer_positive_index < coeffs.size:
-        if coeffs[prefer_positive_index] < 0:
-            coeffs *= -1.0
-    residual = matrix @ coeffs
-    rms = float(np.sqrt(np.mean(residual ** 2)))
-    s_min = s[-1] if s.size else 0.0
-    cond = float(s[0] / s_min) if s_min > 0 else math.inf
-    return coeffs, rms, cond
-
-
 def run_hysteresis_sweep(
     h_values: np.ndarray,
     indices: np.ndarray,
@@ -213,32 +171,11 @@ def run_hysteresis_sweep(
     seed: int,
     v_refs: Dict[int, np.ndarray],
     w_refs: Dict[int, np.ndarray],
-    phi0: np.ndarray | None = None,
-) -> Tuple[
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    Dict[int, np.ndarray],
-    Dict[int, np.ndarray],
-    np.ndarray,
-]:
-    """Run quasi-static sweep over ``h_values`` and project onto tracked eigenmodes.
-
-    Parameters
-    ----------
-    phi0:
-        Optional initial field used for the first ``h`` value. When ``None`` a
-        small random perturbation is drawn so that the sweep explores a single
-        branch. Passing the final state from a previous sweep enables
-        quasi-static continuation for the reverse direction.
-    """
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Dict[int, np.ndarray], Dict[int, np.ndarray]]:
+    """Run quasi-static sweep over ``h_values`` and project onto tracked eigenmodes."""
     rng = np.random.default_rng(seed)
     n_points = lap.shape[0]
-    if phi0 is None:
-        phi = 1e-3 * rng.standard_normal(n_points)
-    else:
-        phi = np.array(phi0, copy=True)
+    phi = 1e-3 * rng.standard_normal(n_points)
     amplitudes: List[float] = []
     second_amplitudes: List[float] = []
     v_signs: List[int] = []
@@ -296,7 +233,6 @@ def run_hysteresis_sweep(
         np.array(w_signs, dtype=int),
         v_refs,
         w_refs,
-        phi,
     )
 
 
@@ -378,15 +314,7 @@ def run_probe(args: argparse.Namespace) -> None:
         v_refs: Dict[int, np.ndarray] = {}
         w_refs: Dict[int, np.ndarray] = {}
         base_indices = np.arange(h_grid.size)
-        (
-            amplitudes_up,
-            second_up,
-            v_signs_up,
-            w_signs_up,
-            v_refs,
-            w_refs,
-            phi_final_up,
-        ) = run_hysteresis_sweep(
+        amplitudes_up, second_up, v_signs_up, w_signs_up, v_refs, w_refs = run_hysteresis_sweep(
             h_grid,
             base_indices,
             lap,
@@ -405,15 +333,7 @@ def run_probe(args: argparse.Namespace) -> None:
         )
         amplitudes_up = np.array(amplitudes_up)
         second_up = np.array(second_up)
-        (
-            amplitudes_down,
-            second_down,
-            v_signs_down,
-            w_signs_down,
-            _,
-            _,
-            _phi_final_down,
-        ) = run_hysteresis_sweep(
+        amplitudes_down, second_down, v_signs_down, w_signs_down, _, _ = run_hysteresis_sweep(
             h_grid[::-1],
             base_indices[::-1],
             lap,
@@ -429,7 +349,6 @@ def run_probe(args: argparse.Namespace) -> None:
             seed=rng.integers(0, 10_000_000),
             v_refs=v_refs,
             w_refs=w_refs,
-            phi0=phi_final_up,
         )
         amplitudes_down = np.array(amplitudes_down)[::-1]
         second_down = np.array(second_down)[::-1]
@@ -512,16 +431,18 @@ def run_probe(args: argparse.Namespace) -> None:
                     h_grid,
                 ]
             )
-            coeff1, rms1, cond1 = fit_nullspace_svd(X1, prefer_positive_index=0)
-            coeff2, rms2, cond2 = fit_nullspace_svd(X2, prefer_positive_index=0)
-            if math.isfinite(rms1) and math.isfinite(rms2) and rms1 < 1e-4 and rms2 < 1e-4:
+            coeff1, residuals1, _, _ = np.linalg.lstsq(X1, np.zeros_like(amplitudes_up), rcond=None)
+            coeff2, residuals2, _, _ = np.linalg.lstsq(X2, np.zeros_like(second_up), rcond=None)
+            pred1 = X1 @ coeff1
+            pred2 = X2 @ coeff2
+            rms1 = float(np.sqrt(np.mean(pred1 ** 2)))
+            rms2 = float(np.sqrt(np.mean(pred2 ** 2)))
+            if rms1 < 1e-4 and rms2 < 1e-4:
                 LOG.info(
-                    "Two-mode fit explains data at kappa=%.3f (rms=%.2e, %.2e, conds=%.2e, %.2e)",
+                    "Two-mode fit explains data at kappa=%.3f (rms=%.2e, %.2e)",
                     kappa,
                     rms1,
                     rms2,
-                    cond1,
-                    cond2,
                 )
         record = {
             "kappa": float(kappa),
