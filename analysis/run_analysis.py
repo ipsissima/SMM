@@ -2,27 +2,15 @@
 import os
 import argparse
 import json
-import sys
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-if __package__ is None or __package__ == "":
-    # When executed as ``python analysis/run_analysis.py`` the script directory
-    # is ``analysis``. Ensure the repository root (which contains the
-    # ``analysis`` package) is importable so absolute imports succeed.
-    repo_root = Path(__file__).resolve().parent.parent
-    if str(repo_root) not in sys.path:
-        sys.path.insert(0, str(repo_root))
-    __package__ = "analysis"
-
-from .utils import compute_spatial_eigenmode, laplacian_9pt_matrix
-from .simulation_engine import MeshSimulator
-from .eigenmode_projection import project_onto_mode, validate_single_mode
-from .identify_coeffs import numeric_identify_coeffs
-from .hysteresis_sweep import sweep_parameter_for_hysteresis, plot_hysteresis
+from analysis.utils import compute_spatial_eigenmode, laplacian_9pt_matrix
+from analysis.simulation_engine import MeshSimulator
+from analysis.eigenmode_projection import project_onto_mode, validate_single_mode
+from analysis.identify_coeffs import numeric_identify_coeffs
+from analysis.hysteresis_sweep import sweep_parameter_for_hysteresis, plot_hysteresis
 
 
 def main(outdir="analysis_results", nx=32, ny=32, dx=1.0):
