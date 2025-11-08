@@ -70,3 +70,58 @@ Regenerate plots from archived CSVs at any time with:
 ```bash
 python plot_bifurcation_summary.py --outdir bifurcation_results --hysteresis
 ```
+
+## Bifurcation probe (advanced)
+
+The refined probe and analyzer introduced in this update implement the full
+three-stage cusp interrogation requested for the mesh model:
+
+1. **Phase-tracked projection** keeps the leading mesh eigenmode aligned across
+   every field sample so that `A(h)` is continuous even when the eigenvector is
+   nearly degenerate.
+2. **Targeted densification** refines the `h` grid around the origin and the
+   `kappa` grid around the softest eigenvalue, performs scaled SVD nullspace
+   fits with bootstrap confidence intervals, and reports discriminant maps and
+   cusp half-widths.
+3. **Two-mode fallback** automatically fits a steady two-mode normal form when
+   the spectral gap collapses and flags the result in the summary table.
+
+### Running the refined probe
+
+```bash
+python bifurcation_probe_refined.py \
+    --nx 32 --ny 32 --L 32 \
+    --kappa_min 0.0 --kappa_max 0.6 --n_kappa_coarse 13 \
+    --n_kappa_refined 13 --refine_factor 0.15 \
+    --h_min -0.8 --h_max 0.8 --n_h_coarse 33 \
+    --n_h_band 101 --h_band 0.2
+```
+
+Key CLI options include adaptive relaxation controls (`--dt`, `--tol`,
+`--Tmax_min`, `--tau_factor`), bootstrap size (`--bootstrap_B`), and the
+two-mode trigger threshold (`--gap_threshold`).  Deterministic smoke testing is
+available with `python bifurcation_probe_refined.py --smoke`, which finishes in
+under ten minutes on CI hardware.
+
+### Analyzer and outputs
+
+The probe stores all artifacts under `bifurcation_results_refined/`:
+
+* `cusp_grid_summary_refined.csv` gathers eigenvalues, hysteresis metrics, Thom
+  coefficients with confidence intervals, and two-mode diagnostics.
+* `hysteresis_kappa_*.csv` record aligned up/down sweeps; corresponding
+  `modes/modes_kappa_*.npz` files store the phase-tracked eigenmodes.
+* `discriminant_kappa_*.csv` tabulate the discriminant `Δ(h)` and scaled drive
+  `β = s h` for each coupling.
+* `figures/` includes the λ–κ, hysteresis, α–κ, and per-κ discriminant plots.
+* `bifurcation_verdict_refined.pdf` summarises whether a cusp was detected and
+  reports the most reliable κ band and half-width estimates.
+
+Re-run the post-processing on archived data at any point with:
+
+```bash
+python analyze_bifurcation_results_refined.py --indir bifurcation_results_refined
+```
+
+Use `--refresh` to recompute the summary from the saved hysteresis sweeps with a
+custom bootstrap count.
