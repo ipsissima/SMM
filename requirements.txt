@@ -1,8 +1,6 @@
-
-mne
-mne-bids
 numpy
+scipy
 pandas
 matplotlib
 seaborn
-scipy
+tqdm
