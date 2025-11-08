@@ -17,17 +17,10 @@ def test_bifurcation_probe_smoke(tmp_path: Path) -> None:
         sys.executable,
         "bifurcation_probe.py",
         "--smoke",
-        "--results-dir",
+        "--outdir",
         str(results_dir),
-        "--log-level",
+        "--log_level",
         "WARNING",
-        "--no-plots",
-        "--n-kappa",
-        "3",
-        "--n-h",
-        "5",
-        "--tmax",
-        "5.0",
     ]
     subprocess.run(cmd, check=True, timeout=300)
 

@@ -63,7 +63,6 @@ class ProbeConfig:
     tol: float
     outdir: Path
     smoke: bool
-    make_plots: bool
     seed: int = 0
 
     @property
@@ -291,31 +290,10 @@ def save_mode(results_dir: Path, kappa: float, mode: np.ndarray) -> Path:
     return path
 
 
-def save_discriminant(
-    results_dir: Path,
-    kappa: float,
-    h_values: np.ndarray,
-    u_coeff: float,
-    s_coeff: float,
-    alpha_coeff: float,
-) -> Path:
-    if not math.isfinite(u_coeff) or abs(u_coeff) < 1e-12:
-        LOGGER.warning(
-            "Ill-conditioned Thom fit at kappa=%.3f: u coefficient %.3e prevents discriminant rescaling.",
-            kappa,
-            u_coeff,
-        )
-        alpha_reduced = np.full_like(h_values, np.nan, dtype=float)
-        beta = np.full_like(h_values, np.nan, dtype=float)
-        delta = np.full_like(h_values, np.nan, dtype=float)
-    else:
-        scale = u_coeff
-        alpha_reduced = alpha_coeff / scale
-        s_reduced = s_coeff / scale
-        beta = s_reduced * h_values
-        delta = -4.0 * (alpha_reduced ** 3) - 27.0 * np.square(beta)
-
-    df = pd.DataFrame({"h": h_values, "alpha_over_u": alpha_reduced, "beta": beta, "Delta": delta})
+def save_discriminant(results_dir: Path, kappa: float, h_values: np.ndarray, s_coeff: float, alpha_coeff: float) -> Path:
+    beta = s_coeff * h_values
+    delta = -4.0 * (alpha_coeff ** 3) - 27.0 * np.square(beta)
+    df = pd.DataFrame({"h": h_values, "beta": beta, "Delta": delta})
     path = results_dir / f"discriminant_kappa_{kappa:.3f}.csv"
     df.to_csv(path, index=False)
     return path
@@ -425,7 +403,7 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
         fields = np.concatenate([h_values, h_values])
         u_fit, alpha_fit, s_fit, rms = fit_thom_normal_form(amplitudes, fields)
 
-        save_discriminant(results_dir, kappa, h_values, u_fit, s_fit, alpha_fit)
+        save_discriminant(results_dir, kappa, h_values, s_fit, alpha_fit)
 
         maxdiff = float(np.max(np.abs(up - down)))
         rows.append(
@@ -445,8 +423,7 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
     summary.to_csv(summary_path, index=False)
     LOGGER.info("Wrote summary to %s", summary_path)
 
-    if config.make_plots:
-        plot_summary(results_dir, summary)
+    plot_summary(results_dir, summary)
 
     # Report approximate cusp location if lambda crosses zero.
     lambda_vals = summary["lambda_min"].to_numpy()
@@ -469,100 +446,30 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
     return summary
 
 
-def _normalise_legacy_argv(argv: Sequence[str] | None) -> Sequence[str] | None:
-    """Translate legacy hyphenated flags into their canonical argparse forms.
-
-    Some downstream automation still invokes the probe using pre-refactor option
-    spellings such as ``--n-kappa`` or ``--results-dir``.  While the parser now
-    exposes more descriptive snake_case names, we preserve backwards
-    compatibility by rewriting the argv tokens before handing them to
-    :func:`argparse.ArgumentParser`.
-    """
-
-    if argv is None:
-        return None
-
-    mapping = {
-        "--kappa-min": "--kappa_min",
-        "--kappa-max": "--kappa_max",
-        "--n-kappa": "--n_kappa",
-        "--h-min": "--h_min",
-        "--h-max": "--h_max",
-        "--n-h": "--n_h",
-        "--tmax": "--Tmax",
-        "--results-dir": "--outdir",
-        "--results_dir": "--outdir",
-        "--log-level": "--log_level",
-        "--no-plots": "--no_plots",
-    }
-
-    normalised: List[str] = []
-    for token in argv:
-        normalised.append(mapping.get(token, token))
-    return normalised
-
-
 def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
     parser = argparse.ArgumentParser(description="Run the SMM bifurcation probe")
-    parser.add_argument("--nx", "--n-x", type=int, default=32, help="Number of grid points along x")
-    parser.add_argument("--ny", "--n-y", type=int, default=32, help="Number of grid points along y")
-    parser.add_argument("--L", "--length", type=float, default=32.0, help="Domain length (assumed square)")
-    parser.add_argument("--kappa_min", "--kappa-min", type=float, default=0.0, help="Minimum coupling kappa")
-    parser.add_argument("--kappa_max", "--kappa-max", type=float, default=0.6, help="Maximum coupling kappa")
-    parser.add_argument(
-        "--n_kappa", "--n-kappa", type=int, default=13, help="Number of kappa samples"
-    )
-    parser.add_argument("--h_min", "--h-min", type=float, default=-0.8, help="Minimum field h")
-    parser.add_argument("--h_max", "--h-max", type=float, default=0.8, help="Maximum field h")
-    parser.add_argument("--n_h", "--n-h", type=int, default=33, help="Number of h samples")
+    parser.add_argument("--nx", type=int, default=32, help="Number of grid points along x")
+    parser.add_argument("--ny", type=int, default=32, help="Number of grid points along y")
+    parser.add_argument("--L", type=float, default=32.0, help="Domain length (assumed square)")
+    parser.add_argument("--kappa_min", type=float, default=0.0, help="Minimum coupling kappa")
+    parser.add_argument("--kappa_max", type=float, default=0.6, help="Maximum coupling kappa")
+    parser.add_argument("--n_kappa", type=int, default=13, help="Number of kappa samples")
+    parser.add_argument("--h_min", type=float, default=-0.8, help="Minimum field h")
+    parser.add_argument("--h_max", type=float, default=0.8, help="Maximum field h")
+    parser.add_argument("--n_h", type=int, default=33, help="Number of h samples")
     parser.add_argument("--r", type=float, default=0.2, help="Linear coefficient r")
     parser.add_argument("--u", type=float, default=1.0, help="Cubic coefficient u")
     parser.add_argument("--dt", type=float, default=0.02, help="RK4 time step")
-    parser.set_defaults(make_plots=True)
-
-    parser.add_argument(
-        "--Tmax",
-        "--tmax",
-        type=float,
-        default=120.0,
-        help="Maximum integration time per h",
-    )
-    parser.add_argument(
-        "--tol",
-        type=float,
-        default=1e-7,
-        help="Convergence tolerance on ||phi_{n+1}-phi_n||",
-    )
-    parser.add_argument(
-        "--outdir",
-        "--results-dir",
-        "--results_dir",
-        type=Path,
-        default=Path("bifurcation_results"),
-        help="Output directory",
-    )
+    parser.add_argument("--Tmax", type=float, default=120.0, help="Maximum integration time per h")
+    parser.add_argument("--tol", type=float, default=1e-7, help="Convergence tolerance on ||phi_{n+1}-phi_n||")
+    parser.add_argument("--outdir", type=Path, default=Path("bifurcation_results"), help="Output directory")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for initial perturbations")
     parser.add_argument("--smoke", action="store_true", help="Run a quick deterministic smoke test")
-    parser.add_argument(
-        "--log_level",
-        "--log-level",
-        default="INFO",
-        help="Logging level (case-insensitive)",
-    )
-    parser.add_argument(
-        "--no-plots",
-        "--no_plots",
-        dest="make_plots",
-        action="store_false",
-        help="Disable generation of summary figure PNGs",
-    )
+    parser.add_argument("--log_level", default="INFO", help="Logging level")
 
-    args = parser.parse_args(_normalise_legacy_argv(argv))
+    args = parser.parse_args(argv)
 
-    logging.basicConfig(
-        level=getattr(logging, args.log_level.upper(), logging.INFO),
-        format="[%(levelname)s] %(message)s",
-    )
+    logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO), format="[%(levelname)s] %(message)s")
 
     if args.smoke:
         LOGGER.info("Activating smoke-test settings")
@@ -590,7 +497,6 @@ def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
         tol=args.tol,
         outdir=args.outdir,
         smoke=args.smoke,
-        make_plots=args.make_plots,
         seed=args.seed,
     )
 
