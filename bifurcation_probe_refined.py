@@ -155,48 +155,6 @@ def align_vector(vec: np.ndarray, ref: np.ndarray | None) -> Tuple[np.ndarray, i
     return vec, 1
 
 
-def fit_nullspace_svd(
-    matrix: np.ndarray,
-    prefer_positive_index: int | None = 0,
-) -> Tuple[np.ndarray, float, float]:
-    """Return unit-norm nullspace vector and RMS residual using SVD.
-
-    Parameters
-    ----------
-    matrix:
-        Design matrix whose near-nullspace captures the steady-state constraints.
-    prefer_positive_index:
-        Optional coefficient index that should be non-negative. If the selected
-        coefficient ends up negative the vector is flipped to fix the sign.
-
-    Returns
-    -------
-    coeffs:
-        Unit-norm coefficient vector spanning the smallest singular subspace.
-    rms:
-        Root-mean-square residual of ``matrix @ coeffs``.
-    cond:
-        Effective condition number ``s_max / s_min``. ``np.inf`` when ill-posed.
-    """
-
-    if matrix.size == 0:
-        return np.full(matrix.shape[1], np.nan), math.nan, math.inf
-    _, s, vh = np.linalg.svd(matrix, full_matrices=False)
-    coeffs = vh[-1]
-    norm = float(np.linalg.norm(coeffs))
-    if norm == 0.0:
-        return coeffs, math.inf, math.inf
-    coeffs /= norm
-    if prefer_positive_index is not None and 0 <= prefer_positive_index < coeffs.size:
-        if coeffs[prefer_positive_index] < 0:
-            coeffs *= -1.0
-    residual = matrix @ coeffs
-    rms = float(np.sqrt(np.mean(residual ** 2)))
-    s_min = s[-1] if s.size else 0.0
-    cond = float(s[0] / s_min) if s_min > 0 else math.inf
-    return coeffs, rms, cond
-
-
 def run_hysteresis_sweep(
     h_values: np.ndarray,
     indices: np.ndarray,
@@ -473,16 +431,18 @@ def run_probe(args: argparse.Namespace) -> None:
                     h_grid,
                 ]
             )
-            coeff1, rms1, cond1 = fit_nullspace_svd(X1, prefer_positive_index=0)
-            coeff2, rms2, cond2 = fit_nullspace_svd(X2, prefer_positive_index=0)
-            if math.isfinite(rms1) and math.isfinite(rms2) and rms1 < 1e-4 and rms2 < 1e-4:
+            coeff1, residuals1, _, _ = np.linalg.lstsq(X1, np.zeros_like(amplitudes_up), rcond=None)
+            coeff2, residuals2, _, _ = np.linalg.lstsq(X2, np.zeros_like(second_up), rcond=None)
+            pred1 = X1 @ coeff1
+            pred2 = X2 @ coeff2
+            rms1 = float(np.sqrt(np.mean(pred1 ** 2)))
+            rms2 = float(np.sqrt(np.mean(pred2 ** 2)))
+            if rms1 < 1e-4 and rms2 < 1e-4:
                 LOG.info(
-                    "Two-mode fit explains data at kappa=%.3f (rms=%.2e, %.2e, conds=%.2e, %.2e)",
+                    "Two-mode fit explains data at kappa=%.3f (rms=%.2e, %.2e)",
                     kappa,
                     rms1,
                     rms2,
-                    cond1,
-                    cond2,
                 )
         record = {
             "kappa": float(kappa),
