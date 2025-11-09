@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload bifurcation artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: bifurcation_results
           path: bifurcation_results.zip
