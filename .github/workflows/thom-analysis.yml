@@ -37,7 +37,7 @@ jobs:
             --log-level WARNING
 
       - name: Upload bifurcation probe artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.3.3
         with:
           name: bifurcation-probe-results
           path: bifurcation_results_ci
