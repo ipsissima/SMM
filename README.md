@@ -126,51 +126,45 @@ python analyze_bifurcation_results_refined.py --indir bifurcation_results_refine
 Use `--refresh` to recompute the summary from the saved hysteresis sweeps with a
 custom bootstrap count.
 
-## Two-mode coherence fitting (supplementary)
+## Two-mode fit reproduction
 
 The supplementary two-mode analysis reconstructs the empirical probability of
-observing significant coherence across spatial scales and fits a linear
-decoherence-rate model with bootstrap confidence bands.  The implementation
-falls back to a saturating probability link because the manuscript PDF could
-not be parsed in this environment; the exact formula can be updated by passing
-`--note-pdf` if a PDF parser is available locally.
+observing significant coherence across spatial scales and fits the linear-rate
+model described in the manuscript.  Bootstrap confidence bands quantify
+uncertainty on both the empirical proportions and fitted parameters.
 
-### Quickstart
-
-Install the scientific dependencies once:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the smoke test (fast, coarse grid):
+Reproduce the figures and tables from commit `747593ebfeb84952e4ea5d4f57d2bff5459cb19c` using the provided
+wrapper:
 
 ```bash
 bash RUN_TWO_MODE.sh
 ```
 
-The script internally calls:
+The script performs a quick smoke run (B=100, coarse L grid) to validate the
+pipeline and a full run (B=1000, 200-point L grid).  Both read
+`PSD_with_Coherence.csv` from the repository root and write outputs under
+`two_mode_results/`.
+
+To run manually, use:
 
 ```bash
+# Smoke mode
 python supplementary_code/two_mode_fitting.py \
   --input PSD_with_Coherence.csv \
-  --outdir supplementary_code/two_mode_results_smoke \
-  --B 100 --seed 1234 --threshold 0.05 --assume-constant --smoke
-```
+  --outdir two_mode_results/smoke \
+  --threshold 0.0465 --B 100 --seed 1234 --assume-constant --smoke
 
-Run the full analysis (dense grid, B=1000):
-
-```bash
+# Full bootstrap
 python supplementary_code/two_mode_fitting.py \
   --input PSD_with_Coherence.csv \
-  --outdir supplementary_code/two_mode_results \
-  --B 1000 --seed 1234 --threshold 0.05 --assume-constant
+  --outdir two_mode_results \
+  --threshold 0.0465 --B 1000 --seed 1234 --assume-constant
 ```
 
-Outputs include figures of the empirical P(L) with model overlays
-(`P_L_fit.png`), bootstrap parameter histograms (`parameter_bootstrap.png`),
-CSV tables of parameter estimates and bootstrap samples, and a concise
-`two_mode_fit_report.txt` with AIC/BIC comparison against a saturating-rate
-alternative.  The `--assume-constant` flag reuses the per-subject coherence
-value across scales when no per-scale CSV is available; provide
-`PSD_with_Coherence_by_scale.csv` to use scale-specific measurements instead.
+Key outputs include:
+
+- `P_L_empirical_and_fit.csv` with empirical medians, 95% CIs, and model bands.
+- `two_mode_fit_summary.csv` and `two_mode_bootstrap_samples.csv` (parameters,
+  AIC/BIC, bootstrap draws).
+- Figures `figure_P_L_with_CI.png` and `figure_parameter_bootstrap.png` plus
+  the textual report `two_mode_fit_report.txt`.

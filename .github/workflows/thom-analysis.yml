@@ -41,3 +41,4 @@ jobs:
         with:
           name: bifurcation-probe-results
           path: bifurcation_results_ci
+          if-no-files-found: warn

@@ -58,3 +58,4 @@ jobs:
         with:
           name: bifurcation_results
           path: bifurcation_results.zip
+          if-no-files-found: warn
