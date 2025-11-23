@@ -46,7 +46,8 @@ jobs:
             echo "No results directory found" && exit 1
           fi
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bifurcation_results_refined
           path: bifurcation_results_refined.zip
+          if-no-files-found: warn

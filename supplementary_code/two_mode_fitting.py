@@ -30,9 +30,10 @@ from scipy.stats import binom
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_THRESHOLD = 0.05
+DEFAULT_THRESHOLD = 0.0465
 DEFAULT_B = 1000
 SMOKE_B = 100
+SMOKE_TEST_B = 20
 SMOKE_L_POINTS = 60
 FULL_L_POINTS = 200
 L_MIN = 0.1
@@ -56,7 +57,7 @@ class FitResult:
 @dataclass
 class EmpiricalPL:
     L_grid: np.ndarray
-    p_mean: np.ndarray
+    p_median: np.ndarray
     p_bootstrap: np.ndarray
     ci_low: np.ndarray
     ci_high: np.ndarray
@@ -92,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--outdir",
         type=Path,
-        default=Path("supplementary_code/two_mode_results"),
+        default=Path("two_mode_results"),
         help="Directory to store figures and CSV outputs.",
     )
     parser.add_argument("--B", type=int, default=DEFAULT_B, help="Bootstrap iterations.")
@@ -192,6 +193,11 @@ def load_scale_data(
     when required sources are unavailable and no constant assumption is given.
     """
     df = pd.read_csv(input_path)
+    if "C" not in df.columns:
+        raise ValueError(
+            "Input file must contain a coherence column 'C'. Found columns: "
+            f"{list(df.columns)}"
+        )
     df = normalise_subject_column(df)
     scale_col = detect_scale_column(df)
     if scale_col:
@@ -208,6 +214,10 @@ def load_scale_data(
             candidate = Path("PSD_with_Coherence_by_scale.csv")
     if candidate and candidate.exists():
         scale_df = pd.read_csv(candidate)
+        if "C" not in scale_df.columns:
+            raise ValueError(
+                "Scale file must include coherence column 'C' along with scale information."
+            )
         scale_df = normalise_subject_column(scale_df)
         scale_col = detect_scale_column(scale_df)
         if scale_col is None:
@@ -273,11 +283,11 @@ def summarise_empirical(significance: np.ndarray, L_grid: np.ndarray, B: int, rn
     boot = bootstrap_probabilities(significance, B, rng)
     ci_low = np.percentile(boot, 2.5, axis=0)
     ci_high = np.percentile(boot, 97.5, axis=0)
-    p_mean = boot.mean(axis=0)
+    p_median = np.median(boot, axis=0)
     successes = significance.sum(axis=0)
     return EmpiricalPL(
         L_grid=L_grid,
-        p_mean=p_mean,
+        p_median=p_median,
         p_bootstrap=boot,
         ci_low=ci_low,
         ci_high=ci_high,
@@ -399,7 +409,7 @@ def bootstrap_fit_parameters(
     B: int,
     rng: np.random.Generator,
     fix_pmax: Optional[float],
-) -> Tuple[List[FitResult], np.ndarray]:
+) -> Tuple[List[FitResult], np.ndarray, List[str]]:
     n_subjects = significance.shape[0]
     fits: List[FitResult] = []
     for b in range(B):
@@ -407,23 +417,49 @@ def bootstrap_fit_parameters(
         successes = significance[sample_idx].sum(axis=0)
         fit = fit_two_mode(L_grid, successes, n_subjects, model="linear", fix_pmax=fix_pmax)
         fits.append(fit)
-    params_matrix = np.array([[f.params.get("lambda0", np.nan), f.params.get("kappa", np.nan)] for f in fits])
-    return fits, params_matrix
+
+    param_keys = ["lambda0", "kappa", "p_max", "lambda_scale"]
+    params_matrix = np.array([[fit.params.get(key, np.nan) for key in param_keys] for fit in fits])
+    return fits, params_matrix, param_keys
 
 
-def summarise_params(fits: List[FitResult]) -> pd.DataFrame:
+def summarise_params(
+    linear_fit: FitResult,
+    alt_fit: FitResult,
+    boot_params: np.ndarray,
+    param_keys: List[str],
+) -> pd.DataFrame:
     records = []
-    for param in sorted({key for f in fits for key in f.params}):
-        values = np.array([f.params[param] for f in fits])
+    for col_idx, key in enumerate(param_keys):
+        boot_col = boot_params[:, col_idx]
         records.append(
             {
-                "parameter": param,
-                "estimate": float(np.median(values)),
-                "2.5%": float(np.percentile(values, 2.5)),
-                "97.5%": float(np.percentile(values, 97.5)),
+                "model": "linear",
+                "parameter": key,
+                "estimate": float(linear_fit.params.get(key, np.nan)),
+                "2.5%": float(np.percentile(boot_col, 2.5)),
+                "97.5%": float(np.percentile(boot_col, 97.5)),
+                "AIC": float(linear_fit.aic),
+                "BIC": float(linear_fit.bic),
             }
         )
-    return pd.DataFrame.from_records(records)
+
+    for key, value in alt_fit.params.items():
+        records.append(
+            {
+                "model": alt_fit.name,
+                "parameter": key,
+                "estimate": float(value),
+                "2.5%": np.nan,
+                "97.5%": np.nan,
+                "AIC": float(alt_fit.aic),
+                "BIC": float(alt_fit.bic),
+            }
+        )
+
+    df = pd.DataFrame.from_records(records)
+    ordered_cols = ["model", "parameter", "estimate", "2.5%", "97.5%", "AIC", "BIC"]
+    return df[ordered_cols]
 
 
 def predictive_band(
@@ -440,6 +476,21 @@ def predictive_band(
     )
 
 
+def run_internal_smoke_test() -> None:
+    """Lightweight self-test executed in smoke mode.
+
+    The check uses synthetic binary significance data to verify bootstrap
+    stability and model fitting in a few milliseconds.
+    """
+    rng = np.random.default_rng(0)
+    L_grid = build_L_grid(smoke=True)[:20]
+    significance = (rng.random((6, len(L_grid))) > 0.4).astype(int)
+    empirical = summarise_empirical(significance, L_grid, B=SMOKE_TEST_B, rng=rng)
+    fit = fit_two_mode(empirical.L_grid, empirical.successes, empirical.n_subjects, model="linear", fix_pmax=None)
+    assert np.isfinite(fit.loglike)
+    assert empirical.p_median.shape == empirical.ci_low.shape
+
+
 def plot_probability(
     empirical: EmpiricalPL,
     model_pred: ModelPredictions,
@@ -447,7 +498,7 @@ def plot_probability(
     label: str,
 ):
     plt.figure(figsize=(8, 5))
-    plt.semilogx(empirical.L_grid, empirical.p_mean, "o", label="Empirical mean", color="black")
+    plt.semilogx(empirical.L_grid, empirical.p_median, "o", label="Empirical median", color="black")
     plt.fill_between(empirical.L_grid, empirical.ci_low, empirical.ci_high, color="gray", alpha=0.3, label="Empirical 95% CI")
     plt.plot(empirical.L_grid, model_pred.median, label=f"Model ({label})", color="C1")
     plt.fill_between(empirical.L_grid, model_pred.ci_low, model_pred.ci_high, color="C1", alpha=0.2, label="Model 95% CI")
@@ -461,11 +512,13 @@ def plot_probability(
     plt.close()
 
 
-def plot_parameter_hist(params_matrix: np.ndarray, outpath: Path):
-    plt.figure(figsize=(8, 4))
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-    labels = ["lambda0", "kappa"]
-    for ax, idx, label in zip(axes, range(params_matrix.shape[1]), labels):
+def plot_parameter_hist(params_matrix: np.ndarray, param_keys: List[str], outpath: Path):
+    n_params = params_matrix.shape[1]
+    n_cols = min(2, n_params)
+    n_rows = int(np.ceil(n_params / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 3.5 * n_rows))
+    axes_arr = np.atleast_1d(axes).ravel()
+    for ax, idx, label in zip(axes_arr, range(n_params), param_keys):
         ax.hist(params_matrix[:, idx], bins=30, color="C0", alpha=0.7)
         ax.set_title(label)
     fig.tight_layout()
@@ -480,27 +533,26 @@ def save_csv_outputs(
     model_pred: ModelPredictions,
     param_summary: pd.DataFrame,
     param_samples: np.ndarray,
+    param_keys: List[str],
     linear_fit: FitResult,
     alt_fit: FitResult,
 ):
     outdir.mkdir(parents=True, exist_ok=True)
-    summary = param_summary.copy()
-    summary.insert(0, "model", linear_fit.name)
-    summary.to_csv(outdir / "two_mode_fit_summary.csv", index=False)
+    param_summary.to_csv(outdir / "two_mode_fit_summary.csv", index=False)
 
-    samples_df = pd.DataFrame(param_samples, columns=["lambda0", "kappa"])
+    samples_df = pd.DataFrame(param_samples, columns=param_keys)
     samples_df.insert(0, "model", linear_fit.name)
     samples_df.to_csv(outdir / "two_mode_bootstrap_samples.csv", index=False)
 
     grid_df = pd.DataFrame(
         {
-            "L_mm": empirical.L_grid,
-            "p_obs_mean": empirical.p_mean,
+            "L": empirical.L_grid,
+            "p_obs_median": empirical.p_median,
             "p_obs_ci_low": empirical.ci_low,
             "p_obs_ci_high": empirical.ci_high,
-            "p_model_median": model_pred.median,
-            "p_model_ci_low": model_pred.ci_low,
-            "p_model_ci_high": model_pred.ci_high,
+            "P_model_median": model_pred.median,
+            "P_model_ci_low": model_pred.ci_low,
+            "P_model_ci_high": model_pred.ci_high,
         }
     )
     grid_df.to_csv(outdir / "P_L_empirical_and_fit.csv", index=False)
@@ -532,11 +584,18 @@ def main():
     L_grid = build_L_grid(args.smoke)
     B = SMOKE_B if args.smoke else args.B
 
+    if args.smoke:
+        run_internal_smoke_test()
+
     pdf_note = None
+    pdf_text: Optional[str] = None
     if args.note_pdf:
         try:
             pdf_text = attempt_parse_pdf()
-            pdf_note = "Parsed manuscript text successfully." if pdf_text else "Manuscript parsed but empty."
+            if pdf_text and "Ptwo" in pdf_text:
+                pdf_note = "Detected two-mode notation in manuscript; using saturating link because parsing is not automated."
+            else:
+                pdf_note = "No explicit two-mode probability formula found; defaulting to saturating link."
         except PdfParseWarning as warning:
             pdf_note = f"PDF parse unavailable: {warning}"
             logger.warning(pdf_note)
@@ -552,7 +611,9 @@ def main():
 
     significance, subjects = build_subject_curves(scale_df, args.threshold, L_grid)
     empirical = summarise_empirical(significance, L_grid, B=B, rng=rng)
-    plateau = float(np.median(empirical.p_mean[-10:]))
+    plateau_mask = empirical.L_grid >= 1.0
+    plateau_values = empirical.p_median[plateau_mask] if plateau_mask.any() else empirical.p_median
+    plateau = float(np.median(plateau_values))
     fix_pmax = plateau if args.fix_pmax else None
 
     linear_fit = fit_two_mode(
@@ -570,15 +631,15 @@ def main():
         fix_pmax=fix_pmax,
     )
 
-    boot_fits, param_samples = bootstrap_fit_parameters(
+    boot_fits, param_samples, param_keys = bootstrap_fit_parameters(
         significance, empirical.L_grid, B=B, rng=rng, fix_pmax=fix_pmax
     )
-    param_summary = summarise_params([linear_fit] + boot_fits)
+    param_summary = summarise_params(linear_fit, alt_fit, param_samples, param_keys)
     model_pred = predictive_band([linear_fit] + boot_fits, empirical.L_grid, model="linear", fix_pmax=fix_pmax)
 
     args.outdir.mkdir(parents=True, exist_ok=True)
-    plot_probability(empirical, model_pred, args.outdir / "P_L_fit.png", label="linear")
-    plot_parameter_hist(param_samples, args.outdir / "parameter_bootstrap.png")
+    plot_probability(empirical, model_pred, args.outdir / "figure_P_L_with_CI.png", label="linear")
+    plot_parameter_hist(param_samples, param_keys, args.outdir / "figure_parameter_bootstrap.png")
 
     save_csv_outputs(
         outdir=args.outdir,
@@ -586,6 +647,7 @@ def main():
         model_pred=model_pred,
         param_summary=param_summary,
         param_samples=param_samples,
+        param_keys=param_keys,
         linear_fit=linear_fit,
         alt_fit=alt_fit,
     )

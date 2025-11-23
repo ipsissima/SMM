@@ -64,6 +64,7 @@ class ProbeConfig:
     outdir: Path
     smoke: bool
     seed: int = 0
+    no_plots: bool = False
 
     @property
     def dx(self) -> float:
@@ -423,7 +424,8 @@ def run_probe(config: ProbeConfig) -> pd.DataFrame:
     summary.to_csv(summary_path, index=False)
     LOGGER.info("Wrote summary to %s", summary_path)
 
-    plot_summary(results_dir, summary)
+    if not config.no_plots:
+        plot_summary(results_dir, summary)
 
     # Report approximate cusp location if lambda crosses zero.
     lambda_vals = summary["lambda_min"].to_numpy()
@@ -453,19 +455,53 @@ def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
     parser.add_argument("--L", type=float, default=32.0, help="Domain length (assumed square)")
     parser.add_argument("--kappa_min", type=float, default=0.0, help="Minimum coupling kappa")
     parser.add_argument("--kappa_max", type=float, default=0.6, help="Maximum coupling kappa")
-    parser.add_argument("--n_kappa", type=int, default=13, help="Number of kappa samples")
+    parser.add_argument(
+        "--n_kappa",
+        "--n-kappa",
+        dest="n_kappa",
+        type=int,
+        default=13,
+        help="Number of kappa samples",
+    )
     parser.add_argument("--h_min", type=float, default=-0.8, help="Minimum field h")
     parser.add_argument("--h_max", type=float, default=0.8, help="Maximum field h")
-    parser.add_argument("--n_h", type=int, default=33, help="Number of h samples")
+    parser.add_argument(
+        "--n_h",
+        "--n-h",
+        dest="n_h",
+        type=int,
+        default=33,
+        help="Number of h samples",
+    )
     parser.add_argument("--r", type=float, default=0.2, help="Linear coefficient r")
     parser.add_argument("--u", type=float, default=1.0, help="Cubic coefficient u")
     parser.add_argument("--dt", type=float, default=0.02, help="RK4 time step")
-    parser.add_argument("--Tmax", type=float, default=120.0, help="Maximum integration time per h")
+    parser.add_argument(
+        "--Tmax",
+        "--tmax",
+        dest="Tmax",
+        type=float,
+        default=120.0,
+        help="Maximum integration time per h",
+    )
     parser.add_argument("--tol", type=float, default=1e-7, help="Convergence tolerance on ||phi_{n+1}-phi_n||")
-    parser.add_argument("--outdir", type=Path, default=Path("bifurcation_results"), help="Output directory")
+    parser.add_argument(
+        "--outdir",
+        "--results-dir",
+        dest="outdir",
+        type=Path,
+        default=Path("bifurcation_results"),
+        help="Output directory",
+    )
     parser.add_argument("--seed", type=int, default=0, help="Random seed for initial perturbations")
     parser.add_argument("--smoke", action="store_true", help="Run a quick deterministic smoke test")
-    parser.add_argument("--log_level", default="INFO", help="Logging level")
+    parser.add_argument("--log_level", "--log-level", dest="log_level", default="INFO", help="Logging level")
+    parser.add_argument(
+        "--no-plots",
+        dest="no_plots",
+        action="store_true",
+        help="Skip rendering plots (useful for CI).",
+    )
 
     args = parser.parse_args(argv)
 
@@ -498,6 +534,7 @@ def parse_args(argv: Sequence[str] | None = None) -> ProbeConfig:
         outdir=args.outdir,
         smoke=args.smoke,
         seed=args.seed,
+        no_plots=args.no_plots,
     )
 
 
