@@ -125,3 +125,52 @@ python analyze_bifurcation_results_refined.py --indir bifurcation_results_refine
 
 Use `--refresh` to recompute the summary from the saved hysteresis sweeps with a
 custom bootstrap count.
+
+## Two-mode coherence fitting (supplementary)
+
+The supplementary two-mode analysis reconstructs the empirical probability of
+observing significant coherence across spatial scales and fits a linear
+decoherence-rate model with bootstrap confidence bands.  The implementation
+falls back to a saturating probability link because the manuscript PDF could
+not be parsed in this environment; the exact formula can be updated by passing
+`--note-pdf` if a PDF parser is available locally.
+
+### Quickstart
+
+Install the scientific dependencies once:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the smoke test (fast, coarse grid):
+
+```bash
+bash RUN_TWO_MODE.sh
+```
+
+The script internally calls:
+
+```bash
+python supplementary_code/two_mode_fitting.py \
+  --input PSD_with_Coherence.csv \
+  --outdir supplementary_code/two_mode_results_smoke \
+  --B 100 --seed 1234 --threshold 0.05 --assume-constant --smoke
+```
+
+Run the full analysis (dense grid, B=1000):
+
+```bash
+python supplementary_code/two_mode_fitting.py \
+  --input PSD_with_Coherence.csv \
+  --outdir supplementary_code/two_mode_results \
+  --B 1000 --seed 1234 --threshold 0.05 --assume-constant
+```
+
+Outputs include figures of the empirical P(L) with model overlays
+(`P_L_fit.png`), bootstrap parameter histograms (`parameter_bootstrap.png`),
+CSV tables of parameter estimates and bootstrap samples, and a concise
+`two_mode_fit_report.txt` with AIC/BIC comparison against a saturating-rate
+alternative.  The `--assume-constant` flag reuses the per-subject coherence
+value across scales when no per-scale CSV is available; provide
+`PSD_with_Coherence_by_scale.csv` to use scale-specific measurements instead.
