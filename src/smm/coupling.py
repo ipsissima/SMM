@@ -1,10 +1,37 @@
 """
-Coupling functions between neural, mesh, and Kuramoto layers.
+Coupling functions for tripartite loop: neurons ⇄ glia ⇄ connectivity.
 
-Implements minimal, numerically consistent coupling:
-1. Neural masses → mesh: excitatory activities create Gaussian source terms
-2. Mesh → Kuramoto: mesh field modulates phase dynamics
-3. Mesh → neural masses: optional feedback to excitatory input
+TRIPARTITE COUPLINGS:
+----------------------
+
+(a) Neurons → Glia (source term S_ψ):
+    S_ψ(r,t) = Σᵢ G_σ(r-rᵢ) · [β_E·E_i + β_I·I_i + β_θ·cos(θᵢ)]
+    
+    Neural activity drives local glial waves via:
+    - Excitatory population activity (neurotransmitter release)
+    - Inhibitory population activity
+    - Kuramoto phase (oscillatory neural state)
+
+(b) Glia → Neurons (gliotransmission I^(A)):
+    I_i^(A)(t) = g_A · Φ(u(rᵢ,t))
+    
+    Glial field modulates neuronal excitability via:
+    - Φ: nonlinearity (linear, tanh, sigmoid, threshold_linear)
+    - g_A: coupling strength
+    - u(rᵢ,t): local glial field value
+
+(c) Glia → Kuramoto (phase modulation):
+    dθᵢ/dt = ωᵢ + K·Σⱼ sin(θⱼ-θᵢ) + κ_ψ·u(rᵢ,t)
+    
+    Glial field modulates phase dynamics directly.
+
+(d) Glia → Connectivity (Ca-gated plasticity):
+    τ_C·dC_ij/dt = -λ_C·C_ij + η_H·H(Eᵢ,Eⱼ) + η_ψ·(u(rᵢ)·u(rⱼ) - σ_ψ²)
+    
+    Slow connectivity changes based on:
+    - Hebbian term H (correlated neural activity)
+    - Glial coincidence detection (u(rᵢ)·u(rⱼ))
+    - Homeostatic baseline σ_ψ²
 
 Contact: Andreu.Ballus@uab.cat
 """
@@ -164,6 +191,268 @@ def mesh_to_neural(
         raise ValueError(f"Unknown nonlinearity: {nonlinearity}")
     
     return kappa * mesh_values
+
+
+def tripartite_neural_to_glia_source(
+    E: np.ndarray,
+    I: np.ndarray,
+    theta: np.ndarray,
+    positions: list,
+    grid_shape: Tuple[int, int],
+    dx: float,
+    sigma: float,
+    beta_E: float = 0.0,
+    beta_I: float = 0.0,
+    beta_theta: float = 0.0
+) -> np.ndarray:
+    """Tripartite coupling: Neurons → Glia source term.
+    
+    Computes the glial source field from neural activity:
+    
+        S_ψ(r,t) = Σᵢ G_σ(r-rᵢ) · [β_E·E_i + β_I·I_i + β_θ·cos(θᵢ)]
+    
+    where G_σ is a Gaussian kernel representing the astrocyte domain.
+    
+    Parameters
+    ----------
+    E : ndarray
+        Excitatory population activities (n_regions,)
+    I : ndarray
+        Inhibitory population activities (n_regions,)
+    theta : ndarray
+        Kuramoto phases (n_regions,)
+    positions : list of tuple
+        Grid positions (i, j) for each region
+    grid_shape : tuple
+        (Ny, Nx) shape of glial grid
+    dx : float
+        Grid spacing in mm
+    sigma : float
+        Gaussian kernel width in mm (astrocyte domain size)
+    beta_E : float
+        Coupling strength E → glia
+    beta_I : float
+        Coupling strength I → glia
+    beta_theta : float
+        Coupling strength phase → glia
+    
+    Returns
+    -------
+    ndarray
+        Glial source field S_ψ(r,t) of shape (Ny, Nx)
+    """
+    from .mesh import create_gaussian_source
+    
+    # Combined neural activity
+    activities = beta_E * E + beta_I * I + beta_theta * np.cos(theta)
+    
+    # Create source field using Gaussian convolution
+    source_field = create_gaussian_source(
+        positions, activities, grid_shape, dx, sigma
+    )
+    
+    return source_field
+
+
+def glia_to_neural_gliotransmission(
+    u: np.ndarray,
+    positions: list,
+    g_A: float = 0.0,
+    nonlinearity: str = 'linear',
+    threshold: float = 0.0,
+    gain: float = 1.0
+) -> np.ndarray:
+    """Tripartite coupling: Glia → Neurons (gliotransmission).
+    
+    Computes astrocytic feedback current:
+    
+        I_i^(A)(t) = g_A · Φ(u(rᵢ,t))
+    
+    where Φ is a nonlinearity representing Ca-dependent gliotransmitter release.
+    
+    Parameters
+    ----------
+    u : ndarray
+        Glial field of shape (Ny, Nx)
+    positions : list of tuple
+        Grid positions (i, j) for each region
+    g_A : float
+        Coupling strength (gliotransmission gain)
+    nonlinearity : str
+        Type of nonlinearity:
+        - 'linear': Φ(x) = x
+        - 'tanh': Φ(x) = tanh(gain·x)
+        - 'sigmoid': Φ(x) = 1/(1 + exp(-gain·x))
+        - 'threshold_linear': Φ(x) = max(0, x - threshold)
+    threshold : float
+        Threshold for threshold_linear nonlinearity
+    gain : float
+        Gain parameter for sigmoid/tanh
+    
+    Returns
+    -------
+    ndarray
+        Gliotransmission currents I^(A) (n_regions,)
+    """
+    n_regions = len(positions)
+    glia_values = np.zeros(n_regions)
+    
+    # Sample glial field at region positions
+    for idx, (i, j) in enumerate(positions):
+        Ny, Nx = u.shape
+        if 0 <= i < Nx and 0 <= j < Ny:
+            glia_values[idx] = u[j, i]
+    
+    # Apply nonlinearity Φ
+    if nonlinearity == 'linear':
+        output = glia_values
+    elif nonlinearity == 'tanh':
+        output = np.tanh(gain * glia_values)
+    elif nonlinearity == 'sigmoid':
+        output = 1.0 / (1.0 + np.exp(-gain * glia_values))
+    elif nonlinearity == 'threshold_linear':
+        output = np.maximum(0, glia_values - threshold)
+    else:
+        raise ValueError(f"Unknown nonlinearity: {nonlinearity}")
+    
+    return g_A * output
+
+
+class ConnectivityPlasticity:
+    """Ca-gated connectivity plasticity: Glia → Connectivity.
+    
+    Implements slow connectivity changes based on Hebbian learning
+    and glial coincidence detection:
+    
+        τ_C · dC_ij/dt = -λ_C·C_ij + η_H·H(Eᵢ,Eⱼ) + η_ψ·(u(rᵢ)·u(rⱼ) - σ_ψ²)
+    
+    where:
+        - C_ij: connectivity matrix
+        - H: Hebbian term (product of sigmoidal outputs)
+        - u(rᵢ)·u(rⱼ): glial coincidence
+        - σ_ψ²: homeostatic target
+    
+    Parameters
+    ----------
+    n_regions : int
+        Number of neural regions
+    tau_C : float
+        Connectivity time constant (s)
+    lambda_C : float
+        Connectivity decay rate
+    eta_H : float
+        Hebbian learning rate
+    eta_psi : float
+        Glial plasticity rate
+    sigma_psi_target : float
+        Target glial covariance (homeostatic baseline)
+    
+    Attributes
+    ----------
+    C : ndarray
+        Connectivity matrix (n_regions, n_regions)
+    """
+    
+    def __init__(
+        self,
+        n_regions: int,
+        tau_C: float = 60.0,
+        lambda_C: float = 0.1,
+        eta_H: float = 0.01,
+        eta_psi: float = 0.01,
+        sigma_psi_target: float = 0.1
+    ):
+        self.n_regions = n_regions
+        self.tau_C = tau_C
+        self.lambda_C = lambda_C
+        self.eta_H = eta_H
+        self.eta_psi = eta_psi
+        self.sigma_psi_target = sigma_psi_target
+        
+        # Initialize connectivity matrix (small random values)
+        self.C = np.random.randn(n_regions, n_regions) * 0.01
+        np.fill_diagonal(self.C, 0)  # No self-connections
+    
+    def hebbian_term(self, E: np.ndarray, gain: float = 4.0, threshold: float = 0.5) -> np.ndarray:
+        """Compute Hebbian learning term H(Eᵢ,Eⱼ).
+        
+        Uses product of sigmoidal outputs:
+            H_ij = S(Eᵢ) · S(Eⱼ)
+        
+        Parameters
+        ----------
+        E : ndarray
+            Excitatory activities (n_regions,)
+        gain : float
+            Sigmoid gain
+        threshold : float
+            Sigmoid threshold
+        
+        Returns
+        -------
+        ndarray
+            Hebbian term matrix (n_regions, n_regions)
+        """
+        S_E = 1.0 / (1.0 + np.exp(-gain * (E - threshold)))
+        H = np.outer(S_E, S_E)
+        np.fill_diagonal(H, 0)
+        return H
+    
+    def glial_term(self, u_values: np.ndarray) -> np.ndarray:
+        """Compute glial coincidence detection term.
+        
+        Parameters
+        ----------
+        u_values : ndarray
+            Glial field values at region positions (n_regions,)
+        
+        Returns
+        -------
+        ndarray
+            Glial plasticity term (n_regions, n_regions)
+        """
+        # Glial coincidence: u(rᵢ)·u(rⱼ) - σ_ψ²
+        glia_product = np.outer(u_values, u_values)
+        glia_term = glia_product - self.sigma_psi_target**2
+        np.fill_diagonal(glia_term, 0)
+        return glia_term
+    
+    def step(
+        self,
+        dt: float,
+        E: np.ndarray,
+        u_values: np.ndarray,
+        sigmoid_gain: float = 4.0,
+        sigmoid_threshold: float = 0.5
+    ) -> None:
+        """Update connectivity matrix by one time step.
+        
+        Parameters
+        ----------
+        dt : float
+            Time step (s)
+        E : ndarray
+            Excitatory activities (n_regions,)
+        u_values : ndarray
+            Glial field values at region positions (n_regions,)
+        sigmoid_gain : float
+            Gain for Hebbian sigmoid
+        sigmoid_threshold : float
+            Threshold for Hebbian sigmoid
+        """
+        H = self.hebbian_term(E, sigmoid_gain, sigmoid_threshold)
+        G = self.glial_term(u_values)
+        
+        # dC/dt = (-λ_C·C + η_H·H + η_ψ·G) / τ_C
+        dC_dt = (-self.lambda_C * self.C + self.eta_H * H + self.eta_psi * G) / self.tau_C
+        
+        self.C += dt * dC_dt
+        
+        # Ensure no self-connections
+        np.fill_diagonal(self.C, 0)
+        
+        # Optional: clip to prevent explosion
+        self.C = np.clip(self.C, -10.0, 10.0)
 
 
 def create_region_positions_grid(
