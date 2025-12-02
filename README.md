@@ -74,6 +74,49 @@ python simulate_mesh_psd.py --params params.yaml --ensemble 50 --output results
 pytest tests/ -v
 ```
 
+## Scope Boundaries: Implemented vs Conceptual
+
+**CRITICAL DISTINCTION** following the "Paper A" strategy:
+
+### ✅ IMPLEMENTED (Real Code)
+
+**Layer 3: Glial Mesh PDE**
+- Module: `analysis/simulation_engine.py` and `src/smm/glia.py`
+- Equation: Telegraph-approximated glial reaction-diffusion
+  ```
+  ∂²u/∂t² + 2γ₀·∂u/∂t + ω₀²·u - c_eff²·∇²u = S(r,t)
+  ```
+- Parameters: c_eff (~15 mm/s mesoscopic group velocity), ω₀² (mass term), γ₀ (damping)
+- Source term: Phenomenological Gaussian-cosine S(r,t) approximating neural drive
+
+**Analysis Tools**
+- `bifurcation_probe_refined.py`: Refined bifurcation analysis with phase tracking
+- Two-mode coherence fitting (`supplementary_code/two_mode_fitting.py`)
+- PSD and phase gradient coherence metrics (`src/smm/analysis/`)
+
+### ⚠️ CONCEPTUAL (Theoretical Context Only - No Code)
+
+**Layer 1: Neural Masses** (Wilson-Cowan equations)
+- Status: Implemented in `src/smm/neural.py` but serves as theoretical context
+- Current simulations use phenomenological source terms instead of explicit neural dynamics
+
+**Layer 2: Kuramoto Connectome** (Phase oscillators)
+- Status: Implemented in `src/smm/neural.py` but serves as theoretical context
+- Coupling to mesh exists but primary focus is isolated mesh dynamics
+
+**When asked to run simulations involving neurons:**
+> "The current codebase isolates the mesh dynamics using a phenomenological 
+> Gaussian-cosine source term S(r,t) to approximate neural drive. Explicit 
+> Neural Mass equations are not the primary focus of current simulations."
+
+### Parameter Scale Defense
+
+**4 Hz Resonance vs 32mm Domain:**
+The 4 Hz resonance corresponds to the **intrinsic correlation length** 
+λ* ≈ 3.7 mm selected by the medium properties (via ω₀² and c_eff), 
+NOT the fundamental harmonic of the box. This is a material property, 
+not a boundary condition artifact.
+
 ## Model Components
 
 ### 1. Glial Field Layer (`src/smm/glia.py`) **[NEW]**

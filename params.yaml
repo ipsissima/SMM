@@ -25,17 +25,19 @@ D_um2_per_s: 100.0      # IP₃ diffusion coefficient (μm²/s) - gap junction c
 # ∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S(r,t) + ξ(r,t)
 # gamma0 = (alpha + delta) / 2
 # c_eff² = D * (delta - alpha) / 2
-# omega0² determined by local eigenvalues of (alpha, beta, gamma, delta)
+# omega0² = alpha * delta - beta * gamma  (can be negative for overdamped systems)
 # Leave these commented to use auto-computation from micro-parameters:
 # gamma0: 1.25          # Damping coefficient (1/s) - auto: (α+δ)/2
-# omega0: 0.0           # Oscillation frequency (rad/s) - auto: from eigenvalues
+# omega0: 0.0           # Oscillation frequency (rad/s) - auto: sqrt(|α·δ - β·γ|)
+# omega0_sq: 0.0        # Characteristic frequency squared ω₀² (rad²/s²) - auto: α·δ - β·γ
 # c_eff_mm_per_s: 7.07  # Effective wave speed (mm/s) - auto: sqrt(D·(δ-α)/2)
 
 # === Legacy PDE Parameters (for backward compatibility) ===
 # These can be used if glial micro-model is disabled
-c_mm_per_s: 15.0        # Wave speed (mm/s) - used if c_eff not derived
-gamma_s: 0.5            # Background damping coefficient (1/s) - used if gamma0 not derived
-dt_s: 0.001             # Time step (s) - must satisfy CFL condition
+c_mm_per_s: 15.0        # Wave speed c_eff (mm/s) - mesoscopic group velocity
+gamma_s: 0.5            # Background damping coefficient γ₀ (1/s) - used if gamma0 not derived
+omega0_sq: 0.0          # Characteristic frequency squared ω₀² (rad²/s²) - MASS TERM from glial micro-kinetics (α·δ - β·γ)
+dt_s: 0.001             # Time step (s) - must satisfy CFL condition: c_eff*dt/dx < 1
 noise_sigma_mesh: 0.000001  # Mesh white noise amplitude
 
 # === PML Boundaries ===
