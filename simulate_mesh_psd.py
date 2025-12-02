@@ -8,9 +8,17 @@ Contact: Andreu.Ballus@uab.cat
 """
 
 # ============================================================================
-# WARNING: This script uses the LEGACY Wave Equation (without mass term).
-# For the correct Telegraph model with physiologically-derived physics,
-# use scripts/run_glial_wave.py instead.
+# WARNING: This script uses the LEGACY Wave Equation (missing mass term ω₀²).
+# 
+# The Telegraph Equation (∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S) includes
+# a physiologically-derived mass term from glial IP₃/Ca kinetics that:
+#   - Suppresses non-physical constant modes
+#   - Defines intrinsic spatial correlation length
+#   - Matches experimental Ca²⁺ wave dynamics
+# 
+# For the correct Telegraph model, use:
+#   - Implementation: src/smm/glia.py (GlialField class)
+#   - Script: scripts/run_glial_wave.py
 # ============================================================================
 
 import argparse
@@ -515,9 +523,12 @@ def main():
     """Main CLI entry point."""
     # Print deprecation warning
     print("=" * 80)
-    print("WARNING: This script uses the LEGACY Wave Equation (without mass term).")
-    print("For the correct Telegraph model with physiologically-derived physics,")
-    print("use scripts/run_glial_wave.py instead.")
+    print("WARNING: This script uses the LEGACY Wave Equation (missing mass term ω₀²).")
+    print()
+    print("The Telegraph Equation includes a physiologically-derived mass term from")
+    print("glial IP₃/Ca kinetics. For the correct model, use:")
+    print("  - Implementation: src/smm/glia.py (GlialField class)")
+    print("  - Script: scripts/run_glial_wave.py")
     print("=" * 80)
     print()
     
