@@ -1,11 +1,179 @@
 
-# SMM PSD Pipeline
+# SMM - Syncytium Mesh Model
 
-Reproducible workflow for comparing Syncytial Mesh Model (SMM) simulation spectra with empirical EEG data.
+A multi-layer computational neuroscience model combining neural mass dynamics, 
+Kuramoto phase oscillators, and a 2D continuous mesh field governed by a damped 
+wave PDE. This project provides reproducible numerical implementations for 
+comparing model spectra with empirical EEG data.
 
 **Contact:** Andreu.Ballus@uab.cat
 
-## Steps
+## Project Structure
+
+The repository is organized into core modules, analysis scripts, and utilities:
+
+```
+SMM/
+├── src/smm/              # Core model implementations
+│   ├── mesh.py           # 2D PDE mesh solver (damped wave equation)
+│   ├── neural.py         # Neural mass (Wilson-Cowan) and Kuramoto layers
+│   ├── coupling.py       # Inter-layer coupling functions
+│   └── analysis/         # Analysis metrics (PSD, phase gradient coherence)
+├── scripts/              # Experiment runners
+│   ├── run_mesh_ensemble.py      # Ensemble mesh simulations
+│   └── run_full_model.py         # Full 3-layer coupled model
+├── tests/                # pytest test suite
+│   ├── test_mesh_eigenfreqs.py
+│   ├── test_coupling_smoke.py
+│   └── test_analysis_metrics.py
+├── params.yaml           # Central parameter file with units
+├── simulate_mesh_psd.py  # Legacy mesh simulation script
+└── analysis/             # Legacy analysis utilities
+```
+
+## Quick Start
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+### Running simulations
+
+**Mesh ensemble simulation (new):**
+```bash
+python scripts/run_mesh_ensemble.py --params params.yaml --ensemble 50 --output results
+```
+
+**Full coupled 3-layer model (optional):**
+```bash
+python scripts/run_full_model.py --params params.yaml --output results_coupled
+```
+
+**Legacy simulation (backward compatible):**
+```bash
+python simulate_mesh_psd.py --params params.yaml --ensemble 50 --output results
+```
+
+### Running tests
+
+```bash
+pytest tests/ -v
+```
+
+## Model Components
+
+### 1. Mesh PDE Layer (`src/smm/mesh.py`)
+
+Implements a 2D damped wave (telegraph) equation as a first-order system:
+
+```
+∂ₜu = v
+∂ₜv = c²∇²u - γv + S(r,t) + η(r,t)
+```
+
+**Features:**
+- First-order formulation with state (u, v)
+- 9-point stencil Laplacian
+- RK4 time integration with CFL checking
+- Perfectly Matched Layer (PML) boundaries
+- Configurable forcing and white noise
+
+**Example:**
+```python
+from smm.mesh import MeshField, MeshConfig
+
+config = MeshConfig(Lx=32.0, Ly=32.0, Nx=64, Ny=64, c=15.0, dt=0.001)
+mesh = MeshField(config)
+snapshots = mesh.run(T=1.0, record_interval=10, noise_amplitude=1e-6)
+```
+
+### 2. Neural Mass Layer (`src/smm/neural.py`)
+
+Wilson-Cowan-like neural masses per region:
+
+```
+τE dE/dt = -E + S(wEE·E - wEI·I + I_ext + I_mesh)
+τI dI/dt = -I + S(wIE·E - wII·I)
+```
+
+### 3. Kuramoto Oscillators (`src/smm/neural.py`)
+
+Phase dynamics with mesh coupling:
+
+```
+dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ - θᵢ) + κ·u(rᵢ,t)
+```
+
+### 4. Coupling (`src/smm/coupling.py`)
+
+- **Neural → Mesh:** Excitatory activities create Gaussian source fields
+- **Mesh → Kuramoto:** Mesh field modulates phase dynamics  
+- **Mesh → Neural:** Optional feedback to excitatory population
+
+## Parameters
+
+All physical parameters with units are centralized in `params.yaml`:
+
+```yaml
+# Mesh grid
+L_mm: 32.0              # Domain size (mm)
+dx_mm: 0.5              # Grid spacing (mm)
+
+# PDE parameters
+c_mm_per_s: 15.0        # Wave speed (mm/s)
+gamma_s: 0.5            # Damping (1/s)
+dt_s: 0.001             # Time step (s)
+
+# Neural/Kuramoto parameters
+N_regions: 16           # Number of regions
+tau_E_s: 0.01           # E time constant (s)
+K_kuramoto: 0.5         # Coupling strength
+
+# Coupling strengths
+coupling_neural_mesh: 0.0     # E→mesh
+coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto
+coupling_mesh_neural: 0.0     # mesh→neural
+```
+
+## Analysis
+
+### PSD Computation
+
+```python
+from smm.analysis import compute_psd
+
+f, Pxx = compute_psd(signal, fs=250, nperseg=512, noverlap=256)
+```
+
+### Phase Gradient Coherence
+
+```python
+from smm.analysis import compute_phase_gradient_coherence
+
+# signals: (n_sensors, n_timepoints)
+# positions: (n_sensors, 2) with (x, y) coordinates
+C = compute_phase_gradient_coherence(signals, positions, fs=100, band=(1, 8))
+```
+
+## Testing
+
+The test suite verifies:
+
+- ✅ Eigenfrequency peaks match analytical predictions
+- ✅ CFL condition enforcement
+- ✅ PML boundary implementation
+- ✅ Coupling stability and consistency
+- ✅ PSD and coherence metrics on synthetic data
+
+Run with: `pytest tests/ -v`
+
+---
+
+## Legacy Workflows
+
+### SMM PSD Pipeline
 
 1. Preprocess EEG to PSD: `python preprocess_eeg_psd.py`
 2. Simulate mesh PSD: `python simulate_mesh_psd.py`

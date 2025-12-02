@@ -1,16 +1,67 @@
-L_mm: 32.0
-dx_mm: 0.5
-c_mm_per_s: 15.0
-gamma_s: 0.5
-dt_s: 0.001
-sim_duration_s: 10.0
-pml_width_mm: 3.0
-pml_sigma_max: 50.0
-sigma_kernel_mm: 1.0
-N_regions: 16
-ensemble_size: 50
-psd_fs: 250
-psd_nperseg: 512
-psd_noverlap: 256
-noise_sigma_mesh: 0.000001
-seed: 42
+# Syncytium Mesh Model (SMM) Parameters
+# All parameters with physical units documented
+# Contact: Andreu.Ballus@uab.cat
+
+# === Mesh Grid ===
+# Spatial domain configuration
+L_mm: 32.0              # Domain size (mm) - square domain Lx = Ly
+dx_mm: 0.5              # Grid spacing (mm) - determines Nx = Ny = L/dx
+Nx: 64                  # Number of grid points in x (computed as L/dx if not specified)
+Ny: 64                  # Number of grid points in y
+
+# === PDE Parameters ===
+# Damped wave equation: ∂²u/∂t² = c²∇²u - γ∂u/∂t + S + η
+c_mm_per_s: 15.0        # Wave speed (mm/s)
+gamma_s: 0.5            # Background damping coefficient (1/s)
+dt_s: 0.001             # Time step (s) - must satisfy CFL condition
+noise_sigma_mesh: 0.000001  # Mesh white noise amplitude
+
+# === PML Boundaries ===
+# Perfectly Matched Layer for absorbing boundaries
+pml_width_mm: 3.0       # Width of PML region (mm)
+pml_sigma_max: 50.0     # Maximum PML damping coefficient (1/s)
+
+# === Neural Mass Parameters ===
+# Wilson-Cowan-like dynamics per region
+N_regions: 16           # Number of neural regions
+tau_E_s: 0.01           # Excitatory time constant (s)
+tau_I_s: 0.01           # Inhibitory time constant (s)
+w_EE: 1.5               # E→E synaptic weight
+w_EI: 1.2               # I→E synaptic weight
+w_IE: 1.0               # E→I synaptic weight
+w_II: 0.5               # I→I synaptic weight
+sigmoid_gain: 4.0       # Sigmoid activation gain
+sigmoid_threshold: 0.5  # Sigmoid activation threshold
+
+# === Kuramoto Parameters ===
+# Phase oscillators on structural connectome
+K_kuramoto: 0.5         # Kuramoto coupling strength
+omega_mean_hz: 4.0      # Mean natural frequency (Hz)
+omega_std_hz: 0.5       # Std dev of natural frequencies (Hz)
+
+# === Coupling Parameters ===
+# Inter-layer coupling strengths
+coupling_neural_mesh: 0.0     # E→mesh source strength
+coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto modulation
+coupling_mesh_neural: 0.0     # mesh→neural feedback
+sigma_kernel_mm: 1.0          # Gaussian source kernel width (mm)
+
+# === Simulation Parameters ===
+sim_duration_s: 10.0    # Total simulation time (s)
+seed: 42                # Random seed for reproducibility
+
+# === Ensemble Parameters ===
+# For ensemble PSD computation
+ensemble_size: 50       # Number of ensemble members
+
+# === Analysis Parameters ===
+# PSD computation settings
+psd_fs: 250             # Sampling rate for PSD analysis (Hz)
+psd_nperseg: 512        # Welch's method segment length
+psd_noverlap: 256       # Welch's method overlap
+
+# Phase gradient coherence settings
+pgc_band_low: 1.0       # Low frequency for bandpass (Hz)
+pgc_band_high: 8.0      # High frequency for bandpass (Hz)
+pgc_window_s: 0.5       # Window duration (s)
+pgc_step_s: 0.25        # Step size for sliding window (s)
