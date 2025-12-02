@@ -9,10 +9,32 @@ dx_mm: 0.5              # Grid spacing (mm) - determines Nx = Ny = L/dx
 Nx: 64                  # Number of grid points in x (computed as L/dx if not specified)
 Ny: 64                  # Number of grid points in y
 
-# === PDE Parameters ===
-# Damped wave equation: ∂²u/∂t² = c²∇²u - γ∂u/∂t + S + η
-c_mm_per_s: 15.0        # Wave speed (mm/s)
-gamma_s: 0.5            # Background damping coefficient (1/s)
+# === Glial Micro-Model Parameters ===
+# IP₃/Ca reaction-diffusion system at microscale (linearized around steady state)
+# ∂ₜc = -α·c + β·i  (Ca²⁺ fluctuation)
+# ∂ₜi = γ·c - δ·i + D·Δi  (IP₃ fluctuation)
+# These determine the mesoscopic telegraph equation parameters
+alpha: 1.0              # Ca²⁺ decay rate (1/s) - SERCA uptake, buffering
+beta: 0.8               # IP₃ → Ca²⁺ coupling (1/s) - IP₃R open probability
+gamma: 0.9              # Ca²⁺ → IP₃ production (1/s) - PLC activation
+delta: 2.0              # IP₃ degradation rate (1/s) - IP₃ phosphatase
+D_um2_per_s: 100.0      # IP₃ diffusion coefficient (μm²/s) - gap junction coupling
+
+# === Telegraph Equation Parameters (Derived) ===
+# These are computed from micro-parameters. If specified here, they override the derivation.
+# ∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S(r,t) + ξ(r,t)
+# gamma0 = (alpha + delta) / 2
+# c_eff² = D * (delta - alpha) / 2
+# omega0² determined by local eigenvalues of (alpha, beta, gamma, delta)
+# Leave these commented to use auto-computation from micro-parameters:
+# gamma0: 1.25          # Damping coefficient (1/s) - auto: (α+δ)/2
+# omega0: 0.0           # Oscillation frequency (rad/s) - auto: from eigenvalues
+# c_eff_mm_per_s: 7.07  # Effective wave speed (mm/s) - auto: sqrt(D·(δ-α)/2)
+
+# === Legacy PDE Parameters (for backward compatibility) ===
+# These can be used if glial micro-model is disabled
+c_mm_per_s: 15.0        # Wave speed (mm/s) - used if c_eff not derived
+gamma_s: 0.5            # Background damping coefficient (1/s) - used if gamma0 not derived
 dt_s: 0.001             # Time step (s) - must satisfy CFL condition
 noise_sigma_mesh: 0.000001  # Mesh white noise amplitude
 
@@ -39,12 +61,36 @@ K_kuramoto: 0.5         # Kuramoto coupling strength
 omega_mean_hz: 4.0      # Mean natural frequency (Hz)
 omega_std_hz: 0.5       # Std dev of natural frequencies (Hz)
 
-# === Coupling Parameters ===
-# Inter-layer coupling strengths
-coupling_neural_mesh: 0.0     # E→mesh source strength
-coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto modulation
-coupling_mesh_neural: 0.0     # mesh→neural feedback
-sigma_kernel_mm: 1.0          # Gaussian source kernel width (mm)
+# === Tripartite Coupling Parameters ===
+# Inter-layer coupling strengths for neurons ⇄ glia ⇄ connectivity
+
+# (a) Neurons → Glia (source term)
+coupling_E_to_glia: 0.0       # Excitatory → glia source strength (β_E)
+coupling_I_to_glia: 0.0       # Inhibitory → glia source strength (β_I)
+coupling_theta_to_glia: 0.0   # Kuramoto phase → glia source strength (β_θ)
+sigma_kernel_mm: 1.0          # Gaussian source kernel width (mm) - astrocyte domain size
+
+# (b) Glia → Neurons (gliotransmission)
+coupling_glia_to_neural: 0.0  # Glia → neural excitability (g_A)
+glia_nonlinearity: 'linear'   # Options: 'linear', 'tanh', 'sigmoid', 'threshold_linear'
+glia_threshold: 0.0           # Threshold for threshold_linear nonlinearity
+glia_gain: 1.0                # Gain for sigmoid/tanh nonlinearity
+
+# (c) Glia → Kuramoto (phase modulation)
+coupling_glia_to_kuramoto: 0.0   # Glia → phase dynamics (κ_ψ)
+
+# (d) Glia → Connectivity (Ca-gated plasticity)
+enable_plasticity: false      # Enable slow connectivity plasticity
+tau_C_s: 60.0                 # Connectivity time constant (s)
+lambda_C: 0.1                 # Connectivity decay rate (1/s)
+eta_H: 0.01                   # Hebbian learning rate
+eta_psi: 0.01                 # Glial plasticity rate
+sigma_psi_target: 0.1         # Target glial covariance for homeostasis
+
+# Legacy coupling (for backward compatibility)
+coupling_neural_mesh: 0.0     # E→mesh source strength (replaced by coupling_E_to_glia)
+coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto modulation (replaced by coupling_glia_to_kuramoto)
+coupling_mesh_neural: 0.0     # mesh→neural feedback (replaced by coupling_glia_to_neural)
 
 # === Simulation Parameters ===
 sim_duration_s: 10.0    # Total simulation time (s)
