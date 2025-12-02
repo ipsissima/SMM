@@ -113,17 +113,16 @@ def main():
     # pick u-components (first N entries)
     Phi = vec[:N]
     Psi = vecT[:N]  # adjoint left eigenvector
-    # normalize so denominator is real positive if possible
-    dx_area = dx * (L_mm / Ny) if False else dx * dx  # dx*dy; here Lx/Ly == L_mm
+    
+    # Compute area element
     dy = dx
     area = dx * dy
-
-    # compute inner products (complex)
-    # ensure vectors are same orientation
-    numerator = np.vdot(Psi, (Phi.real**3 + 3j*Phi.real**2*Phi.imag - 3*Phi.real*(Phi.imag**2) - 1j*(Phi.imag**3))) if False else np.vdot(Psi, Phi**3)
+    
+    # Compute inner products (complex)
+    numerator = np.vdot(Psi, Phi**3)
     denominator = np.vdot(Psi, Phi)
     alpha = numerator / denominator
-    # scale by area element
+    # Scale by area element
     alpha *= area
 
     print("Eigenvalue (closest to 0):", lam)

@@ -272,7 +272,7 @@ class GlialFieldConfig:
             self.c = params['c_eff_mm_per_s']
             self.gamma = params['gamma0']
             # omega0² can be negative (overdamped), store the signed value
-            self.omega0_squared = params['omega0_squared']
+            self._omega0_squared = params['omega0_squared']
             self.omega0 = params['omega0']
     
     @property
@@ -293,6 +293,11 @@ class GlialFieldConfig:
     def check_cfl(self, max_cfl: float = 0.5) -> bool:
         """Check if CFL condition is satisfied."""
         return self.cfl <= max_cfl
+    
+    @property
+    def omega0_squared(self) -> float:
+        """Get omega0 squared, handling both omega0_squared and omega0 attributes."""
+        return getattr(self, '_omega0_squared', self.omega0**2)
 
 
 class GlialField:
@@ -440,7 +445,7 @@ class GlialField:
         du_dt = v
         
         # Telegraph equation: includes oscillation term -ω₀²·u
-        omega0_squared = getattr(self.config, 'omega0_squared', self.config.omega0**2)
+        omega0_squared = self.config.omega0_squared
         dv_dt = self.config.c**2 * lap_u - 2 * self.gamma_total * v - omega0_squared * u
         
         if source is not None:
@@ -501,7 +506,7 @@ class GlialField:
             # dV/dt = -2 gamma V - omega0^2 U + mean(source) + mean(noise)
             mean_source = np.mean(source) if source is not None else 0.0
             mean_noise = np.mean(noise) if noise is not None else 0.0
-            omega0_sq = getattr(self.config, 'omega0_squared', self.config.omega0**2)
+            omega0_sq = self.config.omega0_squared
             k1u = V
             k1v = -2*self.gamma_total.mean()*V - omega0_sq*U + mean_source + mean_noise
             k2u = V + 0.5*dt*k1v

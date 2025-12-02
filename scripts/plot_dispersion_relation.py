@@ -11,6 +11,9 @@ Plot telegraph dispersion diagnostics:
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Minimum attenuation threshold to avoid division by zero
+MIN_ATTENUATION = 1e-12
+
 def telegraph_omega(k, c, gamma0, omega0):
     disc = omega0**2 - gamma0**2 + (c**2) * (k**2)
     sqrt_disc = np.sqrt(disc.astype(complex))
@@ -29,7 +32,10 @@ def group_velocity_numeric(k, c, gamma0, omega0, branch=0):
     return v_g
 
 def k_of_omega(omega, c, gamma0, omega0):
-    # Solve for k(omega): k = sqrt((omega^2 + 2 i gamma0 omega - omega0^2)/c^2)
+    """Solve for k(omega): k = sqrt((omega^2 + 2i*gamma0*omega - omega0^2)/c^2)."""
+    if c == 0:
+        # Non-propagating mode: return infinite attenuation
+        return np.full_like(omega, np.inf, dtype=complex)
     val = (omega**2 + 2j * gamma0 * omega - omega0**2) / (c**2)
     return np.sqrt(val.astype(complex))
 
@@ -61,7 +67,7 @@ def plot_dispersion(c, gamma0, omega0):
     omegas = 2*np.pi*freqs_hz
     kvals = k_of_omega(omegas, c, gamma0, omega0)
     # attenuation length (1/Im(k))
-    L_att = 1.0 / np.maximum(1e-12, np.abs(np.imag(kvals)))
+    L_att = 1.0 / np.maximum(MIN_ATTENUATION, np.abs(np.imag(kvals)))
     axs[2].semilogy(freqs_hz, L_att)
     axs[2].set_xlabel('frequency (Hz)')
     axs[2].set_ylabel('attenuation length (mm)')

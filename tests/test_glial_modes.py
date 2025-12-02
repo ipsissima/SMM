@@ -103,8 +103,8 @@ def test_mean_field_mode():
     
     # Mean should have evolved according to scalar ODE (with damping, should decay)
     final_mean = np.mean(glia.u)
-    # Due to damping and velocity, should change
-    assert final_mean != initial_mean or abs(final_mean - initial_mean) < 1e-6
+    # Due to damping and velocity, mean should have changed
+    assert abs(final_mean - initial_mean) > 1e-6
 
 
 def test_mode_comparison_with_source():
