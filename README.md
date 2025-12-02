@@ -41,12 +41,24 @@ pip install -r requirements.txt
 
 ### Running simulations
 
-**Mesh ensemble simulation (new):**
+**Glial wave demonstration (NEW):**
+```bash
+python scripts/run_glial_wave.py --params params.yaml --output results_glial
+```
+Shows pure glial telegraph equation with physiological wave speed and damping.
+
+**Tripartite loop demonstration (NEW):**
+```bash
+python scripts/run_tripartite_demo.py --params params.yaml --output results_tripartite
+```
+Shows full neurons ⇄ glia ⇄ connectivity loop with emergent dynamics.
+
+**Mesh ensemble simulation:**
 ```bash
 python scripts/run_mesh_ensemble.py --params params.yaml --ensemble 50 --output results
 ```
 
-**Full coupled 3-layer model (optional):**
+**Full coupled 3-layer model:**
 ```bash
 python scripts/run_full_model.py --params params.yaml --output results_coupled
 ```
@@ -64,7 +76,54 @@ pytest tests/ -v
 
 ## Model Components
 
-### 1. Mesh PDE Layer (`src/smm/mesh.py`)
+### 1. Glial Field Layer (`src/smm/glia.py`) **[NEW]**
+
+Implements a 2D glial (astrocytic) telegraph equation derived from IP₃/Ca dynamics:
+
+**Microscopic model (conceptual basis):**
+```
+∂ₜc = -α·c + β·i               (Ca²⁺ fluctuation)
+∂ₜi = γ·c - δ·i + D·Δi         (IP₃ fluctuation)
+```
+
+**Mesoscopic telegraph equation:**
+```
+∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S_ψ(r,t) + ξ(r,t)
+```
+
+where telegraph parameters are derived from micro-parameters:
+- γ₀ = (α + δ) / 2  (damping coefficient)
+- c_eff² = D·(δ - α) / 2  (effective wave speed squared)
+- ω₀² = α·δ - β·γ  (oscillation frequency squared)
+
+**Physiological ranges:**
+- Ca wave speed: 5-30 μm/s (typical astrocyte Ca²⁺ waves)
+- Damping time: 0.5-10 s (Ca²⁺ transient duration)
+- Propagation length: 10-200 μm (astrocyte syncytium scale)
+
+**Features:**
+- Explicit derivation from IP₃/Ca reaction-diffusion system
+- Physiological parameter validation
+- First-order formulation with RK4 integration
+- 9-point stencil Laplacian
+- PML boundaries for wave absorption
+
+**Example:**
+```python
+from smm.glia import GliaMicroParams, GlialFieldConfig, GlialField
+
+# Define microscopic IP₃/Ca parameters
+micro = GliaMicroParams(alpha=1.0, beta=0.8, gamma=0.9, delta=2.0, D_um2_per_s=100.0)
+
+# Create glial field (telegraph parameters auto-derived)
+config = GlialFieldConfig(Lx=32.0, Ly=32.0, Nx=64, Ny=64, micro_params=micro)
+glia = GlialField(config)
+
+# Simulate
+snapshots = glia.run(T=1.0, record_interval=10, noise_amplitude=1e-6)
+```
+
+### 2. Mesh PDE Layer (`src/smm/mesh.py`) **[LEGACY]**
 
 Implements a 2D damped wave (telegraph) equation as a first-order system:
 
@@ -72,6 +131,8 @@ Implements a 2D damped wave (telegraph) equation as a first-order system:
 ∂ₜu = v
 ∂ₜv = c²∇²u - γv + S(r,t) + η(r,t)
 ```
+
+**Note:** For glial interpretation, use `src/smm/glia.py` which includes explicit derivation from IP₃/Ca dynamics. The mesh layer remains for backward compatibility.
 
 **Features:**
 - First-order formulation with state (u, v)
@@ -89,25 +150,48 @@ mesh = MeshField(config)
 snapshots = mesh.run(T=1.0, record_interval=10, noise_amplitude=1e-6)
 ```
 
-### 2. Neural Mass Layer (`src/smm/neural.py`)
+### 3. Neural Mass Layer (`src/smm/neural.py`)
 
 Wilson-Cowan-like neural masses per region:
 
 ```
-τE dE/dt = -E + S(wEE·E - wEI·I + I_ext + I_mesh)
+τE dE/dt = -E + S(wEE·E - wEI·I + I_ext + I_glia)
 τI dI/dt = -I + S(wIE·E - wII·I)
 ```
 
-### 3. Kuramoto Oscillators (`src/smm/neural.py`)
+### 4. Kuramoto Oscillators (`src/smm/neural.py`)
 
-Phase dynamics with mesh coupling:
+Phase dynamics with glial field coupling:
 
 ```
-dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ - θᵢ) + κ·u(rᵢ,t)
+dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ - θᵢ) + κ_ψ·u(rᵢ,t)
 ```
 
-### 4. Coupling (`src/smm/coupling.py`)
+### 5. Tripartite Couplings (`src/smm/coupling.py`) **[NEW]**
 
+Implements the full tripartite loop:
+
+**(a) Neurons → Glia (source term):**
+```
+S_ψ(r,t) = Σᵢ G_σ(r-rᵢ) · [β_E·Eᵢ + β_I·Iᵢ + β_θ·cos(θᵢ)]
+```
+
+**(b) Glia → Neurons (gliotransmission):**
+```
+I_i^(A)(t) = g_A · Φ(u(rᵢ,t))
+```
+
+**(c) Glia → Kuramoto (phase modulation):**
+```
+Additional term: κ_ψ·u(rᵢ,t) in phase equation
+```
+
+**(d) Glia → Connectivity (Ca-gated plasticity):**
+```
+τ_C·dC_ij/dt = -λ_C·C_ij + η_H·H(Eᵢ,Eⱼ) + η_ψ·(u(rᵢ)·u(rⱼ) - σ_ψ²)
+```
+
+**Legacy coupling functions:**
 - **Neural → Mesh:** Excitatory activities create Gaussian source fields
 - **Mesh → Kuramoto:** Mesh field modulates phase dynamics  
 - **Mesh → Neural:** Optional feedback to excitatory population
@@ -116,12 +200,52 @@ dθᵢ/dt = ωᵢ + (K/N) Σⱼ sin(θⱼ - θᵢ) + κ·u(rᵢ,t)
 
 All physical parameters with units are centralized in `params.yaml`:
 
+### Glial Micro-Model Parameters (NEW)
+
+```yaml
+# IP₃/Ca reaction-diffusion system (microscale)
+alpha: 1.0              # Ca²⁺ decay rate (1/s)
+beta: 0.8               # IP₃ → Ca²⁺ coupling (1/s)
+gamma: 0.9              # Ca²⁺ → IP₃ production (1/s)
+delta: 2.0              # IP₃ degradation rate (1/s)
+D_um2_per_s: 100.0      # IP₃ diffusion coefficient (μm²/s)
+```
+
+These micro-parameters automatically determine the mesoscopic telegraph parameters:
+- **γ₀** = (α + δ) / 2 = damping coefficient
+- **c_eff** = √[D·(δ - α) / 2] = effective wave speed
+- **ω₀** = √(α·δ - β·γ) = oscillation frequency
+
+The code validates that these fall within physiological ranges for astrocyte Ca²⁺ waves.
+
+### Tripartite Coupling Parameters (NEW)
+
+```yaml
+# (a) Neurons → Glia
+coupling_E_to_glia: 0.1       # Excitatory → glia
+coupling_I_to_glia: 0.0       # Inhibitory → glia
+coupling_theta_to_glia: 0.0   # Phase → glia
+
+# (b) Glia → Neurons
+coupling_glia_to_neural: 0.05  # Gliotransmission strength
+glia_nonlinearity: 'tanh'      # Options: linear, tanh, sigmoid, threshold_linear
+
+# (c) Glia → Kuramoto
+coupling_glia_to_kuramoto: 0.01  # Phase modulation
+
+# (d) Glia → Connectivity
+enable_plasticity: false      # Enable Ca-gated plasticity
+eta_psi: 0.01                # Glial plasticity rate
+```
+
+### Legacy Parameters
+
 ```yaml
 # Mesh grid
 L_mm: 32.0              # Domain size (mm)
 dx_mm: 0.5              # Grid spacing (mm)
 
-# PDE parameters
+# Legacy PDE parameters (used if glial micro-model disabled)
 c_mm_per_s: 15.0        # Wave speed (mm/s)
 gamma_s: 0.5            # Damping (1/s)
 dt_s: 0.001             # Time step (s)
@@ -131,10 +255,10 @@ N_regions: 16           # Number of regions
 tau_E_s: 0.01           # E time constant (s)
 K_kuramoto: 0.5         # Coupling strength
 
-# Coupling strengths
-coupling_neural_mesh: 0.0     # E→mesh
-coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto
-coupling_mesh_neural: 0.0     # mesh→neural
+# Legacy coupling strengths
+coupling_neural_mesh: 0.0     # E→mesh (replaced by coupling_E_to_glia)
+coupling_mesh_kuramoto: 0.0   # mesh→Kuramoto (replaced by coupling_glia_to_kuramoto)
+coupling_mesh_neural: 0.0     # mesh→neural (replaced by coupling_glia_to_neural)
 ```
 
 ## Analysis
@@ -161,6 +285,16 @@ C = compute_phase_gradient_coherence(signals, positions, fs=100, band=(1, 8))
 
 The test suite verifies:
 
+**Glial telegraph equation (NEW):**
+- ✅ Micro-parameter to telegraph parameter derivation
+- ✅ Physiological parameter range validation
+- ✅ Wave propagation speed matches c_eff
+- ✅ Damping rate matches γ₀
+- ✅ Tripartite coupling functions
+- ✅ Connectivity plasticity dynamics
+- ✅ Full tripartite loop integration
+
+**Legacy mesh tests:**
 - ✅ Eigenfrequency peaks match analytical predictions
 - ✅ CFL condition enforcement
 - ✅ PML boundary implementation

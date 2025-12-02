@@ -14,10 +14,10 @@ Ny: 64                  # Number of grid points in y
 # ∂ₜc = -α·c + β·i  (Ca²⁺ fluctuation)
 # ∂ₜi = γ·c - δ·i + D·Δi  (IP₃ fluctuation)
 # These determine the mesoscopic telegraph equation parameters
-alpha: 1.5              # Ca²⁺ decay rate (1/s) - SERCA uptake, buffering
+alpha: 1.0              # Ca²⁺ decay rate (1/s) - SERCA uptake, buffering
 beta: 0.8               # IP₃ → Ca²⁺ coupling (1/s) - IP₃R open probability
-gamma: 1.0              # Ca²⁺ → IP₃ production (1/s) - PLC activation
-delta: 1.0              # IP₃ degradation rate (1/s) - IP₃ phosphatase
+gamma: 0.9              # Ca²⁺ → IP₃ production (1/s) - PLC activation
+delta: 2.0              # IP₃ degradation rate (1/s) - IP₃ phosphatase
 D_um2_per_s: 100.0      # IP₃ diffusion coefficient (μm²/s) - gap junction coupling
 
 # === Telegraph Equation Parameters (Derived) ===
