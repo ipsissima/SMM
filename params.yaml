@@ -1,0 +1,16 @@
+L_mm: 32.0
+dx_mm: 0.5
+c_mm_per_s: 15.0
+gamma_s: 0.5
+dt_s: 0.001
+sim_duration_s: 10.0
+pml_width_mm: 3.0
+pml_sigma_max: 50.0
+sigma_kernel_mm: 1.0
+N_regions: 16
+ensemble_size: 50
+psd_fs: 250
+psd_nperseg: 512
+psd_noverlap: 256
+noise_sigma_mesh: 0.000001
+seed: 42

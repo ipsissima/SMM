@@ -5,3 +5,5 @@ matplotlib
 seaborn
 tqdm
 pytest
+h5py
+pyyaml
