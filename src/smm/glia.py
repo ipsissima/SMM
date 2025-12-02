@@ -260,6 +260,11 @@ class GlialFieldConfig:
     pml_width: int = 6
     pml_sigma_max: float = 50.0
     
+    # --- Ablation / alternative model modes ---
+    # mode: 'telegraph' (default) | 'diffusion' | 'mean_field'
+    mode: str = 'telegraph'
+    diffusion_D_mm2_per_s: float = 0.1   # only used for 'diffusion' mode
+    
     def __post_init__(self):
         """Derive telegraph parameters from micro-params if provided."""
         if self.micro_params is not None:
@@ -267,7 +272,7 @@ class GlialFieldConfig:
             self.c = params['c_eff_mm_per_s']
             self.gamma = params['gamma0']
             # omega0² can be negative (overdamped), store the signed value
-            self.omega0_squared = params['omega0_squared']
+            self._omega0_squared = params['omega0_squared']
             self.omega0 = params['omega0']
     
     @property
@@ -288,6 +293,11 @@ class GlialFieldConfig:
     def check_cfl(self, max_cfl: float = 0.5) -> bool:
         """Check if CFL condition is satisfied."""
         return self.cfl <= max_cfl
+    
+    @property
+    def omega0_squared(self) -> float:
+        """Get omega0 squared, handling both omega0_squared and omega0 attributes."""
+        return getattr(self, '_omega0_squared', self.omega0**2)
 
 
 class GlialField:
@@ -435,7 +445,7 @@ class GlialField:
         du_dt = v
         
         # Telegraph equation: includes oscillation term -ω₀²·u
-        omega0_squared = getattr(self.config, 'omega0_squared', self.config.omega0**2)
+        omega0_squared = self.config.omega0_squared
         dv_dt = self.config.c**2 * lap_u - 2 * self.gamma_total * v - omega0_squared * u
         
         if source is not None:
@@ -448,25 +458,68 @@ class GlialField:
     def step(self, dt: Optional[float] = None,
              source: Optional[np.ndarray] = None,
              noise_amplitude: float = 0.0) -> None:
-        """Advance the field by one time step using RK4."""
+        """Advance the field by one time step using RK4 (telegraph) or alternatives."""
         if dt is None:
             dt = self.config.dt
         
-        # Generate noise if needed
+        # Generate noise term if needed (same scaling)
         noise = None
         if noise_amplitude > 0:
-            noise = self.rng.normal(0, noise_amplitude / np.sqrt(dt), 
+            noise = self.rng.normal(0, noise_amplitude / np.sqrt(dt),
                                    (self.config.Ny, self.config.Nx))
         
-        # RK4 integration
-        k1u, k1v = self.rhs(self.u, self.v, source, noise)
-        k2u, k2v = self.rhs(self.u + 0.5*dt*k1u, self.v + 0.5*dt*k1v, source, noise)
-        k3u, k3v = self.rhs(self.u + 0.5*dt*k2u, self.v + 0.5*dt*k2v, source, noise)
-        k4u, k4v = self.rhs(self.u + dt*k3u, self.v + dt*k3v, source, noise)
+        if self.config.mode == 'telegraph':
+            # original RK4 telegraph integrator (unaltered)
+            k1u, k1v = self.rhs(self.u, self.v, source, noise)
+            k2u, k2v = self.rhs(self.u + 0.5*dt*k1u, self.v + 0.5*dt*k1v, source, noise)
+            k3u, k3v = self.rhs(self.u + 0.5*dt*k2u, self.v + 0.5*dt*k2v, source, noise)
+            k4u, k4v = self.rhs(self.u + dt*k3u, self.v + dt*k3v, source, noise)
+            
+            self.u += (dt/6) * (k1u + 2*k2u + 2*k3u + k4u)
+            self.v += (dt/6) * (k1v + 2*k2v + 2*k3v + k4v)
+            self.t += dt
         
-        self.u += (dt/6) * (k1u + 2*k2u + 2*k3u + k4u)
-        self.v += (dt/6) * (k1v + 2*k2v + 2*k3v + k4v)
-        self.t += dt
+        elif self.config.mode == 'diffusion':
+            # Parabolic diffusion-like dynamics:
+            # du/dt = D * Lap(u) - gamma_eff * u + source + noise
+            # use explicit Euler (stable only for small dt) or implicit solver if needed.
+            D = self.config.diffusion_D_mm2_per_s
+            lap_u = self.laplacian_9pt(self.u)
+            gamma_eff = self.config.gamma  # use gamma as sink
+            du_dt = D * lap_u - gamma_eff * self.u
+            if source is not None:
+                du_dt += source
+            if noise is not None:
+                du_dt += noise
+            self.u += dt * du_dt
+            # maintain v as time derivative approximated by finite diff
+            self.v = du_dt
+            self.t += dt
+        
+        elif self.config.mode == 'mean_field':
+            # Spatially uniform mean-field: integrate a scalar U(t)
+            # Use spatial average as state
+            U = np.mean(self.u)
+            V = np.mean(self.v)
+            # Use telegraph scalar ODE for the mean (second order)
+            # dU/dt = V
+            # dV/dt = -2 gamma V - omega0^2 U + mean(source) + mean(noise)
+            mean_source = np.mean(source) if source is not None else 0.0
+            mean_noise = np.mean(noise) if noise is not None else 0.0
+            omega0_sq = self.config.omega0_squared
+            k1u = V
+            k1v = -2*self.gamma_total.mean()*V - omega0_sq*U + mean_source + mean_noise
+            k2u = V + 0.5*dt*k1v
+            k2v = -2*self.gamma_total.mean()*(V + 0.5*dt*k1v) - omega0_sq*(U + 0.5*dt*k1u) + mean_source + mean_noise
+            # RK2 for scalar mean
+            U_new = U + dt*k2u
+            V_new = V + dt*k2v
+            # Broadcast to fields
+            self.u[:] = U_new
+            self.v[:] = V_new
+            self.t += dt
+        else:
+            raise ValueError(f"Unknown glial mode: {self.config.mode}")
     
     def run(self, T: float, record_interval: int = 1,
             source_func: Optional[Callable[[float], np.ndarray]] = None,
