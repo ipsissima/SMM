@@ -6,6 +6,13 @@ with PML boundaries, region-based sources, and ensemble PSD computation.
 
 Contact: Andreu.Ballus@uab.cat
 """
+
+# ============================================================================
+# WARNING: This script uses the LEGACY Wave Equation (without mass term).
+# For the correct Telegraph model with physiologically-derived physics,
+# use scripts/run_glial_wave.py instead.
+# ============================================================================
+
 import argparse
 import json
 import os
@@ -506,6 +513,14 @@ def run_ensemble(params, ensemble_size=None, output_dir='results', verbose=True)
 
 def main():
     """Main CLI entry point."""
+    # Print deprecation warning
+    print("=" * 80)
+    print("WARNING: This script uses the LEGACY Wave Equation (without mass term).")
+    print("For the correct Telegraph model with physiologically-derived physics,")
+    print("use scripts/run_glial_wave.py instead.")
+    print("=" * 80)
+    print()
+    
     parser = argparse.ArgumentParser(
         description='Simulate 2D damped wave PDE with ensemble PSD computation'
     )
