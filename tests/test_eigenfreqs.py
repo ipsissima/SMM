@@ -71,7 +71,10 @@ def test_eigenfreq_f17():
     
     print(f"Found {len(peak_freqs)} peaks in PSD")
     if len(peak_freqs) > 0:
-        print(f"Top 5 peak frequencies: {sorted(peak_freqs, key=lambda x: -Pxx[np.argmin(np.abs(f-x))])[:5]}")
+        # Sort peaks by power (descending)
+        sorted_indices = np.argsort(peak_powers)[::-1]
+        top_peak_freqs = peak_freqs[sorted_indices[:5]]
+        print(f"Top 5 peak frequencies: {top_peak_freqs}")
     
     # Check if there's a peak near f_17
     tolerance_hz = 0.5

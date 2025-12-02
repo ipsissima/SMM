@@ -384,12 +384,14 @@ def run_single_simulation(params, seed, verbose=False):
     # The trace is already at psd_fs due to save_interval
     # But we apply resample_poly for anti-aliasing as specified
     original_fs = 1.0 / dt_s
+    actual_fs = original_fs / save_interval
     target_fs = psd_fs
     
-    if abs(original_fs / save_interval - target_fs) > 0.01:
-        # Need to resample
-        up = int(target_fs)
-        down = int(original_fs / save_interval)
+    if abs(actual_fs - target_fs) > 0.01:
+        # Need to resample - compute rational approximation
+        # Round to nearest integers for ratio
+        up = int(round(target_fs))
+        down = int(round(actual_fs))
         from math import gcd
         g = gcd(up, down)
         up //= g
@@ -483,7 +485,7 @@ def run_ensemble(params, ensemble_size=None, output_dir='results', verbose=True)
             ['git', 'rev-parse', 'HEAD'], 
             stderr=subprocess.DEVNULL
         ).decode().strip()
-    except:
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.SubprocessError):
         git_commit = 'N/A'
     
     metadata['git_commit'] = git_commit

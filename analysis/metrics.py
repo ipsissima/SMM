@@ -133,19 +133,19 @@ def compute_phase_gradient_coherence(signals, positions, fs, band=(1, 8),
         # Convert to list of coordinates
         positions = [tuple(p) for p in positions]
     
-    # For grid positions, build neighbor list based on proximity
+    # Build neighbor lists based on positions
     neighbors = []
     if isinstance(positions[0], tuple) and len(positions[0]) == 2:
         # Build neighbors based on spatial proximity
-        for i, (xi, yi) in enumerate(positions):
-            neighbor_list = []
-            for j, (xj, yj) in enumerate(positions):
-                if i != j:
-                    # Consider as neighbor if within distance ~1.5 grid units
-                    dist = np.sqrt((xi - xj)**2 + (yi - yj)**2)
-                    if dist < 1.5:
-                        neighbor_list.append(j)
-            neighbors.append(neighbor_list)
+        # For regular grids, use efficient distance-based lookup
+        positions_array = np.array(positions)
+        for i in range(n_sensors):
+            # Vectorized distance computation
+            diffs = positions_array - positions_array[i]
+            distances = np.sqrt(np.sum(diffs**2, axis=1))
+            # Consider as neighbor if within distance ~1.5 grid units (excluding self)
+            neighbor_mask = (distances < 1.5) & (distances > 0)
+            neighbors.append(np.where(neighbor_mask)[0].tolist())
     else:
         # Assume positions is already a neighbor list
         neighbors = positions
@@ -183,9 +183,9 @@ def compute_phase_gradient_coherence(signals, positions, fs, band=(1, 8),
             # Use circular mean and variance
             mean_grad = np.mean(phase_diffs, axis=0)  # Average over neighbors
             
-            # Coherence measure: how consistent is the phase gradient?
-            # Use 1 - circular variance
-            # circ_var = 1 - |mean(exp(i*phase_grad))|
+            # Coherence measure: consistency of phase gradient direction
+            # Computed as magnitude of the mean complex phase gradient vector
+            # High magnitude (close to 1) indicates consistent direction
             complex_grads = np.exp(1j * phase_diffs)
             mean_complex = np.mean(complex_grads, axis=(0, 1))  # Mean over neighbors and time
             coherence = np.abs(mean_complex)
