@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import logging
 import math
+import sys
+import yaml
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -14,6 +16,10 @@ from matplotlib import pyplot as plt
 from scipy import sparse
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh
+
+# Import Telegraph physics parameters
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+from smm.glia import GliaMicroParams, GlialFieldConfig
 
 try:
     from analyze_bifurcation_results_refined import (
@@ -34,6 +40,9 @@ except Exception:  # pragma: no cover - circular import fallback
 
 
 LOG = logging.getLogger(__name__)
+
+# Eigenvalue shift threshold for mass term diagnostics
+EIGENVALUE_SHIFT_THRESHOLD = 0.1  # 10% relative threshold
 
 
 def laplacian_9pt_matrix(nx: int, ny: int, dx: float) -> csr_matrix:
@@ -65,10 +74,18 @@ def laplacian_9pt_matrix(nx: int, ny: int, dx: float) -> csr_matrix:
     return lap
 
 
-def build_linear_operator(lap: csr_matrix, kappa: float, r_param: float) -> csr_matrix:
-    """Return L_eff = kappa * Laplacian + r * Identity."""
+def build_linear_operator(
+    lap: csr_matrix, c_eff_sq: float, omega0_sq: float, r_param: float
+) -> csr_matrix:
+    """Return Telegraph steady-state operator: L = c_eff² * Laplacian - omega0² * Identity + r * Identity.
+    
+    For the Telegraph equation at steady state (∂t → 0):
+        c_eff² ∇²u - ω₀² u + r u = ...
+    
+    The linear operator is: L = c_eff² * Laplacian + (r - omega0²) * Identity
+    """
     ident = sparse.identity(lap.shape[0], format="csr", dtype=float)
-    return lap * float(kappa) + ident * float(r_param)
+    return lap * float(c_eff_sq) + ident * float(r_param - omega0_sq)
 
 
 def smallest_eigenpairs(matrix: csr_matrix, k: int = 2) -> Tuple[np.ndarray, np.ndarray]:
@@ -101,7 +118,8 @@ def rk4_step(phi: np.ndarray, dt: float, rhs) -> np.ndarray:
 def integrate_to_steady(
     phi0: np.ndarray,
     lap: csr_matrix,
-    kappa: float,
+    c_eff_sq: float,
+    omega0_sq: float,
     h_value: float,
     r_param: float,
     u_param: float,
@@ -112,14 +130,19 @@ def integrate_to_steady(
     tau_factor: float,
     lambda1_est: float,
 ) -> Tuple[np.ndarray, Dict[str, float]]:
-    """Integrate gradient flow until convergence or time budget is exhausted."""
+    """Integrate gradient flow until convergence or time budget is exhausted.
+    
+    Uses Telegraph equation steady-state: c_eff² ∇²u - ω₀² u + r u + u u³ = h
+    """
     phi = phi0.copy()
     n_points = phi.size
     rhs_const = np.ones(n_points, dtype=float) * float(h_value)
 
     def rhs(vec: np.ndarray) -> np.ndarray:
         lap_term = lap.dot(vec)
-        return -(kappa * lap_term + r_param * vec + u_param * vec ** 3 - rhs_const)
+        # Telegraph steady-state: c_eff² ∇²u - ω₀² u + r u + u u³ = h
+        # Gradient flow: -∂E/∂u where E is the energy functional
+        return -(c_eff_sq * lap_term - omega0_sq * vec + r_param * vec + u_param * vec ** 3 - rhs_const)
 
     tau = 1.0 / max(1e-12, abs(lambda1_est))
     Tmax = max(float(Tmax_min), float(tau_factor) * tau)
@@ -127,8 +150,9 @@ def integrate_to_steady(
         Tmax = min(Tmax, float(Tmax_max))
     if tau_factor / max(1e-12, abs(lambda1_est)) > 1e5:
         LOG.warning(
-            "Extremely slow relaxation detected (kappa=%.3f, h=%.3f, lambda1=%.3e)",
-            kappa,
+            "Extremely slow relaxation detected (c_eff²=%.3f, omega0²=%.3f, h=%.3f, lambda1=%.3e)",
+            c_eff_sq,
+            omega0_sq,
             h_value,
             lambda1_est,
         )
@@ -159,7 +183,8 @@ def run_hysteresis_sweep(
     h_values: np.ndarray,
     indices: np.ndarray,
     lap: csr_matrix,
-    kappa: float,
+    c_eff_sq: float,
+    omega0_sq: float,
     r_param: float,
     u_param: float,
     dt: float,
@@ -189,7 +214,8 @@ def run_hysteresis_sweep(
         phi, meta = integrate_to_steady(
             phi,
             lap,
-            kappa,
+            c_eff_sq,
+            omega0_sq,
             h_val,
             r_param,
             u_param,
@@ -202,11 +228,12 @@ def run_hysteresis_sweep(
         )
         if not meta.get("converged"):
             LOG.warning(
-                "Sweep failed to converge within Tmax (kappa=%.3f, h=%.3f)",
-                kappa,
+                "Sweep failed to converge within Tmax (c_eff²=%.3f, omega0²=%.3f, h=%.3f)",
+                c_eff_sq,
+                omega0_sq,
                 h_val,
             )
-        linop = build_linear_operator(lap, kappa, r_param)
+        linop = build_linear_operator(lap, c_eff_sq, omega0_sq, r_param)
         vals, vecs = smallest_eigenpairs(linop, k=2)
         v1 = vecs[:, 0]
         v2 = vecs[:, 1]
@@ -278,6 +305,39 @@ def run_probe(args: argparse.Namespace) -> None:
         np.random.seed(args.seed)
     elif args.smoke:
         np.random.seed(0)
+    
+    # Load Telegraph physics parameters from params.yaml
+    params_path = Path(args.params)
+    if params_path.exists():
+        with open(params_path, 'r') as f:
+            params = yaml.safe_load(f)
+        
+        # Create micro-parameters to compute Telegraph parameters
+        micro_params = GliaMicroParams(
+            alpha=params.get('alpha', 1.0),
+            beta=params.get('beta', 0.8),
+            gamma=params.get('gamma', 0.9),
+            delta=params.get('delta', 2.0),
+            D_um2_per_s=params.get('D_um2_per_s', 100.0)
+        )
+        
+        telegraph_params = micro_params.compute_telegraph_params()
+        omega0_sq = telegraph_params['omega0_squared']
+        
+        LOG.info(
+            "Loaded Telegraph physics from %s:\n"
+            "  ω₀² = %.6f (rad/s)²\n"
+            "  c_eff = %.4f mm/s\n"
+            "  γ₀ = %.4f s⁻¹",
+            params_path,
+            omega0_sq,
+            telegraph_params['c_eff_mm_per_s'],
+            telegraph_params['gamma0']
+        )
+    else:
+        LOG.warning("params.yaml not found, using omega0_sq = 0.0 (massless wave equation)")
+        omega0_sq = 0.0
+    
     outdir = Path(args.outdir)
     figures_dir = outdir / "figures"
     modes_dir = outdir / "modes"
@@ -291,7 +351,7 @@ def run_probe(args: argparse.Namespace) -> None:
     coarse_kappas = np.linspace(args.kappa_min, args.kappa_max, args.n_kappa_coarse)
     lambda_data: List[Tuple[float, float, float]] = []
     for kappa in coarse_kappas:
-        linop = build_linear_operator(lap, kappa, args.r)
+        linop = build_linear_operator(lap, kappa, omega0_sq, args.r)
         vals, _ = smallest_eigenpairs(linop, k=2)
         lambda_data.append((float(kappa), float(vals[0]), float(vals[1])))
     lambda_df = pd.DataFrame(lambda_data, columns=["kappa", "lambda1", "lambda2"])
@@ -305,12 +365,20 @@ def run_probe(args: argparse.Namespace) -> None:
     rng = np.random.default_rng(args.seed if args.seed is not None else (0 if args.smoke else None))
     h_grid = prepare_h_grid(args.h_min, args.h_max, args.n_h_coarse, args.h_band, args.n_h_band)
     for kappa in refined_kappas:
-        linop = build_linear_operator(lap, kappa, args.r)
+        linop = build_linear_operator(lap, kappa, omega0_sq, args.r)
         lambdas, vecs = smallest_eigenpairs(linop, k=2)
         lambda1 = float(lambdas[0])
         lambda2 = float(lambdas[1])
         gap = float(lambda2 - lambda1)
         lambda_plot_data.append((kappa, lambda1, lambda2))
+        
+        # Check eigenvalue shift due to mass term
+        if abs(lambda1 + omega0_sq) < abs(lambda1) * EIGENVALUE_SHIFT_THRESHOLD:
+            LOG.info(
+                "Mass term significantly shifts eigenvalue: λ₁=%.6f, -ω₀²=%.6f, λ₁+ω₀²=%.6f",
+                lambda1, -omega0_sq, lambda1 + omega0_sq
+            )
+        
         v_refs: Dict[int, np.ndarray] = {}
         w_refs: Dict[int, np.ndarray] = {}
         base_indices = np.arange(h_grid.size)
@@ -319,6 +387,7 @@ def run_probe(args: argparse.Namespace) -> None:
             base_indices,
             lap,
             kappa,
+            omega0_sq,
             args.r,
             args.u,
             args.dt,
@@ -338,6 +407,7 @@ def run_probe(args: argparse.Namespace) -> None:
             base_indices[::-1],
             lap,
             kappa,
+            omega0_sq,
             args.r,
             args.u,
             args.dt,
@@ -446,6 +516,7 @@ def run_probe(args: argparse.Namespace) -> None:
                 )
         record = {
             "kappa": float(kappa),
+            "omega0_sq": float(omega0_sq),
             "lambda1": lambda1,
             "lambda2": lambda2,
             "gap": gap,
@@ -516,6 +587,7 @@ def run_probe(args: argparse.Namespace) -> None:
 
 def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Advanced bifurcation probe")
+    parser.add_argument("--params", type=str, default="params.yaml", help="Path to params.yaml file")
     parser.add_argument("--nx", type=int, default=32)
     parser.add_argument("--ny", type=int, default=32)
     parser.add_argument("--L", type=float, default=32.0)
