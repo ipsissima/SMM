@@ -129,9 +129,12 @@ def test_telegraph_parameters_from_yaml():
     
     # c_eff² = D*(δ - α)/2 = 100*(2.0 - 1.0)/2 = 50
     # c_eff (μm/s) = sqrt(50) = 7.071...
-    # c_eff (mm/s) = 7.071.../1000 = 0.007071...
     expected_c_eff_um = np.sqrt(params['D_um2_per_s'] * (params['delta'] - params['alpha']) / 2.0)
     assert abs(telegraph['c_eff_um_per_s'] - expected_c_eff_um) < 1e-6
+    
+    # Verify mm/s conversion: c_eff (mm/s) = 7.071.../1000 = 0.007071...
+    expected_c_eff_mm = expected_c_eff_um / 1000.0
+    assert abs(telegraph['c_eff_mm_per_s'] - expected_c_eff_mm) < 1e-9
     
     # γ₀ = (α + δ)/2 = (1.0 + 2.0)/2 = 1.5
     expected_gamma0 = (params['alpha'] + params['delta']) / 2.0

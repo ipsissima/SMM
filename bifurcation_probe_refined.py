@@ -41,6 +41,9 @@ except Exception:  # pragma: no cover - circular import fallback
 
 LOG = logging.getLogger(__name__)
 
+# Eigenvalue shift threshold for mass term diagnostics
+EIGENVALUE_SHIFT_THRESHOLD = 0.1  # 10% relative threshold
+
 
 def laplacian_9pt_matrix(nx: int, ny: int, dx: float) -> csr_matrix:
     """Return the 9-point periodic Laplacian as a CSR matrix."""
@@ -321,10 +324,16 @@ def run_probe(args: argparse.Namespace) -> None:
         telegraph_params = micro_params.compute_telegraph_params()
         omega0_sq = telegraph_params['omega0_squared']
         
-        LOG.info("Loaded Telegraph physics from %s", params_path)
-        LOG.info("  ω₀² = %.6f (rad/s)²", omega0_sq)
-        LOG.info("  c_eff = %.4f mm/s", telegraph_params['c_eff_mm_per_s'])
-        LOG.info("  γ₀ = %.4f s⁻¹", telegraph_params['gamma0'])
+        LOG.info(
+            "Loaded Telegraph physics from %s:\n"
+            "  ω₀² = %.6f (rad/s)²\n"
+            "  c_eff = %.4f mm/s\n"
+            "  γ₀ = %.4f s⁻¹",
+            params_path,
+            omega0_sq,
+            telegraph_params['c_eff_mm_per_s'],
+            telegraph_params['gamma0']
+        )
     else:
         LOG.warning("params.yaml not found, using omega0_sq = 0.0 (massless wave equation)")
         omega0_sq = 0.0
@@ -364,7 +373,7 @@ def run_probe(args: argparse.Namespace) -> None:
         lambda_plot_data.append((kappa, lambda1, lambda2))
         
         # Check eigenvalue shift due to mass term
-        if abs(lambda1 + omega0_sq) < abs(lambda1) * 0.1:
+        if abs(lambda1 + omega0_sq) < abs(lambda1) * EIGENVALUE_SHIFT_THRESHOLD:
             LOG.info(
                 "Mass term significantly shifts eigenvalue: λ₁=%.6f, -ω₀²=%.6f, λ₁+ω₀²=%.6f",
                 lambda1, -omega0_sq, lambda1 + omega0_sq
