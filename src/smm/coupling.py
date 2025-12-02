@@ -346,6 +346,8 @@ class ConnectivityPlasticity:
         Glial plasticity rate
     sigma_psi_target : float
         Target glial covariance (homeostatic baseline)
+    seed : int, optional
+        Random seed for reproducible initialization
     
     Attributes
     ----------
@@ -360,7 +362,8 @@ class ConnectivityPlasticity:
         lambda_C: float = 0.1,
         eta_H: float = 0.01,
         eta_psi: float = 0.01,
-        sigma_psi_target: float = 0.1
+        sigma_psi_target: float = 0.1,
+        seed: Optional[int] = None
     ):
         self.n_regions = n_regions
         self.tau_C = tau_C
@@ -370,7 +373,8 @@ class ConnectivityPlasticity:
         self.sigma_psi_target = sigma_psi_target
         
         # Initialize connectivity matrix (small random values)
-        self.C = np.random.randn(n_regions, n_regions) * 0.01
+        rng = np.random.default_rng(seed)
+        self.C = rng.normal(0, 0.01, size=(n_regions, n_regions))
         np.fill_diagonal(self.C, 0)  # No self-connections
     
     def hebbian_term(self, E: np.ndarray, gain: float = 4.0, threshold: float = 0.5) -> np.ndarray:

@@ -84,7 +84,7 @@ def run_tripartite_demo(params_file: str, output_dir: str, quiet: bool = False):
         Lx=Lx, Ly=Ly, Nx=Nx, Ny=Ny,
         micro_params=micro_params,
         dt=params.get('dt_s', 0.001),
-        pml_width=int(params.get('pml_width_mm', 3.0) / (Lx / Nx))
+        pml_width=int(params.get('pml_width_mm', 3.0) / (Lx / Nx))  # Convert PML width from mm to grid points
     )
     
     glia = GlialField(glia_config, rng=np.random.default_rng(params.get('seed', 42)))
