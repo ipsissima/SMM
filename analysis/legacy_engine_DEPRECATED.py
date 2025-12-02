@@ -1,4 +1,18 @@
-# analysis/simulation_engine.py
+# analysis/legacy_engine_DEPRECATED.py
+# 
+# DEPRECATED: This file contains the old Wave Equation implementation
+# missing the mass term (ω₀²) from the Telegraph Equation.
+#
+# The Telegraph Equation (∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S) includes
+# a physiologically-derived mass term from glial IP₃/Ca kinetics.
+#
+# For the correct Telegraph Equation, use:
+#   - Implementation: src/smm/glia.py (GlialField class)
+#   - Script: scripts/run_glial_wave.py
+#
+# This file is kept only for backward compatibility with analysis/run_analysis.py
+# and should not be used for new code.
+
 import numpy as np
 
 

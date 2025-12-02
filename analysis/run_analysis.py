@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 try:
     from .utils import compute_spatial_eigenmode, laplacian_9pt_matrix
-    from .simulation_engine import MeshSimulator
+    from .legacy_engine_DEPRECATED import MeshSimulator
     from .eigenmode_projection import project_onto_mode, validate_single_mode
     from .identify_coeffs import numeric_identify_coeffs
     from .hysteresis_sweep import sweep_parameter_for_hysteresis, plot_hysteresis
@@ -24,7 +24,7 @@ except ImportError:  # pragma: no cover - fallback for script execution
     __spec__ = None
 
     from analysis.utils import compute_spatial_eigenmode, laplacian_9pt_matrix
-    from analysis.simulation_engine import MeshSimulator
+    from analysis.legacy_engine_DEPRECATED import MeshSimulator
     from analysis.eigenmode_projection import project_onto_mode, validate_single_mode
     from analysis.identify_coeffs import numeric_identify_coeffs
     from analysis.hysteresis_sweep import sweep_parameter_for_hysteresis, plot_hysteresis

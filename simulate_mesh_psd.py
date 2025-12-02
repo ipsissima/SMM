@@ -6,6 +6,21 @@ with PML boundaries, region-based sources, and ensemble PSD computation.
 
 Contact: Andreu.Ballus@uab.cat
 """
+
+# ============================================================================
+# WARNING: This script uses the LEGACY Wave Equation (missing mass term ω₀²).
+# 
+# The Telegraph Equation (∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S) includes
+# a physiologically-derived mass term from glial IP₃/Ca kinetics that:
+#   - Suppresses non-physical constant modes
+#   - Defines intrinsic spatial correlation length
+#   - Matches experimental Ca²⁺ wave dynamics
+# 
+# For the correct Telegraph model, use:
+#   - Implementation: src/smm/glia.py (GlialField class)
+#   - Script: scripts/run_glial_wave.py
+# ============================================================================
+
 import argparse
 import json
 import os
@@ -506,6 +521,17 @@ def run_ensemble(params, ensemble_size=None, output_dir='results', verbose=True)
 
 def main():
     """Main CLI entry point."""
+    # Print deprecation warning
+    print("=" * 80)
+    print("WARNING: This script uses the LEGACY Wave Equation (missing mass term ω₀²).")
+    print()
+    print("The Telegraph Equation includes a physiologically-derived mass term from")
+    print("glial IP₃/Ca kinetics. For the correct model, use:")
+    print("  - Implementation: src/smm/glia.py (GlialField class)")
+    print("  - Script: scripts/run_glial_wave.py")
+    print("=" * 80)
+    print()
+    
     parser = argparse.ArgumentParser(
         description='Simulate 2D damped wave PDE with ensemble PSD computation'
     )
