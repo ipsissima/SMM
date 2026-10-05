@@ -27,6 +27,7 @@ from packaging.version import Version
 import mne
 
 CHANNELS = [x.strip() for x in (Path(__file__).with_name('channels_64.txt')).read_text().splitlines() if x.strip()]
+NETWORK_ORDER = [x.strip() for x in (Path(__file__).with_name('DK68_NETWORK_ORDER.txt')).read_text().splitlines() if x.strip()]
 
 
 def sha256(path: Path) -> str:
@@ -46,6 +47,14 @@ def vertex_areas(rr: np.ndarray, tris: np.ndarray) -> np.ndarray:
     return out
 
 
+def canonical_mne_label_from_network(name: str) -> str:
+    if name.startswith('L_'):
+        return name[2:] + '-lh'
+    if name.startswith('R_'):
+        return name[2:] + '-rh'
+    raise RuntimeError(f'Invalid frozen DK68 network label: {name}')
+
+
 def clean_dk_labels(labels):
     keep = []
     for lab in labels:
@@ -55,7 +64,17 @@ def clean_dk_labels(labels):
         keep.append(lab)
     if len(keep) != 68:
         raise RuntimeError(f'Expected 68 cortical DK labels after exclusions, got {len(keep)}')
-    return keep
+    by_name = {}
+    for lab in keep:
+        if lab.name in by_name:
+            raise RuntimeError(f'Duplicate DK label from MNE: {lab.name}')
+        by_name[lab.name] = lab
+    expected = [canonical_mne_label_from_network(x) for x in NETWORK_ORDER]
+    missing = [x for x in expected if x not in by_name]
+    extra = sorted(set(by_name) - set(expected))
+    if missing or extra:
+        raise RuntimeError(f'DK68 MNE/network label mismatch; missing={missing}, extra={extra}')
+    return [by_name[x] for x in expected]
 
 
 def build(out_dir: Path, subjects_dir: Path | None) -> None:
@@ -161,6 +180,8 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         'montage': 'fsaverage_1005',
         'n_channels': 64,
         'n_regions': 68,
+        'network_order': NETWORK_ORDER,
+        'mne_aparc_label_order': names,
         'leadfield_rank': int(np.linalg.matrix_rank(L)),
         'U20_orthogonality_max_abs_error': float(np.max(np.abs(U20.T @ U20 - np.eye(20)))),
         'singular_values': s.tolist(),
@@ -171,6 +192,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
             u20_fname.name: sha256(u20_fname),
             'official_fsaverage_src': sha256(src_fname),
             'official_fsaverage_bem': sha256(bem_fname),
+            'DK68_NETWORK_ORDER.txt': sha256(Path(__file__).with_name('DK68_NETWORK_ORDER.txt')),
         },
         'critical_note': 'Dataset lacks individual electrode digitization. This is a template-MRI/template-montage forward model, not subject-specific source localization.'
     }
