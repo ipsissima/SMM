@@ -55,6 +55,22 @@ jobs:
           echo "$EXPECTED_SHA256  development_raw/sub-001/$EDF" | sha256sum -c -
           test "$(stat -c%s "development_raw/sub-001/$EDF")" -eq 23936896
 
+      - name: Diagnose EDF channel labels
+        run: |
+          python - <<'PY'
+          import mne
+          from pathlib import Path
+          edf = Path("development_raw/sub-001/sub-001_ses-1_task-EyesClosed_acq-pre_eeg.edf")
+          raw = mne.io.read_raw_edf(edf, preload=False, verbose="error")
+          frozen = [x.strip() for x in Path("confirmatory/step5b/channels_64.txt").read_text().splitlines() if x.strip()]
+          print("RAW_CHANNELS_JSON=", raw.ch_names)
+          print("FROZEN_CHANNELS_JSON=", frozen)
+          print("RAW_N=", len(raw.ch_names), "FROZEN_N=", len(frozen))
+          for i,(a,b) in enumerate(zip(raw.ch_names,frozen)):
+              if a != b:
+                  print("MISMATCH", i, repr(a), repr(b))
+          PY
+
       - name: Frozen preprocessing
         run: |
           python confirmatory/step5b/preprocess_ds005385.py \
