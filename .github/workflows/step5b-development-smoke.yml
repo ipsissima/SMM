@@ -1,4 +1,4 @@
-name: Step 5B development smoke test sub-001
+name: Step 5B primary development preprocessing
 
 on:
   push:
@@ -14,17 +14,58 @@ permissions:
   contents: read
 
 concurrency:
-  group: step5b-development-smoke
+  group: step5b-development-primary
   cancel-in-progress: true
 
 jobs:
-  preprocess-sub001:
+  preprocess:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        subject:
+          - sub-001
+          - sub-002
+          - sub-003
+          - sub-004
+          - sub-005
+          - sub-006
+          - sub-007
+          - sub-010
+          - sub-011
+          - sub-012
+          - sub-014
+          - sub-015
+          - sub-016
+          - sub-017
+          - sub-018
+          - sub-019
+          - sub-020
+          - sub-021
+          - sub-022
+          - sub-023
+          - sub-024
+          - sub-025
+          - sub-026
+          - sub-028
+          - sub-029
+          - sub-030
+          - sub-031
+          - sub-032
+          - sub-033
+          - sub-034
+          - sub-035
+          - sub-036
+          - sub-038
+          - sub-039
+          - sub-040
+          - sub-041
+          - sub-042
+          - sub-043
     env:
-      SUBJECT: sub-001
-      EDF: sub-001_ses-1_task-EyesClosed_acq-pre_eeg.edf
-      EXPECTED_SHA256: a9ef4f8bcc7b3fff6568b7a441e14230ec287faa23212713e32f37bf8a8710a7
+      OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
     steps:
       - uses: actions/checkout@v4
 
@@ -39,53 +80,65 @@ jobs:
           python -m pip install -r confirmatory/step5b/requirements-development.txt
           python - <<'PY'
           import mne, pyprep, mne_icalabel
-          print("MNE", mne.__version__)
-          print("PyPREP", pyprep.__version__)
-          print("ICLabel", mne_icalabel.__version__)
           assert mne.__version__ == "1.13.2"
           assert pyprep.__version__ == "0.9.0"
           assert mne_icalabel.__version__ == "0.9.0"
+          print("versions OK", mne.__version__, pyprep.__version__, mne_icalabel.__version__)
           PY
 
-      - name: Download frozen development EDF only
+      - name: Resolve frozen annex hash and download development EDF
+        env:
+          SUBJECT: ${{ matrix.subject }}
         run: |
-          mkdir -p development_raw/sub-001 development_out/sub-001
-          URL="https://s3.amazonaws.com/openneuro.org/ds005385/sub-001/ses-1/eeg/$EDF"
-          curl --fail --location --retry 4 --retry-delay 5 "$URL" -o "development_raw/sub-001/$EDF"
-          echo "$EXPECTED_SHA256  development_raw/sub-001/$EDF" | sha256sum -c -
-          test "$(stat -c%s "development_raw/sub-001/$EDF")" -eq 23936896
+          set -euo pipefail
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          REL="${SUBJECT}/ses-1/eeg/${EDF}"
+          mkdir -p "development_raw/${SUBJECT}" "development_out/${SUBJECT}"
 
-      - name: Diagnose EDF channel labels
-        run: |
-          python - <<'PY'
-          import mne
-          from pathlib import Path
-          edf = Path("development_raw/sub-001/sub-001_ses-1_task-EyesClosed_acq-pre_eeg.edf")
-          raw = mne.io.read_raw_edf(edf, preload=False, verbose="error")
-          frozen = [x.strip() for x in Path("confirmatory/step5b/channels_64.txt").read_text().splitlines() if x.strip()]
-          print("RAW_CHANNELS_JSON=", raw.ch_names)
-          print("FROZEN_CHANNELS_JSON=", frozen)
-          print("RAW_N=", len(raw.ch_names), "FROZEN_N=", len(frozen))
-          for i,(a,b) in enumerate(zip(raw.ch_names,frozen)):
-              if a != b:
-                  print("MISMATCH", i, repr(a), repr(b))
-          PY
+          POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
+          curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}" -o "development_out/${SUBJECT}/annex_pointer.txt"
+
+          EXPECTED_SHA256="$(sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
+          EXPECTED_SIZE="$(sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
+          test -n "${EXPECTED_SHA256}"
+          test -n "${EXPECTED_SIZE}"
+
+          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
+          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "development_raw/${SUBJECT}/${EDF}"
+
+          echo "${EXPECTED_SHA256}  development_raw/${SUBJECT}/${EDF}" | sha256sum -c -
+          test "$(stat -c%s "development_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
+
+          echo "subject=${SUBJECT}" > "development_out/${SUBJECT}/input_provenance.txt"
+          echo "openneuro_commit=${OPENNEURO_COMMIT}" >> "development_out/${SUBJECT}/input_provenance.txt"
+          echo "edf=${EDF}" >> "development_out/${SUBJECT}/input_provenance.txt"
+          echo "sha256=${EXPECTED_SHA256}" >> "development_out/${SUBJECT}/input_provenance.txt"
+          echo "size=${EXPECTED_SIZE}" >> "development_out/${SUBJECT}/input_provenance.txt"
 
       - name: Frozen preprocessing
+        env:
+          SUBJECT: ${{ matrix.subject }}
         run: |
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
           python confirmatory/step5b/preprocess_ds005385.py \
-            "development_raw/sub-001/$EDF" \
-            --out-dir development_out/sub-001
+            "development_raw/${SUBJECT}/${EDF}" \
+            --out-dir "development_out/${SUBJECT}"
 
-      - name: Assert no holdout paths were created
+      - name: Assert development boundary
+        env:
+          SUBJECT: ${{ matrix.subject }}
         run: |
+          case "${SUBJECT}" in
+            sub-00[1-7]|sub-010|sub-011|sub-012|sub-014|sub-015|sub-016|sub-017|sub-018|sub-019|sub-020|sub-021|sub-022|sub-023|sub-024|sub-025|sub-026|sub-028|sub-029|sub-030|sub-031|sub-032|sub-033|sub-034|sub-035|sub-036|sub-038|sub-039|sub-040|sub-041|sub-042|sub-043) ;;
+            *) echo "Unexpected subject outside primary development set: ${SUBJECT}"; exit 1 ;;
+          esac
           test ! -e development_raw/sub-044
           test ! -e ds005385
-          cat development_out/sub-001/qc.json
+          test -f "development_out/${SUBJECT}/qc.json"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SMM_STEP5B_DEV_SMOKE_SUB001
-          path: development_out/sub-001/
+          name: SMM_STEP5B_DEV_${{ matrix.subject }}
+          path: development_out/${{ matrix.subject }}/
           if-no-files-found: error
           retention-days: 90
