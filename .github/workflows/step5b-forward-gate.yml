@@ -44,6 +44,7 @@ jobs:
 
       - name: Build official fsaverage forward gate
         run: |
+          mkdir -p "$MNE_DATA"
           mkdir -p confirmatory/step5b/out
           python confirmatory/step5b/build_fsaverage_bem_ds005385.py \
             --out-dir confirmatory/step5b/out
