@@ -7,6 +7,12 @@ on:
     paths:
       - 'confirmatory/step5b/**'
       - '.github/workflows/step5b-forward-gate.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'confirmatory/step5b/**'
+      - '.github/workflows/step5b-forward-gate.yml'
 
 permissions:
   contents: read
