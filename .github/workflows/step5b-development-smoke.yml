@@ -1,0 +1,75 @@
+name: Step 5B development smoke test sub-001
+
+on:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - 'confirmatory/step5b/preprocess_ds005385.py'
+      - 'confirmatory/step5b/requirements-development.txt'
+      - '.github/workflows/step5b-development-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: step5b-development-smoke
+  cancel-in-progress: true
+
+jobs:
+  preprocess-sub001:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SUBJECT: sub-001
+      EDF: sub-001_ses-1_task-EyesClosed_acq-pre_eeg.edf
+      EXPECTED_SHA256: a9ef4f8bcc7b3fff6568b7a441e14230ec287faa23212713e32f37bf8a8710a7
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install frozen development environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-development.txt
+          python - <<'PY'
+          import mne, pyprep, mne_icalabel
+          print("MNE", mne.__version__)
+          print("PyPREP", pyprep.__version__)
+          print("ICLabel", mne_icalabel.__version__)
+          assert mne.__version__ == "1.13.2"
+          assert pyprep.__version__ == "0.9.0"
+          assert mne_icalabel.__version__ == "0.9.0"
+          PY
+
+      - name: Download frozen development EDF only
+        run: |
+          mkdir -p development_raw/sub-001 development_out/sub-001
+          URL="https://s3.amazonaws.com/openneuro.org/ds005385/sub-001/ses-1/eeg/$EDF"
+          curl --fail --location --retry 4 --retry-delay 5 "$URL" -o "development_raw/sub-001/$EDF"
+          echo "$EXPECTED_SHA256  development_raw/sub-001/$EDF" | sha256sum -c -
+          test "$(stat -c%s "development_raw/sub-001/$EDF")" -eq 23936896
+
+      - name: Frozen preprocessing
+        run: |
+          python confirmatory/step5b/preprocess_ds005385.py \
+            "development_raw/sub-001/$EDF" \
+            --out-dir development_out/sub-001
+
+      - name: Assert no holdout paths were created
+        run: |
+          test ! -e development_raw/sub-044
+          test ! -e ds005385
+          cat development_out/sub-001/qc.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_DEV_SMOKE_SUB001
+          path: development_out/sub-001/
+          if-no-files-found: error
+          retention-days: 90
