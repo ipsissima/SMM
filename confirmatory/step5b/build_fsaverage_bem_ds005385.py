@@ -9,7 +9,7 @@ so subject-specific coregistration is impossible from ds005385 alone.
 Outputs
 -------
 - fsaverage_vertex_forward-fwd.fif
-- fsaverage_fixed_surface_normal_vertex_leadfield.npy
+- fsaverage_fixed_surface_normal_average_ref_vertex_leadfield.npy
 - leadfield_DK68_64x68.csv
 - DK68_regional_surface_area_mm2.csv
 - leadfield_U20.npy
@@ -58,7 +58,8 @@ def canonical_mne_label_from_network(name: str) -> str:
 
 def clean_dk_labels(labels):
     keep = []
-    for lab in labels:
+    mne_label_names = [lab.name for lab in labels]
+    for network_name, lab in zip(NETWORK_ORDER, labels):
         low = lab.name.lower()
         if 'unknown' in low or 'corpuscallosum' in low:
             continue
@@ -125,13 +126,13 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         fwd_free, surf_ori=True, force_fixed=True, use_cps=True, copy=True, verbose=True
     )
     G = np.asarray(fwd['sol']['data'], float)
-    fixed_vertex_fname = out_dir / 'fsaverage_fixed_surface_normal_vertex_leadfield.npy'
-    np.save(fixed_vertex_fname, G)
     if G.shape[0] != 64:
         raise RuntimeError(f'Expected 64 EEG channels in forward solution, got {G.shape[0]}')
 
     P = np.eye(64) - np.ones((64, 64)) / 64.0
     G = P @ G
+    fixed_vertex_fname = out_dir / 'fsaverage_fixed_surface_normal_average_ref_vertex_leadfield.npy'
+    np.save(fixed_vertex_fname, G)
 
     labels = clean_dk_labels(mne.read_labels_from_annot('fsaverage', parc='aparc', subjects_dir=subjects_dir))
     src = fwd['src']
@@ -163,7 +164,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         col = G[:, idx] @ w
         columns.append(col)
         areas_mm2.append(float(w.sum()))
-        names.append(lab.name)
+        names.append(network_name)
 
     L = np.column_stack(columns)
     areas_mm2 = np.asarray(areas_mm2)
@@ -188,7 +189,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         'n_channels': 64,
         'n_regions': 68,
         'network_order': NETWORK_ORDER,
-        'mne_aparc_label_order': names,
+        'mne_aparc_label_order': mne_label_names,
         'leadfield_rank': int(np.linalg.matrix_rank(L)),
         'U20_orthogonality_max_abs_error': float(np.max(np.abs(U20.T @ U20 - np.eye(20)))),
         'singular_values': s.tolist(),
@@ -201,8 +202,9 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
             'official_fsaverage_src': sha256(src_fname),
             'official_fsaverage_bem': sha256(bem_fname),
             'DK68_NETWORK_ORDER.txt': sha256(Path(__file__).with_name('DK68_NETWORK_ORDER.txt')),
+            'channels_64.txt': sha256(Path(__file__).with_name('channels_64.txt')),
         },
-        'vertex_forward_storage_note': 'The FIFF file stores the canonical MNE free-orientation vertex forward. The exact fixed surface-normal matrix used to construct the DK68 regional leadfield is saved separately as fsaverage_fixed_surface_normal_vertex_leadfield.npy because MNE reverts orientation conversion on FIFF write.',
+        'vertex_forward_storage_note': 'The FIFF file stores the canonical MNE free-orientation vertex forward. The exact fixed surface-normal, 64-channel common-average-referenced vertex matrix used to construct the DK68 regional leadfield is saved separately as fsaverage_fixed_surface_normal_average_ref_vertex_leadfield.npy because MNE reverts orientation conversion on FIFF write.',
         'regional_leadfield_derived_from_fixed_surface_normal_forward': True,
         'critical_note': 'Dataset lacks individual electrode digitization. This is a template-MRI/template-montage forward model, not subject-specific source localization.'
     }
