@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: step5b-forward-gate
+  cancel-in-progress: true
+
 jobs:
   build-forward:
     runs-on: ubuntu-slim
