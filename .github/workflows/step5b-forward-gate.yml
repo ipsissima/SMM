@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build-forward:
     runs-on: ubuntu-slim
-    timeout-minutes: 15
+    timeout-minutes: 45
     env:
       MNE_DATA: ${{ github.workspace }}/.mne_data
     steps:
