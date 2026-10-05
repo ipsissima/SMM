@@ -39,8 +39,12 @@ def preprocess(edf:Path,out_dir:Path):
 
     out_dir.mkdir(parents=True,exist_ok=True)
     raw=mne.io.read_raw_edf(edf,preload=True,verbose='error')
+    # ds005385 EDF carries one non-EEG acquisition/status channel in addition
+    # to the frozen 64 EEG channels. Accept only this exact representation.
+    if raw.ch_names == CHANNELS + ['Status']:
+        raw.drop_channels(['Status'])
     if raw.ch_names!=CHANNELS:
-        raise RuntimeError('Channel names/order differ from frozen 64-channel ds005385 list.')
+        raise RuntimeError('Channel names/order differ from frozen 64-channel ds005385 list after exact Status-channel handling.')
     if abs(float(raw.info['sfreq'])-1000.0)>1e-6:
         raise RuntimeError(f'Expected 1000 Hz raw sampling; got {raw.info["sfreq"]}')
     if raw.n_times/raw.info['sfreq']<180.0:
