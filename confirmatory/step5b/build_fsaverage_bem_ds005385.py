@@ -58,15 +58,20 @@ def canonical_mne_label_from_network(name: str) -> str:
 
 
 def clean_dk_labels(labels):
+    # Filter the complete MNE aparc set first. Never zip the raw annotation
+    # labels against the 68-network order: fsaverage aparc can include extra
+    # non-cortical/unknown labels.
     keep = []
-    mne_label_names = [lab.name for lab in labels]
-    for network_name, lab in zip(NETWORK_ORDER, labels):
+    for lab in labels:
         low = lab.name.lower()
         if 'unknown' in low or 'corpuscallosum' in low:
             continue
         keep.append(lab)
     if len(keep) != 68:
-        raise RuntimeError(f'Expected 68 cortical DK labels after exclusions, got {len(keep)}')
+        raise RuntimeError(
+            f'Expected 68 cortical DK labels after exclusions, got {len(keep)}; '
+            f'raw={[lab.name for lab in labels]}'
+        )
     by_name = {}
     for lab in keep:
         if lab.name in by_name:
@@ -151,6 +156,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
     np.save(fixed_vertex_fname, G)
 
     labels = clean_dk_labels(mne.read_labels_from_annot('fsaverage', parc='aparc', subjects_dir=subjects_dir))
+    mne_label_names = [lab.name for lab in labels]
     src = fwd['src']
     lh_vert = np.asarray(src[0]['vertno'], int)
     rh_vert = np.asarray(src[1]['vertno'], int)
@@ -165,7 +171,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
     columns = []
     areas_mm2 = []
     names = []
-    for lab in labels:
+    for network_name, lab in zip(NETWORK_ORDER, labels, strict=True):
         if lab.hemi == 'lh':
             mapping, areas = lh_map, area_lh
         elif lab.hemi == 'rh':
