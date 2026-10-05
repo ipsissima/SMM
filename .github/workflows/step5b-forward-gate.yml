@@ -1,0 +1,68 @@
+name: Step 5B confirmatory forward gate
+
+on:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - 'confirmatory/step5b/**'
+      - '.github/workflows/step5b-forward-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MNE_DATA: ${{ github.workspace }}/.mne_data
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install frozen gate environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
+          python - <<'PY'
+          import mne
+          print("MNE", mne.__version__)
+          assert mne.__version__ == "1.13.2"
+          assert "fsaverage_1005" in mne.channels.get_builtin_montages()
+          PY
+
+      - name: Build official fsaverage forward gate
+        run: |
+          mkdir -p confirmatory/step5b/out
+          python confirmatory/step5b/build_fsaverage_bem_ds005385.py \
+            --out-dir confirmatory/step5b/out
+
+      - name: Verify no EEG inputs exist in gate
+        run: |
+          test ! -e ds005385
+          test -f confirmatory/step5b/out/leadfield_build_manifest.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("confirmatory/step5b/out/leadfield_build_manifest.json")
+          m = json.loads(p.read_text())
+          assert m["mne_version"] == "1.13.2"
+          assert m["montage"] == "fsaverage_1005"
+          assert m["n_channels"] == 64
+          assert m["n_regions"] == 68
+          assert m["leadfield_rank"] <= 63
+          assert m["U20_orthogonality_max_abs_error"] < 1e-10
+          print(json.dumps(m, indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_FORWARD_GATE
+          path: confirmatory/step5b/out/
+          if-no-files-found: error
+          retention-days: 90
