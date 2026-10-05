@@ -8,7 +8,8 @@ so subject-specific coregistration is impossible from ds005385 alone.
 
 Outputs
 -------
-- fsaverage_DK68_fixed_forward.fif
+- fsaverage_vertex_forward-fwd.fif
+- fsaverage_fixed_surface_normal_vertex_leadfield.npy
 - leadfield_DK68_64x68.csv
 - DK68_regional_surface_area_mm2.csv
 - leadfield_U20.npy
@@ -104,7 +105,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         raise RuntimeError(f'Locked dataset channels absent from fsaverage_1005: {missing}')
     info.set_montage(montage, on_missing='raise')
 
-    fwd = mne.make_forward_solution(
+    fwd_free = mne.make_forward_solution(
         info,
         trans='fsaverage',
         src=str(src_fname),
@@ -115,11 +116,17 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         n_jobs=1,
         verbose=True,
     )
-    fwd = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True, use_cps=True, verbose=True)
-    fwd_fname = out_dir / 'fsaverage_DK68_fixed_forward.fif'
-    mne.write_forward_solution(fwd_fname, fwd, overwrite=True)
-
+    # Persist the canonical MNE forward in its native free-orientation form.
+    # MNE intentionally reverts fixed/surface-orientation conversions on FIFF write,
+    # so the exact fixed matrix used below is saved separately as .npy.
+    fwd_fname = out_dir / 'fsaverage_vertex_forward-fwd.fif'
+    mne.write_forward_solution(fwd_fname, fwd_free, overwrite=True)
+    fwd = mne.convert_forward_solution(
+        fwd_free, surf_ori=True, force_fixed=True, use_cps=True, copy=True, verbose=True
+    )
     G = np.asarray(fwd['sol']['data'], float)
+    fixed_vertex_fname = out_dir / 'fsaverage_fixed_surface_normal_vertex_leadfield.npy'
+    np.save(fixed_vertex_fname, G)
     if G.shape[0] != 64:
         raise RuntimeError(f'Expected 64 EEG channels in forward solution, got {G.shape[0]}')
 
@@ -187,6 +194,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
         'singular_values': s.tolist(),
         'files_sha256': {
             fwd_fname.name: sha256(fwd_fname),
+            fixed_vertex_fname.name: sha256(fixed_vertex_fname),
             lead_csv.name: sha256(lead_csv),
             area_csv.name: sha256(area_csv),
             u20_fname.name: sha256(u20_fname),
@@ -194,6 +202,8 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
             'official_fsaverage_bem': sha256(bem_fname),
             'DK68_NETWORK_ORDER.txt': sha256(Path(__file__).with_name('DK68_NETWORK_ORDER.txt')),
         },
+        'vertex_forward_storage_note': 'The FIFF file stores the canonical MNE free-orientation vertex forward. The exact fixed surface-normal matrix used to construct the DK68 regional leadfield is saved separately as fsaverage_fixed_surface_normal_vertex_leadfield.npy because MNE reverts orientation conversion on FIFF write.',
+        'regional_leadfield_derived_from_fixed_surface_normal_forward': True,
         'critical_note': 'Dataset lacks individual electrode digitization. This is a template-MRI/template-montage forward model, not subject-specific source localization.'
     }
     (out_dir / 'leadfield_build_manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
