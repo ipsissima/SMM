@@ -28,6 +28,7 @@ from packaging.version import Version
 import mne
 
 CHANNELS = [x.strip() for x in (Path(__file__).with_name('channels_64.txt')).read_text().splitlines() if x.strip()]
+FSAVERAGE_DOWNLOAD_TIMEOUT_SECONDS = 120
 NETWORK_ORDER = [x.strip() for x in (Path(__file__).with_name('DK68_NETWORK_ORDER.txt')).read_text().splitlines() if x.strip()]
 
 
@@ -87,7 +88,22 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
 
     out_dir.mkdir(parents=True, exist_ok=True)
     if subjects_dir is None:
-        fs_dir = Path(mne.datasets.fetch_fsaverage(verbose=True))
+        # Infrastructure-only robustness: MNE 1.13.2 hard-codes a 15 s HTTP
+        # read timeout for dataset downloads. Keep the official fetch_fsaverage
+        # URLs/hashes and only extend that transport timeout.
+        from mne.datasets import utils as _mne_dataset_utils
+        _orig_downloader_params = _mne_dataset_utils._downloader_params
+
+        def _locked_downloader_params(*, auth=None, token=None):
+            params = _orig_downloader_params(auth=auth, token=token)
+            params["timeout"] = FSAVERAGE_DOWNLOAD_TIMEOUT_SECONDS
+            return params
+
+        _mne_dataset_utils._downloader_params = _locked_downloader_params
+        try:
+            fs_dir = Path(mne.datasets.fetch_fsaverage(verbose=True))
+        finally:
+            _mne_dataset_utils._downloader_params = _orig_downloader_params
         subjects_dir = fs_dir.parent
     else:
         subjects_dir = subjects_dir.expanduser().resolve()
@@ -186,6 +202,7 @@ def build(out_dir: Path, subjects_dir: Path | None) -> None:
     manifest = {
         'mne_version': mne.__version__,
         'montage': 'fsaverage_1005',
+        'fsaverage_download_timeout_seconds': FSAVERAGE_DOWNLOAD_TIMEOUT_SECONDS,
         'n_channels': 64,
         'n_regions': 68,
         'network_order': NETWORK_ORDER,
