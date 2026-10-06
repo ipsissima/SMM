@@ -98,17 +98,23 @@ jobs:
           import os,json,math
           s=os.environ["SUBJECT"]
           d=json.load(open(f"fit_out/{s}.json"))
+          profile=json.load(open("confirmatory/step5b/NUMERICAL_PROFILE.json"))
+          assert profile["status"] == "FROZEN"
+          expected={
+              "sobol_candidates": int(profile["sobol_candidates"]),
+              "polish_starts": int(profile["polish_starts"]),
+              "polish_maxiter": int(profile["polish_maxiter"]),
+              "method": profile["method"],
+              "ftol": float(profile["ftol"]),
+              "gtol": float(profile["gtol"]),
+              "maxls": int(profile["maxls"]),
+              "rel_floor": float(profile["rel_floor"]),
+          }
           assert d["n_epochs"] >= 30
           assert set(d["models"]) == {"M2","M3"}
           assert math.isfinite(d["delta_elpd_M3_minus_M2"])
-          assert d["seed"] == 97
-          assert d["optimizer"] == {
-              "sobol_candidates": 32,
-              "polish_starts": 4,
-              "polish_maxiter": 120,
-              "method": "L-BFGS-B",
-              "rel_floor": 1e-6,
-          }
+          assert d["seed"] == int(profile["seed"])
+          assert d["optimizer"] == expected
           for m in ("M2","M3"):
               assert len(d["models"][m]["directions"]) == 2
               for direction in d["models"][m]["directions"]:
