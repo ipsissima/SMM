@@ -77,6 +77,7 @@ def main():
         "development_summary_file_sha256":"sha256:"+sha256(args.development_summary),
         "development_signoff_file_sha256":"sha256:"+sha256(args.development_signoff),
         "numerical_freeze_commit":profile["final_freeze_commit"],
+        "numerical_profile_sha256":"sha256:"+sha256(here/"NUMERICAL_PROFILE.json"),
         "required_development_subjects":34,
         "holdout_first_subject":"sub-044",
         "holdout_last_subject":"sub-608",
