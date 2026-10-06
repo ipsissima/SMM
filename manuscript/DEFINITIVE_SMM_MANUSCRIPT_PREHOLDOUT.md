@@ -227,7 +227,7 @@ The public EEG cohort contains 608 participants. Because historical SMM work had
 
 Frozen preprocessing yielded 34 QC-passed primary development recordings. Four failed prespecified criteria and were not rescued by threshold relaxation.
 
-During development, repeated fits revealed cross-run sensitivity of the M2 optimizer to the numerical execution environment. A dedicated reproducibility experiment showed that single-thread numerical execution on the pinned environment produced exactly identical M2 and M3 scores and identical optimizer iteration counts across three independent runners. This deterministic numerical environment was then frozen before confirmatory holdout inspection.
+During development, repeated fits revealed sensitivity of the optimizer to numerical execution details. An initial three-run same-image reproducibility test produced bit-identical M2 and M3 scores under pinned packages and single-thread execution. However, the first subsequent development fit executed after a GitHub runner-image update returned materially different local optima despite byte-identical scientific code and inputs. The provisional numerical freeze was therefore superseded before any confirmatory holdout data were opened. A development-only robustness study was then initiated to select the final optimizer profile on the basis of training-objective recovery and cross-kernel reproducibility, not on the sign or magnitude of M3-versus-M2 held-out effects.
 
 **Insert final 34-subject descriptive development aggregate here once complete. Do not report confirmatory significance on development.**
 
