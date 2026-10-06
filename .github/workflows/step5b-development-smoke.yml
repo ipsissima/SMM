@@ -1,71 +1,25 @@
-name: Step 5B primary development preprocessing
+name: Step 5B development fit smoke sub-001
 
 on:
   push:
     branches:
       - step5b-confirmatory-gate-2026-10-05
     paths:
-      - 'confirmatory/step5b/preprocess_ds005385.py'
-      - 'confirmatory/step5b/requirements-development.txt'
       - '.github/workflows/step5b-development-smoke.yml'
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
-  group: step5b-development-primary
+  group: step5b-development-fit-smoke
   cancel-in-progress: true
 
 jobs:
-  preprocess:
+  fit-sub001:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      max-parallel: 6
-      matrix:
-        subject:
-          - sub-001
-          - sub-002
-          - sub-003
-          - sub-004
-          - sub-005
-          - sub-006
-          - sub-007
-          - sub-010
-          - sub-011
-          - sub-012
-          - sub-014
-          - sub-015
-          - sub-016
-          - sub-017
-          - sub-018
-          - sub-019
-          - sub-020
-          - sub-021
-          - sub-022
-          - sub-023
-          - sub-024
-          - sub-025
-          - sub-026
-          - sub-028
-          - sub-029
-          - sub-030
-          - sub-031
-          - sub-032
-          - sub-033
-          - sub-034
-          - sub-035
-          - sub-036
-          - sub-038
-          - sub-039
-          - sub-040
-          - sub-041
-          - sub-042
-          - sub-043
-    env:
-      OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -74,71 +28,68 @@ jobs:
           python-version: '3.13'
           cache: 'pip'
 
-      - name: Install frozen development environment
+      - name: Install frozen fit environment
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r confirmatory/step5b/requirements-development.txt
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
           python - <<'PY'
-          import mne, pyprep, mne_icalabel
+          import mne, numpy, scipy, pandas
           assert mne.__version__ == "1.13.2"
-          assert pyprep.__version__ == "0.9.0"
-          assert mne_icalabel.__version__ == "0.9.0"
-          print("versions OK", mne.__version__, pyprep.__version__, mne_icalabel.__version__)
+          print("fit environment", mne.__version__, numpy.__version__, scipy.__version__, pandas.__version__)
           PY
 
-      - name: Resolve frozen annex hash and download development EDF
-        env:
-          SUBJECT: ${{ matrix.subject }}
+      - name: Reconstruct and verify frozen DK68 network
         run: |
-          set -euo pipefail
-          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
-          REL="${SUBJECT}/ses-1/eeg/${EDF}"
-          mkdir -p "development_raw/${SUBJECT}" "development_out/${SUBJECT}"
+          python confirmatory/step5b/reconstruct_network_frozen.py
 
-          POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
-          curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}" -o "development_out/${SUBJECT}/annex_pointer.txt"
+      - name: Download validated forward gate
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_FORWARD_GATE
+          path: forward_gate
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37376954431
 
-          EXPECTED_SHA256="$(sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
-          EXPECTED_SIZE="$(sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
-          test -n "${EXPECTED_SHA256}"
-          test -n "${EXPECTED_SIZE}"
-
-          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
-          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "development_raw/${SUBJECT}/${EDF}"
-
-          echo "${EXPECTED_SHA256}  development_raw/${SUBJECT}/${EDF}" | sha256sum -c -
-          test "$(stat -c%s "development_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
-
-          echo "subject=${SUBJECT}" > "development_out/${SUBJECT}/input_provenance.txt"
-          echo "openneuro_commit=${OPENNEURO_COMMIT}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "edf=${EDF}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "sha256=${EXPECTED_SHA256}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "size=${EXPECTED_SIZE}" >> "development_out/${SUBJECT}/input_provenance.txt"
-
-      - name: Frozen preprocessing
-        env:
-          SUBJECT: ${{ matrix.subject }}
+      - name: Verify forward gate material hashes
         run: |
-          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
-          python confirmatory/step5b/preprocess_ds005385.py \
-            "development_raw/${SUBJECT}/${EDF}" \
-            --out-dir "development_out/${SUBJECT}"
+          echo "86afbddbd637ef4239b5755ef3853aafb62890ac989340fd093482ad7c9853b2  forward_gate/leadfield_DK68_64x68.csv" | sha256sum -c -
+          echo "17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy" | sha256sum -c -
 
-      - name: Assert development boundary
-        env:
-          SUBJECT: ${{ matrix.subject }}
+      - name: Download QC-passed sub-001 development epochs
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_DEV_sub-001
+          path: dev_sub001
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37438628533
+
+      - name: Run frozen M2/M3 two-block CV fit
         run: |
-          case "${SUBJECT}" in
-            sub-00[1-7]|sub-010|sub-011|sub-012|sub-014|sub-015|sub-016|sub-017|sub-018|sub-019|sub-020|sub-021|sub-022|sub-023|sub-024|sub-025|sub-026|sub-028|sub-029|sub-030|sub-031|sub-032|sub-033|sub-034|sub-035|sub-036|sub-038|sub-039|sub-040|sub-041|sub-042|sub-043) ;;
-            *) echo "Unexpected subject outside primary development set: ${SUBJECT}"; exit 1 ;;
-          esac
-          test ! -e development_raw/sub-044
-          test ! -e ds005385
-          test -f "development_out/${SUBJECT}/qc.json"
+          mkdir -p fit_out
+          PYTHONPATH=confirmatory/step5b python confirmatory/step5b/fit_cv_subject.py \
+            dev_sub001/clean-epo.fif \
+            --forward-dir forward_gate \
+            --network-dir confirmatory/step5b/network_frozen \
+            --models M2 M3 \
+            --out fit_out/sub-001.json
+
+      - name: Validate fit output
+        run: |
+          python - <<'PY'
+          import json, math
+          d=json.load(open("fit_out/sub-001.json"))
+          assert d["n_epochs"] >= 30
+          assert set(d["models"]) == {"M2","M3"}
+          assert math.isfinite(d["delta_elpd_M3_minus_M2"])
+          for m in ("M2","M3"):
+              assert len(d["models"][m]["directions"]) == 2
+          print("FIT_SMOKE_PASS")
+          print("delta_elpd_M3_minus_M2", d["delta_elpd_M3_minus_M2"])
+          PY
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SMM_STEP5B_DEV_${{ matrix.subject }}
-          path: development_out/${{ matrix.subject }}/
+          name: SMM_STEP5B_DEV_FIT_SMOKE_SUB001
+          path: fit_out/
           if-no-files-found: error
           retention-days: 90
