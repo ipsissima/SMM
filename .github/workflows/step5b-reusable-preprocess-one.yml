@@ -1,0 +1,93 @@
+name: Step 5B reusable preprocess one subject
+
+on:
+  workflow_call:
+    inputs:
+      subject:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
+      SUBJECT: ${{ inputs.subject }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Assert holdout subject boundary before any network access
+        run: |
+          set -euo pipefail
+          N="${SUBJECT#sub-}"
+          N=$((10#${N}))
+          test "${N}" -ge 44
+          test "${N}" -le 608
+          echo "HOLDOUT_SUBJECT_BOUNDARY=PASS ${SUBJECT}"
+
+      - name: Install frozen preprocessing environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-development.txt
+          python - <<'PY'
+          import mne, pyprep, mne_icalabel
+          assert mne.__version__ == "1.13.2"
+          assert pyprep.__version__ == "0.9.0"
+          assert mne_icalabel.__version__ == "0.9.0"
+          print("PREPROCESS_ENVIRONMENT=PASS",mne.__version__,pyprep.__version__,mne_icalabel.__version__)
+          PY
+
+      - name: Resolve frozen annex pointer and download EDF
+        run: |
+          set -euo pipefail
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          REL="${SUBJECT}/ses-1/eeg/${EDF}"
+          mkdir -p "holdout_raw/${SUBJECT}" "holdout_out/${SUBJECT}"
+
+          POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
+          POINTER="$(curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}")"
+          printf '%s\n' "${POINTER}" | tee "holdout_out/${SUBJECT}/annex_pointer.txt"
+
+          EXPECTED_SHA256="$(printf '%s\n' "${POINTER}" | sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p')"
+          EXPECTED_SIZE="$(printf '%s\n' "${POINTER}" | sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p')"
+          test -n "${EXPECTED_SHA256}"
+          test -n "${EXPECTED_SIZE}"
+
+          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
+          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "holdout_raw/${SUBJECT}/${EDF}"
+
+          echo "${EXPECTED_SHA256}  holdout_raw/${SUBJECT}/${EDF}" | sha256sum -c -
+          test "$(stat -c%s "holdout_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
+
+          printf '{"subject":"%s","openneuro_commit":"%s","edf":"%s","expected_sha256":"%s","expected_size":%s}\n' \
+            "${SUBJECT}" "${OPENNEURO_COMMIT}" "${EDF}" "${EXPECTED_SHA256}" "${EXPECTED_SIZE}" \
+            > "holdout_out/${SUBJECT}/input_provenance.json"
+
+      - name: Frozen preprocessing
+        run: |
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          python confirmatory/step5b/preprocess_ds005385.py \
+            "holdout_raw/${SUBJECT}/${EDF}" \
+            --out-dir "holdout_out/${SUBJECT}"
+
+      - name: Assert output and no development data
+        run: |
+          test -f "holdout_out/${SUBJECT}/qc.json"
+          test ! -d holdout_raw/sub-001
+          test ! -d development_raw
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_HOLDOUT_${{ inputs.subject }}
+          path: holdout_out/${{ inputs.subject }}/
+          if-no-files-found: error
+          retention-days: 90
