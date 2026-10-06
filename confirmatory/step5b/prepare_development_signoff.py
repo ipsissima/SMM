@@ -46,6 +46,8 @@ def main():
         raise RuntimeError("Development sign-off requires final numerical profile FROZEN")
     if not profile.get("final_freeze_commit") or not profile.get("robustness_run_id"):
         raise RuntimeError("Frozen numerical profile lacks final provenance")
+    if profile.get("profile_name")!="N1" or profile.get("exact_nested_anchor") is not True:
+        raise RuntimeError("Development sign-off now requires frozen N1 nested-comparator profile")
 
     summary_path=args.aggregate_dir/"development_summary.json"
     subjects_path=args.aggregate_dir/"development_subject_results.csv"
@@ -130,7 +132,8 @@ def main():
         "",
         f"- Frozen profile: {profile['sobol_candidates']} Sobol candidates / {profile['polish_starts']} polish starts.",
         f"- Production OpenBLAS kernel: {profile['openblas_coretype']}.",
-        "- 136/136 M2/M3 x two-direction optimizer calls report success.",
+        "- 136/136 selected M2/M3 x two-direction fit results satisfy the N1 success schema.",
+        "- Every development training block satisfies the exact M3-in-M2 nesting checks enforced by the aggregate.",
         "- The aggregate embeds exactly the repository frozen numerical profile.",
         "",
         "## Descriptive development result",
