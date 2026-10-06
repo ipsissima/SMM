@@ -67,7 +67,7 @@ For each chronological training block:
 - gtol 1e-7;
 - maxls 50.
 
-The best finite solution, including the unpolished candidate set, is retained.
+Every finite raw Sobol candidate remains in the final candidate pool; successful local polishes are added rather than replacing their starts. The best finite candidate is retained.
 
 ### C. Exact M3-in-M2 anchor
 
@@ -122,7 +122,7 @@ All conditions must hold.
 5. For each model/direction, the range of optimized training scores across the three kernels is <= 0.001.
 6. For each model, the range of two-direction CV ELPD across kernels is <= 0.005.
 7. All retained scores are finite and all decoded parameters satisfy the unchanged frozen physical bounds.
-8. Every selected local optimization reports success, or the selected result is an explicitly retained raw exact-embedding candidate whose finite score satisfies the nesting invariant.
+8. The final candidate pool retains every finite raw Sobol candidate as well as every successful local polish and, for M2, the raw exact-embedding candidate. A selected local-polish result must report success; a selected raw feasible candidate is valid without a local-optimizer success flag because its objective is evaluated directly.
 
 The sign and magnitude of held-out DeltaELPD(M3-M2) are logged but are not used in any PASS criterion.
 
