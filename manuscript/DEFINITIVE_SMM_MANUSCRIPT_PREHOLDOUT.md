@@ -334,16 +334,7 @@ Describe DPSS multitaper estimation, NW=3, Kmax=5, integer 1-40 Hz frequencies, 
 
 ## 3.11 Model fitting
 
-Frozen deterministic environment:
-- seed 97;
-- 32 Sobol candidates;
-- 4 L-BFGS-B polish starts;
-- maxiter 120;
-- ftol (10^{-9});
-- gtol (10^{-6});
-- maxls 30;
-- relative eigenvalue floor (10^{-6});
-- single-thread BLAS/OpenMP execution.
+The invariant numerical settings are seed 97, L-BFGS-B with maxiter 120, ftol \(10^{-9}\), gtol \(10^{-6}\), maxls 30, relative eigenvalue floor \(10^{-6}\), pinned numerical packages and single-thread BLAS/OpenMP execution. The final global-search width is fixed only after the predeclared development-only optimizer-robustness rule: P1 (256 Sobol candidates / 8 polish starts) failed its training-basin recovery requirement, and the protocol therefore escalated exactly once to P2 (512 / 16). The final manuscript reports the passing frozen profile from `NUMERICAL_PROFILE.json`; no optimizer profile is selected by the sign or magnitude of held-out M3-versus-M2 effects.
 
 Fit A and score B; fit B and score A; average held-out score.
 
