@@ -7,6 +7,9 @@ on:
       - step5b-confirmatory-gate-2026-10-05
     paths:
       - '.github/workflows/step5b-optimizer-n1-nested.yml'
+      - 'confirmatory/step5b/N1_NESTED_OPTIMIZER_PROTOCOL.md'
+      - 'confirmatory/step5b/nested_optimizer_probe.py'
+      - 'confirmatory/step5b/aggregate_nested_optimizer_probe.py'
 
 permissions:
   actions: read
@@ -14,7 +17,7 @@ permissions:
 
 concurrency:
   group: step5b-optimizer-n1-nested
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   probe:
