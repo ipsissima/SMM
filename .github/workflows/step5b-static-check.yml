@@ -98,11 +98,13 @@ jobs:
               assert gate["development_run_id"] is None
               assert gate["development_aggregate_artifact_id"] is None
               assert gate["development_aggregate_sha256"] is None
+              assert gate["numerical_profile_sha256"] is None
           if gate["status"] == "OPEN":
               assert gate["development_run_id"]
               assert gate["development_aggregate_artifact_id"]
               assert gate["development_aggregate_sha256"]
               assert gate["numerical_freeze_commit"]
+              assert gate["numerical_profile_sha256"]
               assert profile["status"] == "FROZEN"
               assert profile["final_freeze_commit"] == gate["numerical_freeze_commit"]
 
