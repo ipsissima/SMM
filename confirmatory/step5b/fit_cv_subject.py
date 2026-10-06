@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, math
+import argparse, json, math, os, platform
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import scipy
 from scipy.optimize import minimize
 from scipy.stats import qmc
 import mne
@@ -125,6 +126,22 @@ def main():
         blocks[name]=(S,nu)
     result={'seed':SEED,'n_epochs':int(len(ep)),'split_A':int(len(A)),'split_B':int(len(B)),
             'optimizer':{'sobol_candidates':2**SOBOL_M,'polish_starts':POLISH_STARTS,'polish_maxiter':POLISH_MAXITER,'method':'L-BFGS-B','rel_floor':REL_FLOOR},
+            'environment':{
+                'platform':platform.platform(),
+                'python':platform.python_version(),
+                'numpy':np.__version__,
+                'scipy':scipy.__version__,
+                'mne':mne.__version__,
+                'thread_env':{k:os.environ.get(k) for k in (
+                    'OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','OPENBLAS_CORETYPE',
+                    'MKL_NUM_THREADS','VECLIB_MAXIMUM_THREADS','NUMEXPR_NUM_THREADS',
+                    'OMP_DYNAMIC','PYTHONHASHSEED')},
+                'runner_image':{
+                    'ImageOS':os.environ.get('ImageOS'),
+                    'ImageVersion':os.environ.get('ImageVersion'),
+                    'RUNNER_OS':os.environ.get('RUNNER_OS'),
+                    'RUNNER_ARCH':os.environ.get('RUNNER_ARCH')},
+            },
             'models':{}}
     for model in [m.upper() for m in a.models]:
         dirs=[]
