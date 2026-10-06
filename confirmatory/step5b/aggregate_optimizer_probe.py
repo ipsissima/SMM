@@ -12,7 +12,7 @@ import json
 import math
 from pathlib import Path
 
-KERNELS = {"Haswell", "SkylakeX", "Zen"}
+KERNELS = {"Haswell", "Sandybridge", "Zen"}
 TRAIN_RANGE_MAX = 0.001
 CV_RANGE_MAX = 0.005
 
