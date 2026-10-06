@@ -10,6 +10,6 @@
   "holdout_last_subject": "sub-608",
   "holdout_subject_count": 565,
   "primary_condition": "ses-1 / EyesClosed / acq-pre",
-  "note": "CLOSED. Prior single-thread freeze was superseded after cross-runner-image optimizer non-reproducibility. Do not open until a new final numerical freeze and complete deterministic/robust 34-subject rerun are audited.",
+  "note": "CLOSED. P1 and P2 numerical profiles failed robustness. Do not open until N1 passes, is frozen, and a complete fresh 34-subject N1 development rerun is aggregated and signed off.",
   "numerical_profile_sha256": null
 }
