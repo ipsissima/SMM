@@ -17,6 +17,9 @@ SEED = 97
 SOBOL_M = 5
 POLISH_STARTS = 4
 POLISH_MAXITER = 120
+FTOL = 1e-9
+GTOL = 1e-6
+MAXLS = 30
 REL_FLOOR = 1e-6
 
 def _load_L20(forward_dir: Path):
@@ -85,7 +88,7 @@ def fit_block(empirical_csd, dof, model, network_dir, L20):
     best=None
     for k in order:
         res=minimize(objective,cand[k],method='L-BFGS-B',bounds=bounds,
-                     options={'maxiter':POLISH_MAXITER,'ftol':1e-9,'gtol':1e-6,'maxls':30})
+                     options={'maxiter':POLISH_MAXITER,'ftol':FTOL,'gtol':GTOL,'maxls':MAXLS})
         if best is None or res.fun < best.fun: best=res
     if best is None or not np.isfinite(best.fun) or best.fun>=1e99:
         raise RuntimeError(f'optimizer failed for {model}')
@@ -125,7 +128,9 @@ def main():
         if not np.array_equal(f,FREQS_HZ): raise RuntimeError('frequency lock drift')
         blocks[name]=(S,nu)
     result={'seed':SEED,'n_epochs':int(len(ep)),'split_A':int(len(A)),'split_B':int(len(B)),
-            'optimizer':{'sobol_candidates':2**SOBOL_M,'polish_starts':POLISH_STARTS,'polish_maxiter':POLISH_MAXITER,'method':'L-BFGS-B','rel_floor':REL_FLOOR},
+            'optimizer':{'sobol_candidates':2**SOBOL_M,'polish_starts':POLISH_STARTS,
+                         'polish_maxiter':POLISH_MAXITER,'method':'L-BFGS-B',
+                         'ftol':FTOL,'gtol':GTOL,'maxls':MAXLS,'rel_floor':REL_FLOOR},
             'environment':{
                 'platform':platform.platform(),
                 'python':platform.python_version(),
