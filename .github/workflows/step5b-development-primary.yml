@@ -1,146 +1,19 @@
-name: Step 5B primary development preprocessing
-# infrastructure retrigger only; no scientific change
+name: Step 5B primary development preprocessing archive
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - step5b-confirmatory-gate-2026-10-05
-    paths:
-      - '.github/workflows/step5b-development-primary.yml'
 
 permissions:
   contents: read
 
-concurrency:
-  group: step5b-development-primary
-  cancel-in-progress: true
-
 jobs:
-  preprocess:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      max-parallel: 6
-      matrix:
-        subject:
-          - sub-001
-          - sub-002
-          - sub-003
-          - sub-004
-          - sub-005
-          - sub-006
-          - sub-007
-          - sub-010
-          - sub-011
-          - sub-012
-          - sub-014
-          - sub-015
-          - sub-016
-          - sub-017
-          - sub-018
-          - sub-019
-          - sub-020
-          - sub-021
-          - sub-022
-          - sub-023
-          - sub-024
-          - sub-025
-          - sub-026
-          - sub-028
-          - sub-029
-          - sub-030
-          - sub-031
-          - sub-032
-          - sub-033
-          - sub-034
-          - sub-035
-          - sub-036
-          - sub-038
-          - sub-039
-          - sub-040
-          - sub-041
-          - sub-042
-          - sub-043
-    env:
-      OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
+  provenance:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
-      - name: Install frozen development environment
+      - name: Canonical preprocessing record
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r confirmatory/step5b/requirements-development.txt
-          python - <<'PY'
-          import mne, pyprep, mne_icalabel
-          assert mne.__version__ == "1.13.2"
-          assert pyprep.__version__ == "0.9.0"
-          assert mne_icalabel.__version__ == "0.9.0"
-          print("versions OK", mne.__version__, pyprep.__version__, mne_icalabel.__version__)
-          PY
-
-      - name: Resolve frozen annex hash and download one development EDF
-        env:
-          SUBJECT: ${{ matrix.subject }}
-        run: |
-          set -euo pipefail
-          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
-          REL="${SUBJECT}/ses-1/eeg/${EDF}"
-          mkdir -p "development_raw/${SUBJECT}" "development_out/${SUBJECT}"
-
-          POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
-          POINTER="$(curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}")"
-          printf '%s
-' "${POINTER}" | tee "development_out/${SUBJECT}/annex_pointer.txt"
-
-          EXPECTED_SHA256="$(printf '%s
-' "${POINTER}" | sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p')"
-          EXPECTED_SIZE="$(printf '%s
-' "${POINTER}" | sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p')"
-          test -n "${EXPECTED_SHA256}"
-          test -n "${EXPECTED_SIZE}"
-
-          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
-          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "development_raw/${SUBJECT}/${EDF}"
-
-          echo "${EXPECTED_SHA256}  development_raw/${SUBJECT}/${EDF}" | sha256sum -c -
-          test "$(stat -c%s "development_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
-
-          printf '{"subject":"%s","openneuro_commit":"%s","edf":"%s","expected_sha256":"%s","expected_size":%s}
-' \
-            "${SUBJECT}" "${OPENNEURO_COMMIT}" "${EDF}" "${EXPECTED_SHA256}" "${EXPECTED_SIZE}" \
-            > "development_out/${SUBJECT}/input_provenance.json"
-
-      - name: Frozen preprocessing
-        env:
-          SUBJECT: ${{ matrix.subject }}
-        run: |
-          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
-          python confirmatory/step5b/preprocess_ds005385.py \
-            "development_raw/${SUBJECT}/${EDF}" \
-            --out-dir "development_out/${SUBJECT}"
-
-      - name: Assert development boundary
-        env:
-          SUBJECT: ${{ matrix.subject }}
-        run: |
-          case "${SUBJECT}" in
-            sub-00[1-7]|sub-010|sub-011|sub-012|sub-014|sub-015|sub-016|sub-017|sub-018|sub-019|sub-020|sub-021|sub-022|sub-023|sub-024|sub-025|sub-026|sub-028|sub-029|sub-030|sub-031|sub-032|sub-033|sub-034|sub-035|sub-036|sub-038|sub-039|sub-040|sub-041|sub-042|sub-043) ;;
-            *) echo "Unexpected subject outside primary development set: ${SUBJECT}"; exit 1 ;;
-          esac
-          test ! -e development_raw/sub-044
-          test ! -e ds005385
-          test -f "development_out/${SUBJECT}/qc.json"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: SMM_STEP5B_DEV_${{ matrix.subject }}
-          path: development_out/${{ matrix.subject }}/
-          if-no-files-found: error
-          retention-days: 90
+          echo "Primary development preprocessing is already frozen."
+          echo "Canonical run: 37438628533"
+          echo "Outcome: 34/38 QC pass."
+          echo "Do not rerun or alter preprocessing to improve development fit."
+          echo "See confirmatory/step5b/RESULTS_PROVENANCE_MANIFEST.md"
