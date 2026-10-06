@@ -109,10 +109,13 @@ A development-only optimizer robustness probe now tests a broader search using t
 
 - final optimizer profile: **PENDING**
 - P1 robustness-probe run ID: `37499465520` — **FAIL**
-- P1 decisive failed job: Haswell `112393128859`
 - P1 failure record: `confirmatory/step5b/P1_OPTIMIZER_PROBE_RESULT.md`
-- required escalation: predeclared P2 (512 Sobol / 16 polish starts)
-- P2 robustness-probe run ID: `37503947541` (**running**)
+- P2 robustness-probe run ID: `37503947541` — **FAIL**
+- P2 decisive failed job: Zen `112407717464`
+- P2 failure record: `confirmatory/step5b/P2_OPTIMIZER_PROBE_RESULT.md`
+- new method protocol: `confirmatory/step5b/N1_NESTED_OPTIMIZER_PROTOCOL.md`
+- N1 robustness-probe run ID: `37516169155` (**running**)
+- N1 method: normalized unit-cube search + exact M3-in-M2 feasible anchor
 - final numerical-freeze commit: **PENDING**
 - canonical 34-subject rerun: **PENDING**
 
