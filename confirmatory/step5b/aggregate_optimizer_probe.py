@@ -53,6 +53,8 @@ def main():
     all_recovered = True
     train_ranges = {}
     cv_ranges = {}
+    all_finite = True
+    decoded_bounds_pass = True
 
     for model in ("M2", "M3"):
         for train in ("A", "B"):
@@ -65,8 +67,55 @@ def main():
                 success = direction["optimizer"]["success"] is True
                 recovered = direction["recovered_previous_best_within_tolerance"] is True
                 score = float(direction["train_score_normalized"])
-                if not math.isfinite(score):
-                    raise RuntimeError("Nonfinite training score")
+                held = float(direction["heldout_score_normalized"])
+                if not math.isfinite(score) or not math.isfinite(held):
+                    all_finite = False
+
+                pars = direction.get("parameters", {})
+                common = {
+                    "G_N": (50.0, 185.0),
+                    "velocity_m_s": (3.0, 12.0),
+                    "pE": (1e-4, 1.0-1e-4),
+                }
+                for key,(lo,hi) in common.items():
+                    try:
+                        val=float(pars[key])
+                    except Exception:
+                        decoded_bounds_pass=False
+                        continue
+                    if not math.isfinite(val) or not (lo <= val <= hi):
+                        decoded_bounds_pass=False
+                for key in ("source_scale","sensor_floor"):
+                    try:
+                        val=float(pars[key])
+                    except Exception:
+                        decoded_bounds_pass=False
+                        continue
+                    if not math.isfinite(val) or val <= 0:
+                        decoded_bounds_pass=False
+
+                if model == "M2":
+                    m2=pars.get("m2",{})
+                    try:
+                        tau1=float(m2["tau1_s"])
+                        tau2=float(m2["tau2_s"])
+                    except Exception:
+                        decoded_bounds_pass=False
+                    else:
+                        if not (
+                            math.isfinite(tau1) and math.isfinite(tau2)
+                            and 0.03 <= tau1 <= tau2 <= 30.0
+                        ):
+                            decoded_bounds_pass=False
+                    for key in ("gE1","gE2","gI1","gI2"):
+                        try:
+                            val=float(m2[key])
+                        except Exception:
+                            decoded_bounds_pass=False
+                            continue
+                        if not math.isfinite(val) or not (-0.5 <= val <= 0.5):
+                            decoded_bounds_pass=False
+
                 all_success &= success
                 all_recovered &= recovered
                 rows.append((core, score, success, recovered))
@@ -96,7 +145,10 @@ def main():
 
     train_range_pass = all(v <= TRAIN_RANGE_MAX for v in train_ranges.values())
     cv_range_pass = all(v <= CV_RANGE_MAX for v in cv_ranges.values())
-    passed = bool(all_success and all_recovered and train_range_pass and cv_range_pass)
+    passed = bool(
+        all_success and all_recovered and all_finite and decoded_bounds_pass
+        and train_range_pass and cv_range_pass
+    )
 
     summary = {
         "phase": "development_optimizer_robustness",
@@ -106,6 +158,12 @@ def main():
         "criteria": {
             "all_optimizer_calls_success": all_success,
             "all_historical_best_training_basins_recovered": all_recovered,
+            "all_scores_finite": all_finite,
+            "decoded_parameter_bounds_pass": decoded_bounds_pass,
+            "optimizer_bound_enforcement_note": (
+                "L-BFGS-B is called with the frozen raw bounds; decoded common/M2 parameters "
+                "are additionally audited here. Positive source/noise scales are checked after decoding."
+            ),
             "max_training_score_range": TRAIN_RANGE_MAX,
             "training_ranges": train_ranges,
             "training_range_pass": train_range_pass,
@@ -137,6 +195,8 @@ def main():
         f"- Kernels: {', '.join(sorted(seen))}",
         f"- All optimizer calls successful: {all_success}",
         f"- All historical best training basins recovered: {all_recovered}",
+        f"- All scores finite: {all_finite}",
+        f"- Decoded parameter bounds pass: {decoded_bounds_pass}",
         f"- Training-score ranges: {train_ranges}",
         f"- Per-model CV ELPD ranges: {cv_ranges}",
         "",
