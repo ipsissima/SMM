@@ -34,7 +34,7 @@ jobs:
     env:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
-      OPENBLAS_CORETYPE: \${{ matrix.coretype }}
+      OPENBLAS_CORETYPE: ${{ matrix.coretype }}
       OPENBLAS_VERBOSE: "2"
       MKL_NUM_THREADS: "1"
       VECLIB_MAXIMUM_THREADS: "1"
@@ -88,7 +88,7 @@ jobs:
         with:
           name: SMM_STEP5B_FORWARD_GATE
           path: forward_gate
-          github-token: \${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37376954431
 
       - name: Verify forward gate material hashes
@@ -101,12 +101,12 @@ jobs:
         with:
           name: SMM_STEP5B_DEV_sub-001
           path: dev
-          github-token: \${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37438628533
 
       - name: Run frozen N1 normalized nested-comparator probe
         env:
-          KERNEL: \${{ matrix.kernel }}
+          KERNEL: ${{ matrix.kernel }}
         run: |
           mkdir -p n1_out
           PYTHONPATH=confirmatory/step5b python confirmatory/step5b/nested_optimizer_probe.py \
@@ -117,7 +117,7 @@ jobs:
 
       - name: Require all per-kernel N1 invariants
         env:
-          KERNEL: \${{ matrix.kernel }}
+          KERNEL: ${{ matrix.kernel }}
         run: |
           python - <<'PY'
           import json,os
@@ -139,7 +139,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SMM_STEP5B_OPT_N1_SUB001_\${{ matrix.kernel }}
+          name: SMM_STEP5B_OPT_N1_SUB001_${{ matrix.kernel }}
           path: n1_out/
           if-no-files-found: error
           retention-days: 90
@@ -147,7 +147,7 @@ jobs:
   aggregate:
     name: aggregate N1 cross-kernel decision
     needs: probe
-    if: \${{ always() && needs.probe.result == 'success' }}
+    if: ${{ always() && needs.probe.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
