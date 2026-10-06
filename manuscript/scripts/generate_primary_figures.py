@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate manuscript-ready primary-result figures from frozen aggregate tables.
 
-This script never reads raw EEG or GitHub logs. It consumes only the permanent
-machine-readable aggregate outputs.
+Consumes only permanent aggregate outputs. All 565 holdout assignments must be
+present in the accounting table; plots use only frozen-QC-included subjects.
 """
 from __future__ import annotations
 
@@ -29,42 +29,43 @@ def main():
     args = ap.parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
-    csv_path = args.aggregate_dir / "confirmatory_subject_results.csv"
-    json_path = args.aggregate_dir / "confirmatory_primary_result.json"
-    df = pd.read_csv(csv_path)
-    result = json.loads(json_path.read_text(encoding="utf-8"))
+    df = pd.read_csv(args.aggregate_dir / "confirmatory_subject_results.csv")
+    result = json.loads((args.aggregate_dir / "confirmatory_primary_result.json").read_text(encoding="utf-8"))
 
-    if len(df) != 565 or result.get("n_subjects") != 565:
-        raise RuntimeError("Primary figure generation requires the complete 565-subject holdout")
+    if len(df) != 565 or result.get("n_holdout_assigned") != 565:
+        raise RuntimeError("Primary figure generation requires complete 565-subject accounting")
     expected = [f"sub-{i:03d}" for i in range(44, 609)]
     if df["subject"].tolist() != expected:
         raise RuntimeError("Subject order/set drift in confirmatory table")
 
-    delta = df["delta_elpd_M3_minus_M2"].to_numpy(float)
+    inc = df.loc[df["primary_included"] == 1].copy()
+    if len(inc) != int(result["n_primary_included_after_frozen_qc"]):
+        raise RuntimeError("Frozen-QC included-n mismatch")
+    if len(inc) == 0:
+        raise RuntimeError("No frozen-QC-included subjects to plot")
 
-    # Figure 5A: ordered subject contrasts.
-    order = np.argsort(delta)
+    delta = inc["delta_elpd_M3_minus_M2"].to_numpy(float)
+
     fig, ax = plt.subplots(figsize=(8.0, 4.5))
+    order = np.argsort(delta)
     ax.plot(np.arange(len(delta)), delta[order], linewidth=1.0)
     ax.axhline(0.0, linewidth=1.0)
-    ax.set_xlabel("Holdout subjects ordered by DeltaELPD")
+    ax.set_xlabel("Frozen-QC-included holdout subjects ordered by DeltaELPD")
     ax.set_ylabel("DeltaELPD (M3 - M2)")
     ax.set_title("Subject-level held-out predictive contrast")
     save(fig, args.out_dir / "figure_primary_delta_ordered.png")
 
-    # Figure 5B: distribution.
     fig, ax = plt.subplots(figsize=(6.5, 4.5))
     ax.hist(delta, bins="auto")
     ax.axvline(0.0, linewidth=1.0)
     ax.axvline(float(result["mean_delta_elpd_M3_minus_M2"]), linewidth=1.0)
     ax.set_xlabel("DeltaELPD (M3 - M2)")
-    ax.set_ylabel("Subjects")
+    ax.set_ylabel("Frozen-QC-included subjects")
     ax.set_title("Distribution of primary predictive contrast")
     save(fig, args.out_dir / "figure_primary_delta_histogram.png")
 
-    # Figure 5C: M2 vs M3 per subject.
-    x = df["M2_cv_elpd"].to_numpy(float)
-    y = df["M3_cv_elpd"].to_numpy(float)
+    x = inc["M2_cv_elpd"].to_numpy(float)
+    y = inc["M3_cv_elpd"].to_numpy(float)
     lo = float(min(x.min(), y.min()))
     hi = float(max(x.max(), y.max()))
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
@@ -75,10 +76,9 @@ def main():
     ax.set_title("Matched generic slow control vs constrained SMM")
     save(fig, args.out_dir / "figure_primary_m2_vs_m3.png")
 
-    # Figure 5D: frozen group estimate and interval.
     mu = float(result["mean_delta_elpd_M3_minus_M2"])
-    ci = result["bootstrap"]
-    low, high = float(ci["ci_low"]), float(ci["ci_high"])
+    low = float(result["bootstrap"]["ci_low"])
+    high = float(result["bootstrap"]["ci_high"])
     fig, ax = plt.subplots(figsize=(5.5, 2.8))
     ax.errorbar([mu], [0], xerr=[[mu-low], [high-mu]], fmt="o", capsize=5)
     ax.axvline(0.0, linewidth=1.0)
@@ -90,7 +90,7 @@ def main():
     )
     save(fig, args.out_dir / "figure_primary_group_estimate.png")
 
-    print("PRIMARY_FIGURES_PASS", len(df))
+    print("PRIMARY_FIGURES_PASS", "assigned=565", f"included={len(inc)}")
 
 
 if __name__ == "__main__":
