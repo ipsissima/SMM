@@ -1,4 +1,4 @@
-name: Step 5B development fitting 34 QC-pass subjects
+name: Step 5B development M2-M3 CV
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 360
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 6
       matrix:
         subject:
           - sub-001
@@ -74,7 +74,7 @@ jobs:
           python - <<'PY'
           import mne
           assert mne.__version__ == "1.13.2"
-          print("MNE", mne.__version__)
+          print("MNE",mne.__version__)
           PY
 
       - name: Reconstruct and verify frozen DK68 network
@@ -95,10 +95,12 @@ jobs:
           echo "17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy" | sha256sum -c -
 
       - name: Download QC-passed development epochs
+        env:
+          SUBJECT: ${{ matrix.subject }}
         uses: actions/download-artifact@v4
         with:
           name: SMM_STEP5B_DEV_${{ matrix.subject }}
-          path: dev_subject
+          path: dev
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37438628533
 
@@ -108,7 +110,7 @@ jobs:
         run: |
           mkdir -p fit_out
           PYTHONPATH=confirmatory/step5b python confirmatory/step5b/fit_cv_subject.py \
-            dev_subject/clean-epo.fif \
+            dev/clean-epo.fif \
             --forward-dir forward_gate \
             --network-dir confirmatory/step5b/network_frozen \
             --models M2 M3 \
@@ -119,7 +121,7 @@ jobs:
           SUBJECT: ${{ matrix.subject }}
         run: |
           python - <<'PY'
-          import os, json, math
+          import os,json,math
           s=os.environ["SUBJECT"]
           d=json.load(open(f"fit_out/{s}.json"))
           assert d["n_epochs"] >= 30
@@ -127,7 +129,7 @@ jobs:
           assert math.isfinite(d["delta_elpd_M3_minus_M2"])
           for m in ("M2","M3"):
               assert len(d["models"][m]["directions"]) == 2
-          print("FIT_PASS", s, d["delta_elpd_M3_minus_M2"])
+          print("FIT_PASS",s,d["delta_elpd_M3_minus_M2"])
           PY
 
       - uses: actions/upload-artifact@v4
