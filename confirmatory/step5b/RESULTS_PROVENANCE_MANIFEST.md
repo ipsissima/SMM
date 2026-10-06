@@ -108,7 +108,11 @@ A development-only optimizer robustness probe now tests a broader search using t
 ### Final numerical freeze
 
 - final optimizer profile: **PENDING**
-- P1 robustness-probe run ID: `37499465520` (**currently running; verdict pending**)
+- P1 robustness-probe run ID: `37499465520` — **FAIL**
+- P1 decisive failed job: Haswell `112393128859`
+- P1 failure record: `confirmatory/step5b/P1_OPTIMIZER_PROBE_RESULT.md`
+- required escalation: predeclared P2 (512 Sobol / 16 polish starts)
+- P2 robustness-probe run ID: **PENDING**
 - final numerical-freeze commit: **PENDING**
 - canonical 34-subject rerun: **PENDING**
 
