@@ -19,12 +19,27 @@ def robust_mad(x):
     return 1.4826*np.median(np.abs(x-med))
 
 def amplitude_sanity(raw):
-    data_uV=raw.get_data(picks='eeg')*1e6
+    # ds005385 may contain large DC offsets, while its README explicitly warns
+    # that EDF physical min/max header values may be invalid. The frozen
+    # amplitude thresholds therefore apply to the already-prespecified
+    # 1-45 Hz QC stream rather than to uncentered DC-coupled samples.
+    raw_uV=raw.get_data(picks='eeg')*1e6
+    raw_rms=np.sqrt(np.mean(raw_uV**2,axis=1))
+    raw_p999=float(np.percentile(np.abs(raw_uV),99.9))
+
+    qc_stream=raw.copy().filter(1.0,45.0,fir_design='firwin',phase='zero',verbose='error')
+    data_uV=qc_stream.get_data(picks='eeg')*1e6
     rms=np.sqrt(np.mean(data_uV**2,axis=1))
     median_rms=float(np.median(rms))
     p999=float(np.percentile(np.abs(data_uV),99.9))
     ok=(0.1<=median_rms<=500.0) and (p999<=5000.0)
-    return {'median_channel_rms_uV':median_rms,'abs_p999_uV':p999,'pass':bool(ok)}
+    return {
+      'raw_median_channel_rms_uV':float(np.median(raw_rms)),
+      'raw_abs_p999_uV':raw_p999,
+      'qc_1_45_median_channel_rms_uV':median_rms,
+      'qc_1_45_abs_p999_uV':p999,
+      'pass':bool(ok)
+    }
 
 def preprocess(edf:Path,out_dir:Path):
     import mne
