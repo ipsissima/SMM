@@ -2,6 +2,11 @@ name: Step 5B optimizer robustness P2 sub-001
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - '.github/workflows/step5b-optimizer-p2.yml'
 
 permissions:
   actions: read
