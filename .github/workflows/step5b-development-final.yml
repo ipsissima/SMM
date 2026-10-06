@@ -31,8 +31,7 @@ jobs:
           frozen=(p.get("status")=="FROZEN")
           if frozen:
               assert p["openblas_coretype"] == "Haswell"
-              assert p["sobol_candidates"] in (256,512)
-              assert p["polish_starts"] in (8,16)
+              assert (int(p["sobol_candidates"]),int(p["polish_starts"])) in {(256,8),(512,16)}
               assert p["final_freeze_commit"]
           with open(os.environ["GITHUB_OUTPUT"],"a") as f:
               f.write("frozen=" + ("true" if frozen else "false") + "\n")
@@ -46,7 +45,7 @@ jobs:
     timeout-minutes: 360
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 12
       matrix:
         subject:
           - sub-001
