@@ -20,7 +20,7 @@ This directory contains the canonical implementation of the definitive SMM empir
 - `fit_cv_subject.py` - frozen two-block subject-level fitting
 - `reconstruct_network_frozen.py` - deterministic DK68 network reconstruction
 - `aggregate_development.py` - descriptive 34-subject development aggregation
-- `aggregate_confirmatory.py` - frozen 565-subject confirmatory inference
+- `aggregate_confirmatory.py` - frozen confirmatory inference with complete 565-assignment accounting and frozen-QC inclusion
 - `subject_split.csv` - complete 608-subject role/QC map
 
 ## Scientific locks
@@ -47,9 +47,15 @@ See `RESULTS_PROVENANCE_MANIFEST.md` for the complete list.
 
 Workflow:
 
+Optimizer robustness P1 currently uses:
+
 `.github/workflows/step5b-development-smoke.yml`
 
-The historical filename is currently being used for the **development-only optimizer robustness probe** after cross-runner-image instability was detected. Once the final optimizer profile is selected and frozen, this workflow will be restored to the canonical 34-subject development matrix. The final matrix must:
+The definitive 34-subject post-freeze development matrix is already prebuilt separately at:
+
+`.github/workflows/step5b-development-final.yml`
+
+It remains inert while `NUMERICAL_PROFILE.json` is `PENDING`. Once P1 or the predetermined P2 passes and the final numerical profile is frozen, that matrix must:
 
 1. verifies pinned package versions;
 2. forces single-thread numerical execution;
@@ -112,9 +118,10 @@ When legitimately opened, the workflow:
 2. downloads each primary-condition EDF from the frozen OpenNeuro snapshot and verifies its git-annex SHA256 and byte size;
 3. applies frozen preprocessing/QC;
 4. runs the same deterministic M2/M3 fit;
-5. aggregates exactly 565 subject JSONs;
-6. applies the frozen bootstrap/sign-flip rule;
-7. emits the primary PASS/FAIL result and complete machine-readable subject table.
+5. accounts for exactly 565 holdout assignments, representing frozen-QC failures explicitly rather than replacing them;
+6. computes subject fit contrasts only for recordings passing the frozen primary QC/inclusion rules;
+7. applies the frozen bootstrap/sign-flip rule to the frozen-QC-included paired contrasts;
+8. emits the primary PASS/FAIL result plus a complete 565-subject accounting table.
 
 Reusable jobs:
 
