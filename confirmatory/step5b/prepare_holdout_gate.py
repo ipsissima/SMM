@@ -38,6 +38,8 @@ def main():
 
     if profile.get("status")!="FROZEN":
         raise RuntimeError("Holdout cannot open before the final numerical profile is FROZEN")
+    if profile.get("profile_name")!="N1" or profile.get("exact_nested_anchor") is not True:
+        raise RuntimeError("Holdout cannot open unless the final frozen profile is N1")
     if not profile.get("final_freeze_commit"):
         raise RuntimeError("Frozen numerical profile lacks final_freeze_commit")
     if current_gate.get("status")!="CLOSED":
