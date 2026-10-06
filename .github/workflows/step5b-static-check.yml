@@ -168,7 +168,8 @@ jobs:
           bad=[]
           for p in Path(".github/workflows").glob("step5b-*.yml"):
               txt=p.read_text()
-              if "\\${{" in txt:
+              needle="\\" + "$" + "{{"
+              if needle in txt:
                   bad.append(str(p))
           assert not bad, f"Literal escaped GitHub expressions found: {bad}"
           print("GITHUB_EXPRESSION_ESCAPE_CHECK=PASS")
