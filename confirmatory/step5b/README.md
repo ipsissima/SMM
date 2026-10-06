@@ -75,20 +75,23 @@ The aggregate is descriptive only. It intentionally does not compute the confirm
 
 ## Numerical freeze
 
-The frozen fit configuration is:
+The scientific fit architecture is frozen, but the **final numerical search profile is still being resolved in development** under the predeclared robustness rule.
+
+Invariant numerical settings are:
 
 - seed 97;
-- 32 Sobol candidates;
-- 4 L-BFGS-B polish starts;
+- L-BFGS-B;
 - maxiter 120;
-- ftol (10^{-9});
-- gtol (10^{-6});
+- ftol \(10^{-9}\);
+- gtol \(10^{-6}\);
 - maxls 30;
-- relative CSD/model eigenvalue floor (10^{-6});
+- relative CSD/model eigenvalue floor \(10^{-6}\);
 - pinned NumPy/SciPy/MNE/pandas;
 - one BLAS/OpenMP thread.
 
-The single-thread requirement was added after development exposed cross-run M2 local-minimum variability. Three independent reproducibility runs then returned bit-identical scores and optimizer diagnostics.
+The original 32-Sobol / 4-polish profile proved runner-image sensitive and was superseded before holdout opening. P1 (256 Sobol / 8 polish) then failed its predeclared M2 training-basin recovery criterion. P2 (512 Sobol / 16 polish) is the only remaining predeclared escalation and is currently under robustness testing across Haswell, Sandybridge and Zen kernels.
+
+Production development and holdout fitting consume the versioned `NUMERICAL_PROFILE.json` only after its status becomes `FROZEN`. The profile is selected by numerical robustness, never by the sign or magnitude of DeltaELPD(M3-M2).
 
 ## Opening the holdout
 
