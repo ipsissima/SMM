@@ -236,18 +236,26 @@ def fit_unit(empirical_csd, dof, model, network_dir, L20, embedded_anchor=None):
         if anchor_local["success"] and np.isfinite(anchor_local["fun"]) and anchor_local["fun"] < 1e99:
             successful.append(anchor_local)
 
-    if model == "M3":
-        if not successful:
-            raise RuntimeError("M3: no successful local polish")
-        best = min(successful, key=lambda z: z["fun"])
-        selected_source = best["source"]
-        best_u = best["u"]
-        best_fun = best["fun"]
-        selected_success = True
-    else:
-        candidates = list(successful)
+    # Raw finite Sobol points are genuine feasible solutions and remain in
+    # the candidate pool. Local polishing can improve them but may not erase a
+    # better directly evaluated point.
+    raw_candidates = [
+        dict(
+            source=f"sobol-{int(k)}-raw",
+            success=True,
+            message="direct finite Sobol candidate retained",
+            fun=float(vals[k]),
+            nit=0,
+            nfev=1,
+            u=np.asarray(cand[k], float),
+        )
+        for k in np.flatnonzero(finite)
+    ]
+
+    candidates = raw_candidates + list(successful)
+    if model == "M2":
         # The unpolished exact embedding is deliberately retained as a valid
-        # comparator solution. This is what enforces M3 subset M2 numerically.
+        # comparator solution. This enforces M3 subset M2 numerically.
         candidates.append(dict(
             source="embedded-m3-raw",
             success=True,
@@ -257,11 +265,14 @@ def fit_unit(empirical_csd, dof, model, network_dir, L20, embedded_anchor=None):
             nfev=1,
             u=np.asarray(embedded_anchor, float),
         ))
-        best = min(candidates, key=lambda z: z["fun"])
-        selected_source = best["source"]
-        best_u = best["u"]
-        best_fun = best["fun"]
-        selected_success = bool(best["success"])
+
+    if not candidates:
+        raise RuntimeError(f"{model}: no finite retained candidates")
+    best = min(candidates, key=lambda z: z["fun"])
+    selected_source = best["source"]
+    best_u = best["u"]
+    best_fun = best["fun"]
+    selected_success = bool(best["success"])
 
     pars = decode_unit(model, best_u, amp_center, noise_center)
     return dict(
