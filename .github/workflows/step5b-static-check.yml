@@ -1,0 +1,96 @@
+name: Step 5B static integrity checks
+
+on:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - 'confirmatory/step5b/**'
+      - 'manuscript/**'
+      - '.github/workflows/step5b-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: step5b-static-integrity
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Python syntax
+        run: |
+          python -m py_compile \
+            confirmatory/step5b/preprocess_ds005385.py \
+            confirmatory/step5b/empirical_csd_lock.py \
+            confirmatory/step5b/model_frequency_lock.py \
+            confirmatory/step5b/statistical_lock.py \
+            confirmatory/step5b/fit_cv_subject.py \
+            confirmatory/step5b/reconstruct_network_frozen.py \
+            confirmatory/step5b/aggregate_development.py \
+            confirmatory/step5b/aggregate_confirmatory.py \
+            manuscript/scripts/generate_primary_figures.py
+
+      - name: Static split and gate invariants
+        run: |
+          python - <<'PY'
+          import csv,json
+          from pathlib import Path
+
+          rows=list(csv.DictReader(Path("confirmatory/step5b/subject_split.csv").open()))
+          assert len(rows) == 608
+          dev_primary=[r for r in rows if r["role"]=="development_primary"]
+          dev_sens=[r for r in rows if r["role"]=="development_sensitivity_only"]
+          hold=[r for r in rows if r["role"]=="confirmatory_holdout"]
+          assert len(dev_primary) == 38
+          assert len(dev_sens) == 5
+          assert len(hold) == 565
+          assert hold[0]["subject"] == "sub-044"
+          assert hold[-1]["subject"] == "sub-608"
+          assert all(r["development_qc_status"]=="UNOPENED" for r in hold)
+          assert sum(r["development_qc_status"]=="PASS" for r in dev_primary) == 34
+
+          gate=json.loads(Path("confirmatory/step5b/HOLDOUT_GATE.json").read_text())
+          assert gate["holdout_first_subject"] == "sub-044"
+          assert gate["holdout_last_subject"] == "sub-608"
+          assert gate["holdout_subject_count"] == 565
+          if gate["status"] == "CLOSED":
+              assert gate["development_run_id"] is None
+              assert gate["development_aggregate_artifact_id"] is None
+              assert gate["development_aggregate_sha256"] is None
+
+          print("STEP5B_STATIC_INTEGRITY=PASS")
+          PY
+
+      - name: Workflow YAML parse
+        run: |
+          python -m pip install PyYAML
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          files=[
+            ".github/workflows/step5b-development-primary.yml",
+            ".github/workflows/step5b-development-smoke.yml",
+            ".github/workflows/step5b-forward-gate.yml",
+            ".github/workflows/step5b-reusable-preprocess-one.yml",
+            ".github/workflows/step5b-reusable-fit-one.yml",
+            ".github/workflows/step5b-confirmatory-holdout.yml",
+            ".github/workflows/step5b-static-check.yml",
+          ]
+          for p in files:
+              with Path(p).open() as f:
+                  obj=yaml.safe_load(f)
+              assert isinstance(obj,dict),p
+              assert "jobs" in obj,p
+              print("YAML_PARSE_PASS",p)
+          PY
