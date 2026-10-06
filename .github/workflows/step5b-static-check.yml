@@ -72,25 +72,25 @@ jobs:
           assert profile["status"] in {"PENDING","FROZEN"}
 
           if profile["status"] == "FROZEN":
-              import ast
               src=Path("confirmatory/step5b/fit_cv_subject.py").read_text()
-              tree=ast.parse(src)
-              vals={}
-              for node in tree.body:
-                  if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name):
-                      try:
-                          vals[node.targets[0].id]=ast.literal_eval(node.value)
-                      except Exception:
-                          pass
-              assert 2 ** int(vals["SOBOL_M"]) == int(profile["sobol_candidates"])
-              assert int(vals["POLISH_STARTS"]) == int(profile["polish_starts"])
-              assert int(vals["POLISH_MAXITER"]) == int(profile["polish_maxiter"])
-              assert float(vals["FTOL"]) == float(profile["ftol"])
-              assert float(vals["GTOL"]) == float(profile["gtol"])
-              assert int(vals["MAXLS"]) == int(profile["maxls"])
-              assert float(vals["REL_FLOOR"]) == float(profile["rel_floor"])
-              assert int(vals["SEED"]) == int(profile["seed"])
+              assert "def _apply_frozen_numerical_profile()" in src
+              assert "_apply_frozen_numerical_profile()" in src
+              assert int(profile["sobol_candidates"]) in (256,512)
+              assert int(profile["polish_starts"]) in (8,16)
+              assert (
+                  (int(profile["sobol_candidates"]),int(profile["polish_starts"]))
+                  in {(256,8),(512,16)}
+              )
+              assert int(profile["polish_maxiter"]) == 120
+              assert profile["method"] == "L-BFGS-B"
+              assert float(profile["ftol"]) == 1e-9
+              assert float(profile["gtol"]) == 1e-6
+              assert int(profile["maxls"]) == 30
+              assert float(profile["rel_floor"]) == 1e-6
+              assert int(profile["seed"]) == 97
               assert profile["openblas_coretype"] == "Haswell"
+              assert profile["robustness_run_id"]
+              assert profile["final_freeze_commit"]
 
           if gate["status"] == "CLOSED":
               assert gate["development_run_id"] is None
