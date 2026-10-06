@@ -108,7 +108,14 @@ def main():
     a=ap.parse_args()
     U20,L20=_load_L20(a.forward_dir)
     ep=mne.read_epochs(a.epochs_fif,preload=True,verbose='error')
-    x=ep.get_data(picks='eeg')
+    frozen_channels=[x.strip() for x in Path(__file__).with_name('channels_64.txt').read_text().splitlines() if x.strip()]
+    if ep.ch_names != frozen_channels:
+        raise RuntimeError(f'Clean-epoch channel order drift: got {ep.ch_names}')
+    # Bad channels were already interpolated during frozen preprocessing but
+    # deliberately remain flagged in info["bads"] for provenance. Select the
+    # frozen names explicitly so interpolated channels are retained for the
+    # 64-channel forward operator.
+    x=ep.get_data(picks=frozen_channels)
     if x.shape[1:] != (64,1000): raise RuntimeError(f'Expected clean epochs [n,64,1000], got {x.shape}')
     A,B=chronological_two_block_indices(len(ep))
     blocks={}
