@@ -159,3 +159,39 @@ jobs:
           path: fit_out/
           if-no-files-found: error
           retention-days: 90
+
+  aggregate:
+    name: aggregate development
+    needs: fit
+    if: ${{ always() && needs.fit.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download all 34 fit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_DEV_FIT_sub-*
+          path: development_fits
+          merge-multiple: true
+
+      - name: Aggregate development fits and audit optimizers
+        run: |
+          python confirmatory/step5b/aggregate_development.py development_fits --out-dir development_aggregate
+
+      - name: Print aggregate
+        run: |
+          cat development_aggregate/development_summary.md
+          cat development_aggregate/development_summary.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_DEVELOPMENT_AGGREGATE
+          path: development_aggregate/
+          if-no-files-found: error
+          retention-days: 90
