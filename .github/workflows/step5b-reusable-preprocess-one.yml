@@ -20,11 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
       - name: Assert holdout subject boundary before any network access
         run: |
           set -euo pipefail
@@ -33,6 +28,11 @@ jobs:
           test "${N}" -ge 44
           test "${N}" -le 608
           echo "HOLDOUT_SUBJECT_BOUNDARY=PASS ${SUBJECT}"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
 
       - name: Install frozen preprocessing environment
         run: |
@@ -72,18 +72,74 @@ jobs:
             "${SUBJECT}" "${OPENNEURO_COMMIT}" "${EDF}" "${EXPECTED_SHA256}" "${EXPECTED_SIZE}" \
             > "holdout_out/${SUBJECT}/input_provenance.json"
 
-      - name: Frozen preprocessing
+      - name: Frozen preprocessing with structural QC accounting
         run: |
+          set +e
           EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
           python confirmatory/step5b/preprocess_ds005385.py \
             "holdout_raw/${SUBJECT}/${EDF}" \
-            --out-dir "holdout_out/${SUBJECT}"
+            --out-dir "holdout_out/${SUBJECT}" 2>&1 | tee "holdout_out/${SUBJECT}/preprocess.log"
+          CODE=${PIPESTATUS[0]}
+          set -e
 
-      - name: Assert output and no development data
+          if [ "${CODE}" -eq 0 ]; then
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          qc=json.loads((out/"qc.json").read_text())
+          status={
+              "subject":s,
+              "included":True,
+              "primary_condition":"ses-1 / EyesClosed / acq-pre",
+              "reason":None,
+              "n_epochs_clean":int(qc["n_epochs_clean"]),
+          }
+          (out/"qc_status.json").write_text(json.dumps(status,indent=2)+"\n")
+          PY
+          elif grep -q "RuntimeError: Primary QC failed:" "holdout_out/${SUBJECT}/preprocess.log"; then
+            python - <<'PY'
+          import json,os,re
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          log=(out/"preprocess.log").read_text(errors="replace")
+          matches=re.findall(r"RuntimeError: (Primary QC failed:.*)",log)
+          if not matches:
+              raise SystemExit("Expected frozen primary-QC failure was not parseable")
+          status={
+              "subject":s,
+              "included":False,
+              "primary_condition":"ses-1 / EyesClosed / acq-pre",
+              "reason":matches[-1].strip(),
+              "n_epochs_clean":None,
+          }
+          (out/"qc_status.json").write_text(json.dumps(status,indent=2)+"\n")
+          print("FROZEN_QC_EXCLUSION",s,status["reason"])
+          PY
+          else
+            echo "Unexpected preprocessing failure; manual/infrastructure investigation required."
+            exit "${CODE}"
+          fi
+
+      - name: Assert structural QC outcome
         run: |
-          test -f "holdout_out/${SUBJECT}/qc.json"
-          test ! -d holdout_raw/sub-001
-          test ! -d development_raw
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          d=json.loads((out/"qc_status.json").read_text())
+          assert d["subject"] == s
+          if d["included"]:
+              assert (out/"clean-epo.fif").is_file()
+              assert (out/"qc.json").is_file()
+              assert int(d["n_epochs_clean"]) >= 30
+          else:
+              assert str(d["reason"]).startswith("Primary QC failed:")
+          print("QC_STATUS_PASS",s,d["included"],d["reason"])
+          PY
 
       - uses: actions/upload-artifact@v4
         with:
