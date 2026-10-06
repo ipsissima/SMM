@@ -38,14 +38,15 @@ jobs:
           ACK: ${{ inputs.acknowledge }}
         run: |
           python - <<'PY'
-          import json,os
+          import hashlib,json,os
           from pathlib import Path
           cfg=json.loads(Path("confirmatory/step5b/HOLDOUT_GATE.json").read_text())
           profile=json.loads(Path("confirmatory/step5b/NUMERICAL_PROFILE.json").read_text())
           status=cfg.get("status")
           if status == "OPEN":
               required=("development_run_id","development_aggregate_artifact_id",
-                        "development_aggregate_sha256","numerical_freeze_commit")
+                        "development_aggregate_sha256","numerical_freeze_commit",
+                        "numerical_profile_sha256")
               missing=[k for k in required if not cfg.get(k)]
               if missing:
                   raise SystemExit(f"OPEN gate is incomplete: {missing}")
@@ -55,6 +56,10 @@ jobs:
                   raise SystemExit("OPEN gate rejected: numerical profile lacks final_freeze_commit")
               if cfg.get("numerical_freeze_commit") != profile.get("final_freeze_commit"):
                   raise SystemExit("OPEN gate rejected: freeze commit mismatch")
+              raw=Path("confirmatory/step5b/NUMERICAL_PROFILE.json").read_bytes()
+              actual="sha256:"+hashlib.sha256(raw).hexdigest()
+              if cfg.get("numerical_profile_sha256") != actual:
+                  raise SystemExit("OPEN gate rejected: numerical profile digest mismatch")
           ok=(status == "OPEN" and profile.get("status") == "FROZEN" and os.environ.get("ACK") == "OPEN-HOLDOUT")
           with open(os.environ["GITHUB_OUTPUT"],"a") as f:
               f.write("open=" + ("true" if ok else "false") + "\n")
