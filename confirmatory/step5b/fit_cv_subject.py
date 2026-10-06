@@ -22,6 +22,41 @@ GTOL = 1e-6
 MAXLS = 30
 REL_FLOOR = 1e-6
 
+def _apply_frozen_numerical_profile():
+    """Apply the versioned final numerical profile when it is frozen.
+
+    During development robustness probing NUMERICAL_PROFILE remains PENDING and
+    probe code may override these module globals explicitly. Production
+    development/holdout fitting is therefore controlled by the versioned
+    NUMERICAL_PROFILE.json rather than by a second manually synchronized copy
+    of the optimizer constants.
+    """
+    global SEED, SOBOL_M, POLISH_STARTS, POLISH_MAXITER, FTOL, GTOL, MAXLS, REL_FLOOR
+    pth=Path(__file__).with_name("NUMERICAL_PROFILE.json")
+    if not pth.is_file():
+        return
+    p=json.loads(pth.read_text(encoding="utf-8"))
+    if p.get("status") != "FROZEN":
+        return
+    candidates=int(p["sobol_candidates"])
+    if candidates <= 0 or candidates & (candidates-1):
+        raise RuntimeError("Frozen sobol_candidates must be an exact power of two")
+    sobol_m=candidates.bit_length()-1
+    if 2**sobol_m != candidates:
+        raise RuntimeError("Frozen Sobol profile is inconsistent")
+    if p["method"] != "L-BFGS-B":
+        raise RuntimeError("Frozen numerical method drift")
+    SEED=int(p["seed"])
+    SOBOL_M=sobol_m
+    POLISH_STARTS=int(p["polish_starts"])
+    POLISH_MAXITER=int(p["polish_maxiter"])
+    FTOL=float(p["ftol"])
+    GTOL=float(p["gtol"])
+    MAXLS=int(p["maxls"])
+    REL_FLOOR=float(p["rel_floor"])
+
+_apply_frozen_numerical_profile()
+
 def _load_L20(forward_dir: Path):
     U20 = np.load(forward_dir / 'leadfield_U20.npy')
     df = pd.read_csv(forward_dir / 'leadfield_DK68_64x68.csv', index_col=0)
