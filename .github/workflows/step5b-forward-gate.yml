@@ -1,12 +1,7 @@
 name: Step 5B confirmatory forward gate
 
 on:
-  push:
-    branches:
-      - step5b-confirmatory-gate-2026-10-05
-    paths:
-      - 'confirmatory/step5b/**'
-      - '.github/workflows/step5b-forward-gate.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
