@@ -244,6 +244,9 @@ def main():
                 "M3_cv_elpd": "",
                 "delta_elpd_M3_minus_M2": "",
                 "M3_better": "",
+                "max_embedding_score_error": "",
+                "min_M2_minus_M3_training_gap": "",
+                "transfer_identity_max_abs_error": "",
             })
             continue
 
@@ -252,6 +255,7 @@ def main():
         m3 = float(d["models"]["M3"]["cv_elpd"])
         delta = float(d["delta_elpd_M3_minus_M2"])
         included_deltas.append(delta)
+        nested=d["nestedness"]
         subject_rows.append({
             "subject": subject,
             "primary_included": 1,
@@ -263,6 +267,9 @@ def main():
             "M3_cv_elpd": m3,
             "delta_elpd_M3_minus_M2": delta,
             "M3_better": int(delta > 0.0),
+            "max_embedding_score_error": max(float(q["embedding_score_error"]) for q in nested),
+            "min_M2_minus_M3_training_gap": min(float(q["M2_minus_M3_training_gap"]) for q in nested),
+            "transfer_identity_max_abs_error": float(d["transfer_identity_max_abs_error"]),
         })
         for model in ("M2", "M3"):
             for direction in d["models"][model]["directions"]:
@@ -323,6 +330,23 @@ def main():
         "fraction_M3_better": float(np.mean(x > 0.0)),
         "all_optimizers_success": all(r["success"] for r in opt_rows),
         "optimizer_calls": len(opt_rows),
+        "max_embedding_score_error": max(
+            float(r["max_embedding_score_error"]) for r in subject_rows if r["primary_included"] == 1
+        ),
+        "minimum_M2_minus_M3_training_gap": min(
+            float(r["min_M2_minus_M3_training_gap"]) for r in subject_rows if r["primary_included"] == 1
+        ),
+        "max_transfer_identity_abs_error": max(
+            float(r["transfer_identity_max_abs_error"]) for r in subject_rows if r["primary_included"] == 1
+        ),
+        "all_nesting_checks_pass": (
+            max(float(r["max_embedding_score_error"]) for r in subject_rows if r["primary_included"] == 1)
+                <= float(profile["nested_training_tolerance"])
+            and min(float(r["min_M2_minus_M3_training_gap"]) for r in subject_rows if r["primary_included"] == 1)
+                >= -float(profile["nested_training_tolerance"])
+            and max(float(r["transfer_identity_max_abs_error"]) for r in subject_rows if r["primary_included"] == 1)
+                <= float(profile["transfer_identity_tolerance"])
+        ),
         "frozen_optimizer": expected_opt,
         "numerical_profile": profile,
         "success_rule": "CI_low > 0 AND one-sided sign-flip p < 0.05",
