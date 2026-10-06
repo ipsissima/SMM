@@ -114,8 +114,11 @@ A development-only optimizer robustness probe now tests a broader search using t
 - P2 decisive failed job: Zen `112407717464`
 - P2 failure record: `confirmatory/step5b/P2_OPTIMIZER_PROBE_RESULT.md`
 - new method protocol: `confirmatory/step5b/N1_NESTED_OPTIMIZER_PROTOCOL.md`
-- N1 robustness-probe run ID: `37516169155` (**running**)
-- N1 method: normalized unit-cube search + exact M3-in-M2 feasible anchor
+- N1 attempt `37515959819`: **INVALID INFRASTRUCTURE ATTEMPT** — GitHub expressions were escaped literally, so artifact authentication failed before any N1 fit ran.
+- N1 attempt `37516169155`: **SUPERSEDED BEFORE INTERPRETATION** — an audit found that the frozen N1 text required retention of finite raw Sobol candidates while the implementation retained only local polishes plus the M2 anchor. No output from this run is admissible for the N1 verdict.
+- canonical N1 robustness-probe run ID: `37517846200` (**running**)
+- canonical N1 commit SHA: `7c1749c2c8e1dcea1e05dc00cd33f27226c69664`
+- N1 method: normalized unit-cube search + exact M3-in-M2 feasible anchor + retention of finite raw Sobol candidates
 - final numerical-freeze commit: **PENDING**
 - canonical 34-subject rerun: **PENDING**
 
