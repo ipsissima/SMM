@@ -3,6 +3,7 @@
 > **Definitive reconstruction notice (2026-10-06).** The historical README below documents the legacy v1-v3 wave/telegraph implementation and remains for reproducibility. It is **not** the canonical scientific model used by the definitive paper. The reconstructed SMM treats astroglial syncytial physiology as a local/mesoscale ionic-homeostatic control subsystem, uses a QIF/MPR E-I neuronal backbone, has no protected direct glial 4/8/12-Hz oscillator, and does not treat astrocytes as direct EEG generators.
 >
 > Canonical definitive materials:
+> - `theory/definitive/README.md` - complete Step 1-5B mechanistic reconstruction archive
 > - `confirmatory/step5b/RESULTS_PROVENANCE_MANIFEST.md`
 > - `confirmatory/step5b/DEVELOPMENT_NUMERICAL_FREEZE_2026-10-06.md`
 > - `confirmatory/step5b/HOLDOUT_GATE.json`
