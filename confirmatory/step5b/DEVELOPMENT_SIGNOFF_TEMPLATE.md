@@ -4,6 +4,14 @@
 
 The confirmatory gate may be opened only after every item below is resolved from the canonical aggregate.
 
+## 0. Final numerical profile
+
+- [ ] `NUMERICAL_PROFILE.json` status is `FROZEN`.
+- [ ] The passing P1/P2 robustness run and aggregate are permanently recorded.
+- [ ] `FINAL_NUMERICAL_FREEZE_TEMPLATE.md` has been completed into the final freeze record.
+- [ ] The fit driver consumes the frozen versioned profile.
+- [ ] No optimizer profile was selected using the sign or magnitude of DeltaELPD(M3-M2).
+
 ## A. Completeness
 
 - [ ] Exactly 34 expected QC-passed development subjects are present.
@@ -18,12 +26,13 @@ Expected subjects:
 ## B. Numerical integrity
 
 - [ ] Seed = 97 for all subjects.
-- [ ] 32 Sobol candidates for all fits.
-- [ ] 4 polish starts for all fits.
+- [ ] Every fit exactly matches the final `NUMERICAL_PROFILE.json` selected by the predeclared P1/P2 robustness rule.
+- [ ] Final profile is one of the only permitted outcomes: P1 = 256 Sobol / 8 polish starts, or P2 = 512 Sobol / 16 polish starts.
+- [ ] Production kernel is the predeclared `OPENBLAS_CORETYPE=Haswell`, after cross-kernel robustness has passed on Haswell/Sandybridge/Zen.
 - [ ] L-BFGS-B for all fits.
 - [ ] maxiter = 120 for all fits.
 - [ ] relative CSD floor = (10^{-6}).
-- [ ] Deterministic single-thread environment used.
+- [ ] Single-thread BLAS/OpenMP environment used with pinned NumPy/SciPy/MNE versions.
 - [ ] All 136 optimizer calls (34 subjects x 2 models x 2 CV directions) report success.
 - [ ] No nonfinite score or parameter appears.
 - [ ] No implementation-level pathology remains that would justify another numerical change.
