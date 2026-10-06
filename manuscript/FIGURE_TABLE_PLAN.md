@@ -77,14 +77,14 @@ This figure should make it visually impossible to misread the study as "SMM vs n
 **Do not instantiate until holdout is opened.**
 
 Panels:
-- **A. Subject-level DeltaELPD(M3-M2), ordered by value.**
+- **A. Subject-level DeltaELPD(M3-M2), ordered by value, for frozen-QC-included holdout recordings.**
 - **B. Distribution/violin or histogram with zero line.**
 - **C. Mean and frozen 95% bootstrap CI.**
 - **D. Fraction of subjects with Delta > 0.**
 - **E. Optional M2 vs M3 held-out ELPD scatter with identity line.**
 
 Caption must state:
-- n=565 expected;
+- 565 holdout assignments must be accounted for; report the frozen-QC-included primary analysis n separately;
 - primary condition exact;
 - holdout untouched before gate;
 - frozen success rule;
@@ -156,7 +156,9 @@ No development p-value.
 ## Main Table 4 - Primary confirmatory test
 
 Columns:
-- n;
+- holdout assignments (565);
+- frozen-QC-included n;
+- frozen-QC-excluded n and reasons;
 - mean DeltaELPD;
 - median;
 - SD;
