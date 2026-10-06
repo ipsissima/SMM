@@ -69,7 +69,15 @@ def main():
     if summary.get("all_optimizers_success") is not True:
         raise RuntimeError("Not all development optimizer calls succeeded")
     if int(summary.get("optimizer_calls",0))!=136:
-        raise RuntimeError("Expected 136 optimizer calls")
+        raise RuntimeError("Expected 136 model/direction fit results")
+    if summary.get("all_nesting_checks_pass") is not True:
+        raise RuntimeError("Development N1 nesting audit did not pass")
+    if float(summary.get("max_embedding_score_error",1.0)) > float(profile["nested_training_tolerance"]):
+        raise RuntimeError("Development embedded-score tolerance failed")
+    if float(summary.get("minimum_M2_minus_M3_training_gap",-1.0)) < -float(profile["nested_training_tolerance"]):
+        raise RuntimeError("Development M2>=M3 training nesting invariant failed")
+    if float(summary.get("max_transfer_identity_abs_error",1.0)) > float(profile["transfer_identity_tolerance"]):
+        raise RuntimeError("Development transfer-identity tolerance failed")
     if summary.get("numerical_profile") != profile:
         raise RuntimeError("Aggregate numerical profile differs from repository frozen profile")
 
@@ -134,6 +142,9 @@ def main():
         f"- Production OpenBLAS kernel: {profile['openblas_coretype']}.",
         "- 136/136 selected M2/M3 x two-direction fit results satisfy the N1 success schema.",
         "- Every development training block satisfies the exact M3-in-M2 nesting checks enforced by the aggregate.",
+        f"- Max embedded-score error: {summary['max_embedding_score_error']:.3e}.",
+        f"- Minimum M2-M3 training gap: {summary['minimum_M2_minus_M3_training_gap']:.12g}.",
+        f"- Max transfer-identity error: {summary['max_transfer_identity_abs_error']:.3e}.",
         "- The aggregate embeds exactly the repository frozen numerical profile.",
         "",
         "## Descriptive development result",
