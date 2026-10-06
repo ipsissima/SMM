@@ -7,6 +7,7 @@ on:
     paths:
       - 'confirmatory/step5b/**'
       - 'manuscript/**'
+      - 'theory/definitive/**'
       - '.github/workflows/step5b-*.yml'
   workflow_dispatch:
 
@@ -39,6 +40,7 @@ jobs:
             confirmatory/step5b/reconstruct_network_frozen.py \
             confirmatory/step5b/aggregate_development.py \
             confirmatory/step5b/aggregate_confirmatory.py \
+            confirmatory/step5b/optimizer_robustness_probe.py \
             manuscript/scripts/generate_primary_figures.py
 
       - name: Static split and gate invariants
@@ -68,6 +70,31 @@ jobs:
               assert gate["development_run_id"] is None
               assert gate["development_aggregate_artifact_id"] is None
               assert gate["development_aggregate_sha256"] is None
+          if gate["status"] == "OPEN":
+              assert gate["development_run_id"]
+              assert gate["development_aggregate_artifact_id"]
+              assert gate["development_aggregate_sha256"]
+              assert gate["numerical_freeze_commit"]
+
+          required_theory=[
+              "SMM_GENEALOGY_ORIGINAL_TO_DEFINITIVE.md",
+              "SMM_DEFINITIVE_FOUNDATIONS_STEP1.md",
+              "SMM_DEFINITIVE_STEP2_NEURONAL_CORE.md",
+              "SMM_DEFINITIVE_STEP2A_K_TO_QIF_BRIDGE.md",
+              "SMM_DEFINITIVE_STEP2B_CELLULAR_CALIBRATION.md",
+              "SMM_DEFINITIVE_STEP2B_EXECUTED_RESULTS.md",
+              "SMM_DEFINITIVE_STEP3_ASTROGLIAL_MESH.md",
+              "SMM_DEFINITIVE_STEP3A_KNP_REDUCTION.md",
+              "SMM_DEFINITIVE_STEP3B_RESULTS.md",
+              "SMM_DEFINITIVE_STEP3B_NONLINEAR_R2_RESULTS.md",
+              "SMM_DEFINITIVE_STEP4_CLOSED_LOOP_RESULTS.md",
+              "SMM_DEFINITIVE_STEP5_WHOLEBRAIN_EEG_ARCHITECTURE.md",
+              "SMM_DEFINITIVE_STEP5B_PRE_EEG_LOCK.md",
+          ]
+          root=Path("theory/definitive")
+          for name in required_theory:
+              p=root/name
+              assert p.is_file() and p.stat().st_size > 1000,p
 
           print("STEP5B_STATIC_INTEGRITY=PASS")
           PY
