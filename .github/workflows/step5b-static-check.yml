@@ -69,6 +69,28 @@ jobs:
           assert gate["holdout_last_subject"] == "sub-608"
           assert gate["holdout_subject_count"] == 565
           assert profile["status"] in {"PENDING","FROZEN"}
+
+          if profile["status"] == "FROZEN":
+              import ast
+              src=Path("confirmatory/step5b/fit_cv_subject.py").read_text()
+              tree=ast.parse(src)
+              vals={}
+              for node in tree.body:
+                  if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name):
+                      try:
+                          vals[node.targets[0].id]=ast.literal_eval(node.value)
+                      except Exception:
+                          pass
+              assert 2 ** int(vals["SOBOL_M"]) == int(profile["sobol_candidates"])
+              assert int(vals["POLISH_STARTS"]) == int(profile["polish_starts"])
+              assert int(vals["POLISH_MAXITER"]) == int(profile["polish_maxiter"])
+              assert float(vals["FTOL"]) == float(profile["ftol"])
+              assert float(vals["GTOL"]) == float(profile["gtol"])
+              assert int(vals["MAXLS"]) == int(profile["maxls"])
+              assert float(vals["REL_FLOOR"]) == float(profile["rel_floor"])
+              assert int(vals["SEED"]) == int(profile["seed"])
+              assert profile["openblas_coretype"] == "Haswell"
+
           if gate["status"] == "CLOSED":
               assert gate["development_run_id"] is None
               assert gate["development_aggregate_artifact_id"] is None
@@ -113,6 +135,7 @@ jobs:
           files=[
             ".github/workflows/step5b-development-primary.yml",
             ".github/workflows/step5b-development-smoke.yml",
+            ".github/workflows/step5b-development-final.yml",
             ".github/workflows/step5b-forward-gate.yml",
             ".github/workflows/step5b-reusable-preprocess-one.yml",
             ".github/workflows/step5b-reusable-fit-one.yml",
