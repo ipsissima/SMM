@@ -65,3 +65,40 @@ Per `OPTIMIZER_ROBUSTNESS_DECISION_RULE.md`, run exactly P2:
 - identical pass criteria.
 
 No scientific-model change is authorized. The holdout remains closed.
+
+
+## Full three-kernel audit
+
+All three P1 kernel jobs ultimately failed the same predeclared basin-recovery requirement.
+
+### Haswell
+
+- M2 A train: 535.7596930646307 vs historical 535.8336527151650 -> FAIL
+- M2 B train: 534.0061847445946 vs historical 534.0933137283831 -> FAIL
+- M3 A train: 535.8929500896384 vs historical 535.8430963300440 -> PASS
+- M3 B train: 533.9434636648306 vs historical 533.8829279760863 -> PASS
+- audit-only DeltaELPD: -0.0031977596596561852
+
+### Zen
+
+Zen reproduced the Haswell P1 solution numerically for all four directions:
+
+- M2 A train: 535.7596930646307 -> FAIL historical-basin recovery
+- M2 B train: 534.0061847445946 -> FAIL historical-basin recovery
+- M3 A train: 535.8929500896384 -> PASS
+- M3 B train: 533.9434636648306 -> PASS
+- audit-only DeltaELPD: -0.0031977596596561852
+
+### Sandybridge
+
+- M2 A train: 535.7607731393065 -> FAIL historical-basin recovery
+- M2 B train: 533.9475359791719 -> FAIL historical-basin recovery
+- M3 A train: 535.8929502096953 -> PASS
+- M3 B train: 533.9934375840123 -> PASS
+- audit-only DeltaELPD: +0.08385537300182477
+
+The differing audit-only DeltaELPD on Sandybridge is additional evidence that P1 is not numerically robust enough for production, but the formal P1 failure remains the predeclared training-basin recovery failure, not the sign of DeltaELPD.
+
+Final P1 run conclusion: `failure`.
+
+All three jobs completed, so the P1 decision record is now closed.
