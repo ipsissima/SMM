@@ -57,7 +57,7 @@ All conditions must hold:
 
 Criterion 4 is a numerical reproducibility criterion, not a preference for a favorable M3-M2 effect. M2 and M3 are assessed separately.
 
-If P1 passes, P1 becomes the final numerical profile. No cheaper profile is selected after seeing held-out development effects.
+If P1 passes, P1 becomes the final numerical profile. No cheaper profile is selected after seeing held-out development effects. Production development and holdout fits will then force `OPENBLAS_CORETYPE=Haswell`; Sandybridge and Zen are robustness kernels only.
 
 ## Predetermined escalation P2
 
@@ -73,7 +73,7 @@ Run exactly one broader profile:
 - the same three OpenBLAS kernels (Haswell, Sandybridge, Zen);
 - the same PASS criteria above.
 
-If P2 passes, P2 becomes the final numerical profile.
+If P2 passes, P2 becomes the final numerical profile. Production development and holdout fits will force the already predeclared `OPENBLAS_CORETYPE=Haswell`.
 
 ## If P2 fails
 
