@@ -49,7 +49,7 @@ Workflow:
 
 `.github/workflows/step5b-development-smoke.yml`
 
-Despite the historical filename, this is now the deterministic 34-subject development workflow. It:
+The historical filename is currently being used for the **development-only optimizer robustness probe** after cross-runner-image instability was detected. Once the final optimizer profile is selected and frozen, this workflow will be restored to the canonical 34-subject development matrix. The final matrix must:
 
 1. verifies pinned package versions;
 2. forces single-thread numerical execution;
