@@ -42,6 +42,7 @@ jobs:
             confirmatory/step5b/aggregate_confirmatory.py \
             confirmatory/step5b/optimizer_robustness_probe.py \
             confirmatory/step5b/aggregate_optimizer_probe.py \
+            confirmatory/step5b/prepare_frozen_numerical_profile.py \
             manuscript/scripts/generate_primary_figures.py \
             manuscript/scripts/generate_result_tables.py
 
