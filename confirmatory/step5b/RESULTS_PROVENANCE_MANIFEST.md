@@ -70,10 +70,13 @@ Outcome:
 
 The amplitude-sanity implementation amendment preserved the original numerical thresholds but applied them to the prespecified 1-45 Hz QC stream because ds005385 documents invalid EDF physical min/max metadata and raw DC offsets. The correction is part of the auditable development history; no threshold was relaxed.
 
-## Numerical reproducibility gate
+## Numerical reproducibility history
+
+### Provisional same-image gate
 
 Run: `37483948147`  
-Commit: `5ecc084d4d193629657052c9f69448b8e0327850`
+Commit: `5ecc084d4d193629657052c9f69448b8e0327850`  
+Runner image: `ubuntu-24.04 / 20260927.320.1`
 
 Three independent single-thread runs of `sub-001` returned exactly:
 
@@ -88,11 +91,32 @@ Identical optimizer diagnostics:
 - M3 A: nit 34, nfev 378
 - M3 B: nit 34, nfev 282
 
-The resulting implementation-level freeze is single-thread numerical execution on ubuntu-24.04 with the pinned Python package versions. Model equations, bounds, starts, primary contrast, comparator strength, frequency range, exclusions, and success rule were not changed.
+This initially motivated a single-thread implementation freeze, but that freeze was subsequently **superseded before holdout opening**.
+
+### Cross-runner-image failure
+
+Run `37495554793`, on runner image `ubuntu-24.04 / 20261004.327.1`, used byte-identical scientific/fit code, the same frozen sub-001 epochs, the same forward model, the same network reconstruction, the same pinned Python package versions and the same one-thread environment, but returned:
+
+- M2 CV ELPD = `534.8734362017726`
+- M3 CV ELPD = `534.7059328161354`
+- Delta ELPD(M3-M2) = `-0.16750338563724654`
+
+The provisional freeze is therefore not final. Run `37495554793` is a numerical diagnostic and is not the canonical 34-subject development result.
+
+A development-only optimizer robustness probe now tests a broader search using training-objective recovery across deliberately different OpenBLAS kernels. No scientific-model setting has been changed, and the holdout remains closed.
+
+### Final numerical freeze
+
+- final optimizer profile: **PENDING**
+- robustness-probe run ID: **PENDING**
+- final numerical-freeze commit: **PENDING**
+- canonical 34-subject rerun: **PENDING**
 
 ## Canonical development fit
 
-The definitive deterministic 34-subject workflow is:
+The previous 34-subject attempt `37495554793` was cancelled/superseded after its first completed sub-001 result exposed cross-runner-image optimizer instability. It is not canonical.
+
+After the optimizer robustness probe passes and a new final numerical freeze is committed, the definitive 34-subject workflow will again be:
 
 `.github/workflows/step5b-development-smoke.yml`
 
