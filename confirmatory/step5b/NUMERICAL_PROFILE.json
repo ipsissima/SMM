@@ -1,0 +1,16 @@
+{
+  "status": "PENDING",
+  "seed": 97,
+  "sobol_candidates": null,
+  "polish_starts": null,
+  "polish_maxiter": 120,
+  "method": "L-BFGS-B",
+  "ftol": 1e-9,
+  "gtol": 1e-6,
+  "maxls": 30,
+  "rel_floor": 1e-6,
+  "thread_policy": "single-thread BLAS/OpenMP",
+  "robustness_requirement": "Must satisfy OPTIMIZER_ROBUSTNESS_DECISION_RULE.md before status becomes FROZEN.",
+  "robustness_run_id": null,
+  "final_freeze_commit": null
+}
