@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the final numerical-freeze document from a passing P1/P2 aggregate.
-
-The output is evidence/provenance only. It never selects a profile using
-DeltaELPD sign or magnitude.
-"""
+"""Generate the final Step 5B numerical-freeze document from a passing N1 aggregate."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
-
-ALLOWED = {(256,8):"P1",(512,16):"P2"}
 
 
 def main():
@@ -23,31 +17,44 @@ def main():
     args=ap.parse_args()
 
     d=json.loads(args.probe_aggregate.read_text())
+    if d.get("protocol")!="N1-normalized-nested-comparator":
+        raise RuntimeError("Final freeze generator now accepts N1 only")
     if d.get("probe_pass") is not True:
-        raise RuntimeError("Cannot generate final freeze from a failed robustness aggregate")
+        raise RuntimeError("Cannot freeze a failed N1 aggregate")
     if d.get("selection_uses_delta_sign") is not False:
-        raise RuntimeError("Robustness selection must not use DeltaELPD sign")
+        raise RuntimeError("N1 selection must not use DeltaELPD sign")
+    if set(d.get("kernels",[]))!={"Haswell","Sandybridge","Zen"}:
+        raise RuntimeError("N1 kernel set mismatch")
 
     p=d["profile"]
-    pair=(int(p["sobol_candidates"]),int(p["polish_starts"]))
-    if pair not in ALLOWED:
-        raise RuntimeError(f"Unrecognized predeclared profile: {pair}")
-    name=ALLOWED[pair]
-    crit=d["criteria"]
+    expected={
+        "sobol_candidates":512,
+        "polish_starts":16,
+        "method":"L-BFGS-B-unit-cube-plus-exact-nested-anchor",
+        "maxiter":300,
+        "ftol":1e-11,
+        "gtol":1e-7,
+        "maxls":50,
+        "rel_floor":1e-6,
+        "seed":97,
+    }
+    for k,v in expected.items():
+        if p.get(k)!=v:
+            raise RuntimeError(f"N1 profile drift: {k}={p.get(k)} expected {v}")
 
+    c=d["criteria"]
     required_true=[
-        "all_optimizer_calls_success",
-        "all_historical_best_training_basins_recovered",
-        "all_scores_finite",
-        "decoded_parameter_bounds_pass",
+        "transfer_identity_pass",
+        "embedding_score_pass",
+        "nestedness_pass",
         "training_range_pass",
         "cv_range_pass",
+        "all_kernel_internal_pass",
+        "all_outputs_finite_and_in_bounds",
     ]
-    failed=[k for k in required_true if crit.get(k) is not True]
+    failed=[k for k in required_true if c.get(k) is not True]
     if failed:
-        raise RuntimeError(f"Aggregate claims PASS but criteria fail: {failed}")
-    if set(d.get("kernels",[])) != {"Haswell","Sandybridge","Zen"}:
-        raise RuntimeError("Cross-kernel set mismatch")
+        raise RuntimeError(f"N1 aggregate claims PASS but criteria fail: {failed}")
 
     digest=args.aggregate_artifact_digest
     if not (digest.startswith("sha256:") and len(digest)==71):
@@ -59,21 +66,31 @@ def main():
         "",
         "**Status: FROZEN FOR FINAL DEVELOPMENT AND CONFIRMATORY HOLDOUT**",
         "",
-        "The holdout remained closed throughout numerical profile selection.",
+        "The confirmatory holdout remained closed throughout P1, P2 and N1 numerical-method development.",
         "",
-        "## Selected predeclared profile",
+        "## Selected method",
         "",
-        f"- Profile: {name}",
-        f"- Sobol candidates: {pair[0]}",
-        f"- L-BFGS-B polish starts: {pair[1]}",
-        "- maxiter: 120",
-        "- ftol: 1e-9",
-        "- gtol: 1e-6",
-        "- maxls: 30",
+        "- Profile: N1",
+        "- Search coordinates: normalized unit cube",
+        "- M2 time constants: ordered logarithmic parameterization over the unchanged 0.03–30 s physical domain",
+        "- Exact comparator safeguard: fitted M3 solution embedded exactly as a feasible M2 candidate",
+        "- Sobol candidates: 512",
+        "- L-BFGS-B Sobol polish starts: 16",
+        "- Exact nested anchor: one additional deterministic M2 start and retained raw feasible candidate",
+        "- maxiter: 300",
+        "- ftol: 1e-11",
+        "- gtol: 1e-7",
+        "- maxls: 50",
         "- CSD/model relative floor: 1e-6",
         "- seed: 97",
         "- production OpenBLAS kernel: Haswell",
         "- thread policy: one BLAS/OpenMP thread",
+        "",
+        "## Why N1 replaced P1/P2",
+        "",
+        "P1 and P2 used the old physical-coordinate parameterization. Both failed the predeclared training-basin recovery criterion for M2. P2 further exposed the structural anomaly that M2 could return a training optimum below M3 even though the executable M2 family contains the linearized M3 transfer exactly.",
+        "",
+        "N1 corrects only the numerical method: it removes the nondifferentiable tau sorting fold, normalizes coordinate scales, and enforces the exact M3-in-M2 feasible anchor. It does not change either model class or any physical parameter bound.",
         "",
         "## Robustness provenance",
         "",
@@ -82,41 +99,35 @@ def main():
         f"- Aggregate artifact digest: {digest}",
         f"- Kernels tested: {', '.join(d['kernels'])}",
         "",
-        "## Frozen pass criteria",
+        "## Frozen N1 pass criteria",
         "",
-        f"- All optimizer calls successful: {crit['all_optimizer_calls_success']}",
-        f"- Historical best training basins recovered: {crit['all_historical_best_training_basins_recovered']}",
-        f"- All scores finite: {crit['all_scores_finite']}",
-        f"- Decoded parameter bounds pass: {crit['decoded_parameter_bounds_pass']}",
-        f"- Training-score cross-kernel range pass: {crit['training_range_pass']}",
-        f"- Per-model CV cross-kernel range pass: {crit['cv_range_pass']}",
-        f"- Training-score ranges: {json.dumps(crit['training_ranges'],sort_keys=True)}",
-        f"- CV-score ranges: {json.dumps(crit['cv_ranges'],sort_keys=True)}",
+        f"- Analytic transfer-identity pass: {c['transfer_identity_pass']}",
+        f"- Max transfer identity error: {c['transfer_identity_max_abs_error']:.3e}",
+        f"- Embedded M3-as-M2 score equality pass: {c['embedding_score_pass']}",
+        f"- Max embedded score error: {c['embedding_score_max_abs_error']:.3e}",
+        f"- M2 >= contained M3 training invariant pass: {c['nestedness_pass']}",
+        f"- Minimum M2-M3 training gap: {c['minimum_nested_training_gap_M2_minus_M3']:.12g}",
+        f"- Training-score cross-kernel range pass: {c['training_range_pass']}",
+        f"- Per-model CV cross-kernel range pass: {c['cv_range_pass']}",
+        f"- Training-score ranges: {json.dumps(c['training_ranges'],sort_keys=True)}",
+        f"- CV-score ranges: {json.dumps(c['cv_ranges'],sort_keys=True)}",
+        f"- Finite/bounds audit: {c['all_outputs_finite_and_in_bounds']}",
         "",
         "## Selection firewall",
         "",
-        "The numerical profile was selected exclusively by optimizer success, recovery of already observed best training basins, finite/bound checks, and cross-kernel numerical reproducibility.",
+        "**The sign and magnitude of DeltaELPD(M3-M2) were not N1 selection criteria.**",
         "",
-        "**The sign and magnitude of DeltaELPD(M3-M2) were not profile-selection criteria.**",
-        "",
-    ]
-    if name=="P2":
-        lines += [
-            "P2 was reached only because the predeclared P1 profile failed its historical M2 training-basin recovery criterion. No intermediate profile was introduced.",
-            "",
-        ]
-    lines += [
         "## Scientific invariants",
         "",
-        "This freeze changes no biological mechanism, K-to-QIF mapping, astroglial topology, neuronal model, structural network, forward model, primary condition, frequency range, QC threshold, development/holdout boundary, M2 comparator strength, M3-vs-M2 primary contrast, likelihood, or confirmatory success criterion.",
+        "N1 changes no biological mechanism, K-to-QIF mapping, astroglial topology or constants, neuronal equations, M2 flexibility or physical bounds, M3 constraints, structural network, EEG forward model, primary condition, preprocessing/QC threshold, 1–40-Hz endpoint, likelihood, development/holdout split, primary M3-vs-M2 contrast, or confirmatory success criterion.",
         "",
-        "The next permitted step is a fresh complete 34-subject development rerun under this profile. The confirmatory holdout may open only after that rerun is aggregated, permanently recorded and signed off.",
+        "The next permitted operation after this freeze is a complete fresh 34-subject development rerun using the exact N1 production fitter. Holdout opening remains contingent on development aggregation and sign-off.",
         "",
     ]
 
     args.out.parent.mkdir(parents=True,exist_ok=True)
     args.out.write_text("\n".join(lines),encoding="utf-8")
-    print("FINAL_NUMERICAL_FREEZE_DOCUMENT_PASS")
+    print("FINAL_N1_NUMERICAL_FREEZE_DOCUMENT_PASS")
     print(args.out.read_text())
 
 
