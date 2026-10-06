@@ -1,7 +1,7 @@
 # Step 5B development numerical freeze
 
 **Date:** 2026-10-06  
-**Status:** FROZEN AFTER DEVELOPMENT NUMERICAL REPRODUCIBILITY TEST, BEFORE CONFIRMATORY HOLDOUT  
+**Status:** SUPERSEDED DURING DEVELOPMENT - CROSS-RUNNER-IMAGE REPRODUCIBILITY FAILURE; HOLDOUT REMAINS CLOSED  
 **Scope:** implementation-level numerical settings only
 
 ## Reason for this freeze
@@ -80,3 +80,36 @@ After those development fits are complete and audited, no further optimizer/nume
 changes are permitted before opening sub-044..608.
 
 The confirmatory holdout remains unopened at the time of this freeze.
+
+
+---
+
+## Supersession record - 2026-10-06
+
+The single-thread freeze above passed three independent runners in workflow run `37483948147`, but all three used GitHub runner image:
+
+`ubuntu-24.04 / 20260927.320.1`.
+
+The subsequent 34-subject run `37495554793` used the updated GitHub runner image:
+
+`ubuntu-24.04 / 20261004.327.1`.
+
+Its first completed `sub-001` fit, under the same pinned Python packages, the same one-thread environment, the same model code, the same input epochs, the same forward model and the same reconstructed network, returned:
+
+- M2 CV ELPD = `534.8734362017726`
+- M3 CV ELPD = `534.7059328161354`
+- Delta ELPD(M3-M2) = `-0.16750338563724654`
+
+rather than the three-run gate value:
+
+- M2 CV ELPD = `534.8237844922861`
+- M3 CV ELPD = `534.7535949015517`
+- Delta ELPD(M3-M2) = `-0.07018959073445785`.
+
+Direct commit comparison confirmed that `fit_cv_subject.py`, `model_frequency_lock.py`, `statistical_lock.py`, `empirical_csd_lock.py`, `reconstruct_network_frozen.py`, `requirements-gate.txt`, and `channels_64.txt` were byte-identical between the reproducibility run and the new run.
+
+Therefore the prior freeze did **not** establish cross-runner-image optimizer robustness. It is superseded before any confirmatory holdout data are opened.
+
+This does not authorize any scientific-model change. The only permitted next operation is a development-only optimizer robustness study based on training-objective convergence/reproducibility, followed by a new final numerical freeze and a complete rerun of the 34 QC-passed development subjects.
+
+The holdout remains unopened.
