@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Aggregate the frozen 34-subject Step 5B development fits.
+"""Aggregate the final frozen 34-subject Step 5B development fits.
 
-This script is deliberately descriptive. It does not run the confirmatory
-bootstrap/sign-flip criterion and it cannot accept holdout subjects.
+Development output is descriptive only. This script:
+- accepts exactly the 34 prespecified QC-passed development subjects;
+- requires the final NUMERICAL_PROFILE.json to be FROZEN;
+- validates every subject fit against that profile;
+- never computes the confirmatory bootstrap/sign-flip decision;
+- fails closed if a holdout subject appears.
 """
 from __future__ import annotations
 
@@ -22,13 +26,33 @@ EXPECTED = [
     "sub-035","sub-036","sub-038","sub-039","sub-040","sub-042",
 ]
 
-FROZEN_OPT = {
-    "sobol_candidates": 32,
-    "polish_starts": 4,
-    "polish_maxiter": 120,
-    "method": "L-BFGS-B",
-    "rel_floor": 1e-6,
-}
+THREAD_KEYS = (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+)
+
+
+def load_profile() -> tuple[dict, dict]:
+    path = Path(__file__).with_name("NUMERICAL_PROFILE.json")
+    p = json.loads(path.read_text(encoding="utf-8"))
+    if p.get("status") != "FROZEN":
+        raise RuntimeError("Final development aggregation requires NUMERICAL_PROFILE status FROZEN")
+    if not p.get("final_freeze_commit") or not p.get("robustness_run_id"):
+        raise RuntimeError("Frozen numerical profile lacks provenance")
+    expected = {
+        "sobol_candidates": int(p["sobol_candidates"]),
+        "polish_starts": int(p["polish_starts"]),
+        "polish_maxiter": int(p["polish_maxiter"]),
+        "method": p["method"],
+        "ftol": float(p["ftol"]),
+        "gtol": float(p["gtol"]),
+        "maxls": int(p["maxls"]),
+        "rel_floor": float(p["rel_floor"]),
+    }
+    return p, expected
 
 
 def sha256(path: Path) -> str:
@@ -53,9 +77,9 @@ def q(xs, p):
 def locate(input_dir: Path) -> dict[str, Path]:
     found: dict[str, list[Path]] = {}
     for p in input_dir.rglob("sub-*.json"):
+        if p.name.endswith(".excluded.json"):
+            raise RuntimeError(f"Unexpected exclusion record in final development fit set: {p}")
         stem = p.stem
-        if not stem.startswith("sub-"):
-            continue
         try:
             n = int(stem.split("-")[1])
         except Exception:
@@ -78,11 +102,29 @@ def locate(input_dir: Path) -> dict[str, Path]:
     return {k: found[k][0] for k in EXPECTED}
 
 
-def validate(subject: str, d: dict):
-    if d.get("seed") != 97:
+def validate_environment(subject: str, d: dict, profile: dict):
+    env = d.get("environment", {})
+    thread_env = env.get("thread_env", {})
+    for key in THREAD_KEYS:
+        if thread_env.get(key) != "1":
+            raise RuntimeError(f"{subject}: non-single-thread environment for {key}")
+    if thread_env.get("OMP_DYNAMIC") != "FALSE":
+        raise RuntimeError(f"{subject}: OMP_DYNAMIC drift")
+    if thread_env.get("PYTHONHASHSEED") != "0":
+        raise RuntimeError(f"{subject}: PYTHONHASHSEED drift")
+    if thread_env.get("OPENBLAS_CORETYPE") != profile["openblas_coretype"]:
+        raise RuntimeError(f"{subject}: OPENBLAS_CORETYPE drift")
+    if env.get("numpy") != "2.3.5" or env.get("scipy") != "1.17.0" or env.get("mne") != "1.13.2":
+        raise RuntimeError(f"{subject}: pinned numerical package drift")
+
+
+def validate(subject: str, d: dict, profile: dict, expected_opt: dict):
+    if d.get("seed") != int(profile["seed"]):
         raise RuntimeError(f"{subject}: seed drift")
-    if d.get("optimizer") != FROZEN_OPT:
+    if d.get("optimizer") != expected_opt:
         raise RuntimeError(f"{subject}: optimizer drift: {d.get('optimizer')}")
+    validate_environment(subject, d, profile)
+
     if set(d.get("models", {})) != {"M2", "M3"}:
         raise RuntimeError(f"{subject}: model set drift")
     if int(d.get("n_epochs", 0)) < 30:
@@ -116,6 +158,7 @@ def main():
     ap.add_argument("--out-dir", type=Path, required=True)
     args = ap.parse_args()
 
+    profile, expected_opt = load_profile()
     paths = locate(args.input_dir)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +168,7 @@ def main():
 
     for subject, path in paths.items():
         d = json.loads(path.read_text(encoding="utf-8"))
-        validate(subject, d)
+        validate(subject, d, profile, expected_opt)
         m2 = float(d["models"]["M2"]["cv_elpd"])
         m3 = float(d["models"]["M3"]["cv_elpd"])
         delta = float(d["delta_elpd_M3_minus_M2"])
@@ -178,8 +221,9 @@ def main():
         "fraction_M3_better": sum(x > 0 for x in deltas) / len(deltas),
         "all_optimizers_success": all(r["success"] for r in opt_rows),
         "optimizer_calls": len(opt_rows),
-        "frozen_optimizer": FROZEN_OPT,
-        "seed": 97,
+        "frozen_optimizer": expected_opt,
+        "numerical_profile": profile,
+        "seed": int(profile["seed"]),
         "inputs": input_manifest,
         "interpretation_guardrail": (
             "Development statistics are descriptive only. They cannot change the mechanism, "
@@ -188,20 +232,25 @@ def main():
         ),
     }
 
+    if summary["optimizer_calls"] != 34 * 2 * 2:
+        raise RuntimeError("Expected exactly 136 successful model/direction optimizer calls")
+
     with (args.out_dir / "development_subject_results.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(subject_rows[0]))
-        w.writeheader(); w.writerows(subject_rows)
+        w.writeheader()
+        w.writerows(subject_rows)
 
     with (args.out_dir / "development_optimizer_diagnostics.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(opt_rows[0]))
-        w.writeheader(); w.writerows(opt_rows)
+        w.writeheader()
+        w.writerows(opt_rows)
 
     (args.out_dir / "development_summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8"
     )
 
     md = [
-        "# Step 5B development aggregate",
+        "# Step 5B final development aggregate",
         "",
         "**Status:** descriptive development audit only - not confirmatory inference.",
         "",
@@ -215,6 +264,8 @@ def main():
         f"({summary['fraction_M3_better']:.3f})",
         f"- Optimizer calls successful: {summary['all_optimizers_success']} "
         f"({summary['optimizer_calls']} calls)",
+        f"- Frozen profile: {profile['sobol_candidates']} Sobol candidates / "
+        f"{profile['polish_starts']} polish starts / {profile['openblas_coretype']} kernel",
         "",
         "No bootstrap confidence interval, sign-flip p-value, band selection, or "
         "confirmatory decision is computed on development data.",
