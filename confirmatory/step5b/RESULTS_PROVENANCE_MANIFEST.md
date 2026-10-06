@@ -108,7 +108,7 @@ A development-only optimizer robustness probe now tests a broader search using t
 ### Final numerical freeze
 
 - final optimizer profile: **PENDING**
-- robustness-probe run ID: **PENDING**
+- P1 robustness-probe run ID: `37499465520` (**currently running; verdict pending**)
 - final numerical-freeze commit: **PENDING**
 - canonical 34-subject rerun: **PENDING**
 
@@ -116,9 +116,9 @@ A development-only optimizer robustness probe now tests a broader search using t
 
 The previous 34-subject attempt `37495554793` was cancelled/superseded after its first completed sub-001 result exposed cross-runner-image optimizer instability. It is not canonical.
 
-After the optimizer robustness probe passes and a new final numerical freeze is committed, the definitive 34-subject workflow will again be:
+After the optimizer robustness probe passes and a new final numerical freeze is committed, the definitive 34-subject workflow is:
 
-`.github/workflows/step5b-development-smoke.yml`
+`.github/workflows/step5b-development-final.yml`
 
 Its aggregate artifact must be named:
 
@@ -150,9 +150,13 @@ The holdout cannot execute unless both conditions hold:
 
 At the time of this manifest revision, the gate is **CLOSED**.
 
+The holdout workflow is required to account for every `sub-044..608` assignment. Expected frozen primary-QC failures are represented structurally rather than causing batch-wide failure; unexpected preprocessing/infrastructure failures still fail closed. Group inference is applied only to the frozen-QC-included recordings, exactly as implied by the pre-EEG primary inclusion rules.
+
 ## Frozen primary confirmatory rule
 
-For each holdout subject:
+All 565 assigned holdout subjects are retained in the accounting record. The pre-EEG lock also froze primary QC/inclusion criteria, including >=30 clean 4-s epochs. Subjects failing those criteria are recorded as frozen-QC exclusions and are not replaced.
+
+For each frozen-QC-included holdout subject:
 
 [
 Delta_i = ELPD_i(M_3)-ELPD_i(M_2).
