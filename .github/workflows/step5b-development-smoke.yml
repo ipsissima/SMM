@@ -27,8 +27,8 @@ jobs:
         include:
           - kernel: haswell
             coretype: Haswell
-          - kernel: skylakex
-            coretype: SkylakeX
+          - kernel: sandybridge
+            coretype: Sandybridge
           - kernel: zen
             coretype: Zen
     env:
