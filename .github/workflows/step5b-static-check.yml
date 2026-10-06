@@ -42,6 +42,8 @@ jobs:
             confirmatory/step5b/aggregate_confirmatory.py \
             confirmatory/step5b/optimizer_robustness_probe.py \
             confirmatory/step5b/aggregate_optimizer_probe.py \
+            confirmatory/step5b/nested_optimizer_probe.py \
+            confirmatory/step5b/aggregate_nested_optimizer_probe.py \
             confirmatory/step5b/prepare_frozen_numerical_profile.py \
             confirmatory/step5b/prepare_final_numerical_freeze.py \
             confirmatory/step5b/prepare_holdout_gate.py \
@@ -147,6 +149,7 @@ jobs:
             ".github/workflows/step5b-reusable-preprocess-one.yml",
             ".github/workflows/step5b-reusable-fit-one.yml",
             ".github/workflows/step5b-confirmatory-holdout.yml",
+            ".github/workflows/step5b-optimizer-n1-nested.yml",
             ".github/workflows/step5b-static-check.yml",
           ]
           for p in files:
@@ -155,4 +158,18 @@ jobs:
               assert isinstance(obj,dict),p
               assert "jobs" in obj,p
               print("YAML_PARSE_PASS",p)
+          PY
+
+
+      - name: Reject literal escaped GitHub expressions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          bad=[]
+          for p in Path(".github/workflows").glob("step5b-*.yml"):
+              txt=p.read_text()
+              if "\\${{" in txt:
+                  bad.append(str(p))
+          assert not bad, f"Literal escaped GitHub expressions found: {bad}"
+          print("GITHUB_EXPRESSION_ESCAPE_CHECK=PASS")
           PY
