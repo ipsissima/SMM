@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""Generate manuscript result-table fragments from permanent aggregate JSON/CSV.
-
-No raw EEG, Action logs, or transient text are parsed here.
-"""
+"""Generate manuscript result-table fragments from permanent aggregate JSON/CSV."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
-
 import pandas as pd
 
 
@@ -43,14 +39,17 @@ def main():
 
     if args.confirmatory_dir:
         d = json.loads((args.confirmatory_dir / "confirmatory_primary_result.json").read_text())
+        n_inc=int(d["n_primary_included_after_frozen_qc"])
         rows = [
-            ("Subjects", str(d["n_subjects"])),
+            ("Holdout assignments accounted for", f"{d['n_holdout_assigned']}/565"),
+            ("Primary included after frozen QC", str(n_inc)),
+            ("Frozen-QC exclusions", str(d["n_primary_excluded_by_frozen_qc"])),
             ("Mean DeltaELPD(M3-M2)", f9(d["mean_delta_elpd_M3_minus_M2"])),
             ("Median DeltaELPD(M3-M2)", f9(d["median_delta_elpd_M3_minus_M2"])),
             ("SD", f9(d["sd_delta_elpd_M3_minus_M2"])),
             ("Bootstrap 95% CI", f"[{f9(d['bootstrap']['ci_low'])}, {f9(d['bootstrap']['ci_high'])}]"),
             ("One-sided sign-flip p", f"{float(d['sign_flip']['p_value']):.8g}"),
-            ("M3 > M2", f"{d['n_M3_better']}/{d['n_subjects']} ({d['fraction_M3_better']:.3f})"),
+            ("M3 > M2", f"{d['n_M3_better']}/{n_inc} ({d['fraction_M3_better']:.3f})"),
             ("Frozen criterion", d["success_rule"]),
             ("Verdict", "PASS" if d["specific_SMM_predictive_success"] else "FAIL"),
         ]
@@ -60,7 +59,9 @@ def main():
 
         subjects=pd.read_csv(args.confirmatory_dir / "confirmatory_subject_results.csv")
         if len(subjects) != 565:
-            raise RuntimeError("Confirmatory table generation requires 565 subjects")
+            raise RuntimeError("Confirmatory table generation requires all 565 assignments")
+        if int((subjects["primary_included"]==1).sum()) != n_inc:
+            raise RuntimeError("Confirmatory included-n mismatch")
 
     print("RESULT_TABLES_PASS")
 
