@@ -42,6 +42,8 @@ def load_profile() -> tuple[dict, dict]:
         raise RuntimeError("Final development aggregation requires NUMERICAL_PROFILE status FROZEN")
     if not p.get("final_freeze_commit") or not p.get("robustness_run_id"):
         raise RuntimeError("Frozen numerical profile lacks provenance")
+    if p.get("profile_name") != "N1" or p.get("exact_nested_anchor") is not True:
+        raise RuntimeError("Final aggregation requires the frozen N1 nested-comparator profile")
     expected = {
         "sobol_candidates": int(p["sobol_candidates"]),
         "polish_starts": int(p["polish_starts"]),
@@ -145,6 +147,17 @@ def validate(subject: str, d: dict, profile: dict, expected_opt: dict):
             for key in ("train_score_normalized", "heldout_score_normalized"):
                 if not math.isfinite(float(direction[key])):
                     raise RuntimeError(f"{subject} {model}: nonfinite {key}")
+
+    if float(d.get("transfer_identity_max_abs_error", 1.0)) > float(profile["transfer_identity_tolerance"]):
+        raise RuntimeError(f"{subject}: M3-in-M2 transfer identity drift")
+    nested = d.get("nestedness", [])
+    if len(nested) != 2:
+        raise RuntimeError(f"{subject}: expected two N1 nestedness records")
+    for rec in nested:
+        if float(rec["embedding_score_error"]) > float(profile["nested_training_tolerance"]):
+            raise RuntimeError(f"{subject}: embedded M3-as-M2 score mismatch")
+        if float(rec["M2_minus_M3_training_gap"]) < -float(profile["nested_training_tolerance"]):
+            raise RuntimeError(f"{subject}: M2 underoptimized relative to contained M3 point")
 
     delta = float(d["delta_elpd_M3_minus_M2"])
     calc = float(d["models"]["M3"]["cv_elpd"]) - float(d["models"]["M2"]["cv_elpd"])
