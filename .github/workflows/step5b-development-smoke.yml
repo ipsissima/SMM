@@ -1,4 +1,4 @@
-name: Step 5B development M2-M3 CV
+name: Step 5B optimizer reproducibility sub-001
 
 on:
   push:
@@ -13,52 +13,26 @@ permissions:
   contents: read
 
 concurrency:
-  group: step5b-development-fit-34
+  group: step5b-development-opt-stability
   cancel-in-progress: true
 
 jobs:
-  fit:
-    runs-on: ubuntu-latest
+  replicate:
+    runs-on: ubuntu-24.04
     timeout-minutes: 360
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 3
       matrix:
-        subject:
-          - sub-001
-          - sub-002
-          - sub-003
-          - sub-004
-          - sub-005
-          - sub-006
-          - sub-007
-          - sub-010
-          - sub-011
-          - sub-014
-          - sub-015
-          - sub-016
-          - sub-017
-          - sub-018
-          - sub-019
-          - sub-020
-          - sub-021
-          - sub-022
-          - sub-023
-          - sub-024
-          - sub-025
-          - sub-028
-          - sub-029
-          - sub-030
-          - sub-031
-          - sub-032
-          - sub-033
-          - sub-034
-          - sub-035
-          - sub-036
-          - sub-038
-          - sub-039
-          - sub-040
-          - sub-042
+        replicate: [1, 2, 3]
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      VECLIB_MAXIMUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      OMP_DYNAMIC: "FALSE"
+      PYTHONHASHSEED: "0"
     steps:
       - uses: actions/checkout@v4
 
@@ -72,14 +46,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r confirmatory/step5b/requirements-gate.txt
           python - <<'PY'
-          import mne
+          import mne,numpy,scipy,pandas,os
           assert mne.__version__ == "1.13.2"
-          print("MNE",mne.__version__)
+          assert numpy.__version__ == "2.3.5"
+          assert scipy.__version__ == "1.17.0"
+          assert pandas.__version__ == "2.2.3"
+          print("versions",mne.__version__,numpy.__version__,scipy.__version__,pandas.__version__)
+          print("threads",{k:os.environ.get(k) for k in ["OMP_NUM_THREADS","OPENBLAS_NUM_THREADS","MKL_NUM_THREADS","NUMEXPR_NUM_THREADS","PYTHONHASHSEED"]})
           PY
 
       - name: Reconstruct and verify frozen DK68 network
-        run: |
-          python confirmatory/step5b/reconstruct_network_frozen.py
+        run: python confirmatory/step5b/reconstruct_network_frozen.py
 
       - name: Download validated forward gate
         uses: actions/download-artifact@v4
@@ -94,19 +71,17 @@ jobs:
           echo "86afbddbd637ef4239b5755ef3853aafb62890ac989340fd093482ad7c9853b2  forward_gate/leadfield_DK68_64x68.csv" | sha256sum -c -
           echo "17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy" | sha256sum -c -
 
-      - name: Download QC-passed development epochs
-        env:
-          SUBJECT: ${{ matrix.subject }}
+      - name: Download QC-passed sub-001 epochs
         uses: actions/download-artifact@v4
         with:
-          name: SMM_STEP5B_DEV_${{ matrix.subject }}
+          name: SMM_STEP5B_DEV_sub-001
           path: dev
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37438628533
 
-      - name: Run frozen M2/M3 two-block CV fit
+      - name: Run frozen M2-M3 CV
         env:
-          SUBJECT: ${{ matrix.subject }}
+          REP: ${{ matrix.replicate }}
         run: |
           mkdir -p fit_out
           PYTHONPATH=confirmatory/step5b python confirmatory/step5b/fit_cv_subject.py \
@@ -114,27 +89,25 @@ jobs:
             --forward-dir forward_gate \
             --network-dir confirmatory/step5b/network_frozen \
             --models M2 M3 \
-            --out "fit_out/${SUBJECT}.json"
+            --out "fit_out/sub-001-rep${REP}.json"
 
-      - name: Validate fit output
+      - name: Print numerical fingerprint
         env:
-          SUBJECT: ${{ matrix.subject }}
+          REP: ${{ matrix.replicate }}
         run: |
           python - <<'PY'
-          import os,json,math
-          s=os.environ["SUBJECT"]
-          d=json.load(open(f"fit_out/{s}.json"))
-          assert d["n_epochs"] >= 30
-          assert set(d["models"]) == {"M2","M3"}
-          assert math.isfinite(d["delta_elpd_M3_minus_M2"])
+          import os,json
+          rep=os.environ["REP"]
+          d=json.load(open(f"fit_out/sub-001-rep{rep}.json"))
+          print("REPRO_FINGERPRINT",rep,d["models"]["M2"]["cv_elpd"],d["models"]["M3"]["cv_elpd"],d["delta_elpd_M3_minus_M2"])
           for m in ("M2","M3"):
-              assert len(d["models"][m]["directions"]) == 2
-          print("FIT_PASS",s,d["delta_elpd_M3_minus_M2"])
+              for x in d["models"][m]["directions"]:
+                  print("OPT",rep,m,x["train"],x["optimizer"])
           PY
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SMM_STEP5B_DEV_FIT_${{ matrix.subject }}
+          name: SMM_STEP5B_OPT_REPRO_SUB001_REP${{ matrix.replicate }}
           path: fit_out/
           if-no-files-found: error
           retention-days: 90
