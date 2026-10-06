@@ -112,7 +112,7 @@ A development-only optimizer robustness probe now tests a broader search using t
 - P1 decisive failed job: Haswell `112393128859`
 - P1 failure record: `confirmatory/step5b/P1_OPTIMIZER_PROBE_RESULT.md`
 - required escalation: predeclared P2 (512 Sobol / 16 polish starts)
-- P2 robustness-probe run ID: **PENDING**
+- P2 robustness-probe run ID: `37503947541` (**running**)
 - final numerical-freeze commit: **PENDING**
 - canonical 34-subject rerun: **PENDING**
 
