@@ -41,6 +41,7 @@ jobs:
           import json,os
           from pathlib import Path
           cfg=json.loads(Path("confirmatory/step5b/HOLDOUT_GATE.json").read_text())
+          profile=json.loads(Path("confirmatory/step5b/NUMERICAL_PROFILE.json").read_text())
           status=cfg.get("status")
           if status == "OPEN":
               required=("development_run_id","development_aggregate_artifact_id",
@@ -48,7 +49,13 @@ jobs:
               missing=[k for k in required if not cfg.get(k)]
               if missing:
                   raise SystemExit(f"OPEN gate is incomplete: {missing}")
-          ok=(status == "OPEN" and os.environ.get("ACK") == "OPEN-HOLDOUT")
+              if profile.get("status") != "FROZEN":
+                  raise SystemExit("OPEN gate rejected: numerical profile is not FROZEN")
+              if not profile.get("final_freeze_commit"):
+                  raise SystemExit("OPEN gate rejected: numerical profile lacks final_freeze_commit")
+              if cfg.get("numerical_freeze_commit") != profile.get("final_freeze_commit"):
+                  raise SystemExit("OPEN gate rejected: freeze commit mismatch")
+          ok=(status == "OPEN" and profile.get("status") == "FROZEN" and os.environ.get("ACK") == "OPEN-HOLDOUT")
           with open(os.environ["GITHUB_OUTPUT"],"a") as f:
               f.write("open=" + ("true" if ok else "false") + "\n")
           print("HOLDOUT_GATE_STATUS",status)
