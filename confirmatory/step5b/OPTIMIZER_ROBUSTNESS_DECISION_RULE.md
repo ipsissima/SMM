@@ -42,7 +42,7 @@ The sign or magnitude of held-out DeltaELPD is **not** an optimizer-selection ta
 - existing parameter bounds;
 - existing L-BFGS-B stopping settings;
 - one BLAS/OpenMP thread;
-- three OpenBLAS core kernels: Haswell, SkylakeX, Zen;
+- three OpenBLAS core kernels: Haswell, Sandybridge, Zen;
 - same sub-001 data and two chronological CV directions.
 
 ### P1 PASS criteria
@@ -70,7 +70,7 @@ Run exactly one broader profile:
 - sixteen L-BFGS-B polish starts;
 - same bounds/stopping rules;
 - one thread;
-- the same three OpenBLAS kernels;
+- the same three OpenBLAS kernels (Haswell, Sandybridge, Zen);
 - the same PASS criteria above.
 
 If P2 passes, P2 becomes the final numerical profile.
@@ -94,3 +94,16 @@ After P1 or P2 passes:
 7. only then sign off development and open the holdout.
 
 No profile may be chosen because its development DeltaELPD is larger, more positive, more significant, or otherwise more favorable to SMM.
+
+
+## Infrastructure correction before P1 interpretation
+
+The first attempted P1 workflow included an `OPENBLAS_CORETYPE=SkylakeX` arm. That arm terminated during environment import with CPU illegal-instruction exit code 132 before any SMM fitting or probe score was produced. The hosted runner therefore cannot safely execute the SkylakeX kernel.
+
+Before interpreting the still-running Haswell/Zen probe outputs, the kernel set was corrected to:
+
+- Haswell;
+- Sandybridge;
+- Zen.
+
+This is an infrastructure compatibility correction only. No model, data, optimizer profile, threshold, training target, or PASS criterion changed. The corrected three-arm P1 is rerun from scratch.
