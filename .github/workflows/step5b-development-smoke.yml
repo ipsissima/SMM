@@ -1,12 +1,10 @@
-name: Step 5B primary development preprocessing
+name: Step 5B EDF calibration diagnostic
 
 on:
   push:
     branches:
       - step5b-confirmatory-gate-2026-10-05
     paths:
-      - 'confirmatory/step5b/preprocess_ds005385.py'
-      - 'confirmatory/step5b/requirements-development.txt'
       - '.github/workflows/step5b-development-smoke.yml'
   workflow_dispatch:
 
@@ -14,131 +12,86 @@ permissions:
   contents: read
 
 concurrency:
-  group: step5b-development-primary
+  group: step5b-edf-diagnostic
   cancel-in-progress: true
 
 jobs:
-  preprocess:
+  diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     strategy:
       fail-fast: false
-      max-parallel: 6
       matrix:
-        subject:
-          - sub-001
-          - sub-002
-          - sub-003
-          - sub-004
-          - sub-005
-          - sub-006
-          - sub-007
-          - sub-010
-          - sub-011
-          - sub-012
-          - sub-014
-          - sub-015
-          - sub-016
-          - sub-017
-          - sub-018
-          - sub-019
-          - sub-020
-          - sub-021
-          - sub-022
-          - sub-023
-          - sub-024
-          - sub-025
-          - sub-026
-          - sub-028
-          - sub-029
-          - sub-030
-          - sub-031
-          - sub-032
-          - sub-033
-          - sub-034
-          - sub-035
-          - sub-036
-          - sub-038
-          - sub-039
-          - sub-040
-          - sub-041
-          - sub-042
-          - sub-043
+        subject: [sub-001, sub-003, sub-010, sub-014, sub-043]
     env:
       OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
           cache: 'pip'
-
-      - name: Install frozen development environment
+      - name: Install MNE
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r confirmatory/step5b/requirements-development.txt
-          python - <<'PY'
-          import mne, pyprep, mne_icalabel
-          assert mne.__version__ == "1.13.2"
-          assert pyprep.__version__ == "0.9.0"
-          assert mne_icalabel.__version__ == "0.9.0"
-          print("versions OK", mne.__version__, pyprep.__version__, mne_icalabel.__version__)
-          PY
-
-      - name: Resolve frozen annex hash and download development EDF
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
+      - name: Download frozen EDF
         env:
           SUBJECT: ${{ matrix.subject }}
         run: |
           set -euo pipefail
           EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
           REL="${SUBJECT}/ses-1/eeg/${EDF}"
-          mkdir -p "development_raw/${SUBJECT}" "development_out/${SUBJECT}"
-
+          mkdir -p diag
           POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
-          curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}" -o "development_out/${SUBJECT}/annex_pointer.txt"
-
-          EXPECTED_SHA256="$(sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
-          EXPECTED_SIZE="$(sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p' "development_out/${SUBJECT}/annex_pointer.txt")"
-          test -n "${EXPECTED_SHA256}"
-          test -n "${EXPECTED_SIZE}"
-
-          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
-          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "development_raw/${SUBJECT}/${EDF}"
-
-          echo "${EXPECTED_SHA256}  development_raw/${SUBJECT}/${EDF}" | sha256sum -c -
-          test "$(stat -c%s "development_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
-
-          echo "subject=${SUBJECT}" > "development_out/${SUBJECT}/input_provenance.txt"
-          echo "openneuro_commit=${OPENNEURO_COMMIT}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "edf=${EDF}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "sha256=${EXPECTED_SHA256}" >> "development_out/${SUBJECT}/input_provenance.txt"
-          echo "size=${EXPECTED_SIZE}" >> "development_out/${SUBJECT}/input_provenance.txt"
-
-      - name: Frozen preprocessing
+          curl --fail --location "${POINTER_URL}" -o diag/pointer.txt
+          SHA="$(sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p' diag/pointer.txt)"
+          URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
+          curl --fail --location "${URL}" -o "diag/${EDF}"
+          echo "${SHA}  diag/${EDF}" | sha256sum -c -
+      - name: Inspect EDF calibration and offsets
         env:
           SUBJECT: ${{ matrix.subject }}
         run: |
-          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
-          python confirmatory/step5b/preprocess_ds005385.py \
-            "development_raw/${SUBJECT}/${EDF}" \
-            --out-dir "development_out/${SUBJECT}"
-
-      - name: Assert development boundary
-        env:
-          SUBJECT: ${{ matrix.subject }}
-        run: |
-          case "${SUBJECT}" in
-            sub-00[1-7]|sub-010|sub-011|sub-012|sub-014|sub-015|sub-016|sub-017|sub-018|sub-019|sub-020|sub-021|sub-022|sub-023|sub-024|sub-025|sub-026|sub-028|sub-029|sub-030|sub-031|sub-032|sub-033|sub-034|sub-035|sub-036|sub-038|sub-039|sub-040|sub-041|sub-042|sub-043) ;;
-            *) echo "Unexpected subject outside primary development set: ${SUBJECT}"; exit 1 ;;
-          esac
-          test ! -e development_raw/sub-044
-          test ! -e ds005385
-          test -f "development_out/${SUBJECT}/qc.json"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: SMM_STEP5B_DEV_${{ matrix.subject }}
-          path: development_out/${{ matrix.subject }}/
-          if-no-files-found: error
-          retention-days: 90
+          python - <<'PY'
+          import os, json, numpy as np, mne
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          edf=Path("diag")/f"{s}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          raw=mne.io.read_raw_edf(edf,preload=True,verbose="error")
+          if raw.ch_names[-1]=="Status":
+              raw.drop_channels(["Status"])
+          x=raw.get_data(picks="eeg")*1e6
+          means=np.mean(x,axis=1)
+          medians=np.median(x,axis=1)
+          rms=np.sqrt(np.mean(x*x,axis=1))
+          centered=x-np.mean(x,axis=1,keepdims=True)
+          crms=np.sqrt(np.mean(centered*centered,axis=1))
+          filt=raw.copy().filter(1.0,45.0,fir_design="firwin",phase="zero",verbose="error")
+          xf=filt.get_data(picks="eeg")*1e6
+          frms=np.sqrt(np.mean(xf*xf,axis=1))
+          extra=raw._raw_extras[0]
+          def arr(name):
+              v=extra.get(name)
+              if v is None: return None
+              a=np.asarray(v)
+              return {"min":float(np.nanmin(a)),"max":float(np.nanmax(a)),"unique_head":np.unique(a)[:12].tolist()}
+          out={
+            "subject":s,
+            "n_channels":len(raw.ch_names),
+            "raw_median_rms_uV":float(np.median(rms)),
+            "centered_median_rms_uV":float(np.median(crms)),
+            "filtered_1_45_median_rms_uV":float(np.median(frms)),
+            "raw_abs_p999_uV":float(np.percentile(np.abs(x),99.9)),
+            "centered_abs_p999_uV":float(np.percentile(np.abs(centered),99.9)),
+            "filtered_abs_p999_uV":float(np.percentile(np.abs(xf),99.9)),
+            "channel_mean_uV_range":[float(means.min()),float(means.max())],
+            "channel_median_uV_range":[float(medians.min()),float(medians.max())],
+            "physical_min":arr("physical_min"),
+            "physical_max":arr("physical_max"),
+            "digital_min":arr("digital_min"),
+            "digital_max":arr("digital_max"),
+            "units":arr("units"),
+            "cal_first10":np.asarray(raw._cals)[:10].tolist()
+          }
+          print("EDF_DIAGNOSTIC_JSON="+json.dumps(out,sort_keys=True))
+          PY
