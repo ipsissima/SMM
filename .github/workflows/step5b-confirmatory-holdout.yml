@@ -1,0 +1,193 @@
+name: Step 5B confirmatory holdout primary
+
+on:
+  workflow_dispatch:
+    inputs:
+      acknowledge:
+        description: 'Holdout execution acknowledgement'
+        required: true
+        type: choice
+        default: 'NO'
+        options:
+          - 'NO'
+          - 'OPEN-HOLDOUT'
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: step5b-confirmatory-holdout-primary
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: verify explicit holdout gate
+    runs-on: ubuntu-24.04
+    outputs:
+      open: ${{ steps.gate.outputs.open }}
+      batch_a: ${{ steps.plan.outputs.batch_a }}
+      batch_b: ${{ steps.plan.outputs.batch_b }}
+      batch_c: ${{ steps.plan.outputs.batch_c }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: gate
+        name: Check permanent gate record
+        env:
+          ACK: ${{ inputs.acknowledge }}
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          cfg=json.loads(Path("confirmatory/step5b/HOLDOUT_GATE.json").read_text())
+          status=cfg.get("status")
+          if status == "OPEN":
+              required=("development_run_id","development_aggregate_artifact_id",
+                        "development_aggregate_sha256","numerical_freeze_commit")
+              missing=[k for k in required if not cfg.get(k)]
+              if missing:
+                  raise SystemExit(f"OPEN gate is incomplete: {missing}")
+          ok=(status == "OPEN" and os.environ.get("ACK") == "OPEN-HOLDOUT")
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              f.write("open=" + ("true" if ok else "false") + "\n")
+          print("HOLDOUT_GATE_STATUS",status)
+          print("ACKNOWLEDGEMENT",os.environ.get("ACK"))
+          print("HOLDOUT_EXECUTION_ENABLED",ok)
+          PY
+
+      - id: plan
+        name: Generate fixed 565-subject batches without opening data
+        run: |
+          python - <<'PY'
+          import json,os
+          batches={
+              "batch_a":[f"sub-{i:03d}" for i in range(44,232)],
+              "batch_b":[f"sub-{i:03d}" for i in range(232,420)],
+              "batch_c":[f"sub-{i:03d}" for i in range(420,609)],
+          }
+          assert sum(map(len,batches.values())) == 565
+          assert batches["batch_a"][0] == "sub-044"
+          assert batches["batch_c"][-1] == "sub-608"
+          flat=sum(batches.values(),[])
+          assert len(flat) == len(set(flat)) == 565
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              for k,v in batches.items():
+                  f.write(f"{k}={json.dumps(v,separators=(',',':'))}\n")
+          print("HOLDOUT_PLAN_ONLY=PASS", {k:len(v) for k,v in batches.items()})
+          PY
+
+  preprocess_a:
+    name: preprocess batch A
+    needs: gate
+    if: ${{ needs.gate.outputs.open == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_a) }}
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  preprocess_b:
+    name: preprocess batch B
+    needs: gate
+    if: ${{ needs.gate.outputs.open == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_b) }}
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  preprocess_c:
+    name: preprocess batch C
+    needs: gate
+    if: ${{ needs.gate.outputs.open == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_c) }}
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  fit_a:
+    name: fit batch A
+    needs: [gate, preprocess_a]
+    if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_a.result == 'success' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_a) }}
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  fit_b:
+    name: fit batch B
+    needs: [gate, preprocess_b]
+    if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_b.result == 'success' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_b) }}
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  fit_c:
+    name: fit batch C
+    needs: [gate, preprocess_c]
+    if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_c.result == 'success' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_c) }}
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  aggregate:
+    name: frozen primary confirmatory inference
+    needs: [gate, fit_a, fit_b, fit_c]
+    if: ${{ needs.gate.outputs.open == 'true' && needs.fit_a.result == 'success' && needs.fit_b.result == 'success' && needs.fit_c.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install inference dependency
+        run: python -m pip install numpy==2.3.5
+
+      - name: Download all 565 fit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_HOLDOUT_FIT_sub-*
+          path: holdout_fits
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.run_id }}
+
+      - name: Apply frozen confirmatory criterion
+        run: |
+          python confirmatory/step5b/aggregate_confirmatory.py holdout_fits --out-dir confirmatory_aggregate
+          cat confirmatory_aggregate/confirmatory_primary_result.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_CONFIRMATORY_PRIMARY_RESULT
+          path: confirmatory_aggregate/
+          if-no-files-found: error
+          retention-days: 90
