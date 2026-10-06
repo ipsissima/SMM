@@ -307,7 +307,7 @@ Describe the 64-channel actiCAP montage, fsaverage_1005 template geometry, fixed
 
 ## 3.8 EEG cohort and primary condition
 
-Dataset: OpenNeuro ds005385 at the frozen git snapshot. Primary recording: session 1 / EyesClosed / acq-pre. Development/holdout split follows historical signal exposure.
+Dataset: OpenNeuro ds005385 at the frozen git snapshot. Primary recording: session 1 / EyesClosed / acq-pre. Development/holdout split follows historical signal exposure: sub-001..043 are development and sub-044..608 are the 565 assigned confirmatory holdout subjects. Primary inferential n is determined only by the already-frozen QC/inclusion rules; QC-failed recordings remain explicitly accounted for and are not replaced.
 
 ## 3.9 Frozen preprocessing and QC
 
