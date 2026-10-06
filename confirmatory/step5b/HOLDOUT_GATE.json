@@ -1,0 +1,14 @@
+{
+  "status": "CLOSED",
+  "opened_at_utc": null,
+  "development_run_id": null,
+  "development_aggregate_artifact_id": null,
+  "development_aggregate_sha256": null,
+  "numerical_freeze_commit": "ac0fb4c61a471f188da03ca63a5b61ac4f478b6c",
+  "required_development_subjects": 34,
+  "holdout_first_subject": "sub-044",
+  "holdout_last_subject": "sub-608",
+  "holdout_subject_count": 565,
+  "primary_condition": "ses-1 / EyesClosed / acq-pre",
+  "note": "Do not set status to OPEN until the deterministic 34-subject development aggregate has been audited and permanently recorded."
+}
