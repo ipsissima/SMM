@@ -37,6 +37,7 @@ jobs:
             confirmatory/step5b/model_frequency_lock.py \
             confirmatory/step5b/statistical_lock.py \
             confirmatory/step5b/fit_cv_subject.py \
+            confirmatory/step5b/fit_cv_subject_n1.py \
             confirmatory/step5b/reconstruct_network_frozen.py \
             confirmatory/step5b/aggregate_development.py \
             confirmatory/step5b/aggregate_confirmatory.py \
@@ -78,23 +79,22 @@ jobs:
           assert profile["status"] in {"PENDING","FROZEN"}
 
           if profile["status"] == "FROZEN":
-              src=Path("confirmatory/step5b/fit_cv_subject.py").read_text()
-              assert "def _apply_frozen_numerical_profile()" in src
-              assert "_apply_frozen_numerical_profile()" in src
-              assert int(profile["sobol_candidates"]) in (256,512)
-              assert int(profile["polish_starts"]) in (8,16)
-              assert (
-                  (int(profile["sobol_candidates"]),int(profile["polish_starts"]))
-                  in {(256,8),(512,16)}
-              )
-              assert int(profile["polish_maxiter"]) == 120
-              assert profile["method"] == "L-BFGS-B"
-              assert float(profile["ftol"]) == 1e-9
-              assert float(profile["gtol"]) == 1e-6
-              assert int(profile["maxls"]) == 30
+              assert profile["profile_name"] == "N1"
+              src=Path("confirmatory/step5b/fit_cv_subject_n1.py").read_text()
+              assert "require_frozen_n1" in src
+              assert int(profile["sobol_candidates"]) == 512
+              assert int(profile["polish_starts"]) == 16
+              assert int(profile["polish_maxiter"]) == 300
+              assert profile["method"] == "N1-normalized-nested-comparator"
+              assert float(profile["ftol"]) == 1e-11
+              assert float(profile["gtol"]) == 1e-7
+              assert int(profile["maxls"]) == 50
               assert float(profile["rel_floor"]) == 1e-6
               assert int(profile["seed"]) == 97
               assert profile["openblas_coretype"] == "Haswell"
+              assert profile["exact_nested_anchor"] is True
+              assert float(profile["nested_training_tolerance"]) == 1e-8
+              assert float(profile["transfer_identity_tolerance"]) == 1e-12
               assert profile["robustness_run_id"]
               assert profile["final_freeze_commit"]
 
