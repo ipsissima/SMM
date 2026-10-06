@@ -185,6 +185,7 @@ def main():
         m2 = float(d["models"]["M2"]["cv_elpd"])
         m3 = float(d["models"]["M3"]["cv_elpd"])
         delta = float(d["delta_elpd_M3_minus_M2"])
+        nested=d["nestedness"]
         subject_rows.append({
             "subject": subject,
             "n_epochs": int(d["n_epochs"]),
@@ -194,6 +195,9 @@ def main():
             "M3_cv_elpd": m3,
             "delta_elpd_M3_minus_M2": delta,
             "M3_better": int(delta > 0.0),
+            "max_embedding_score_error": max(float(x["embedding_score_error"]) for x in nested),
+            "min_M2_minus_M3_training_gap": min(float(x["M2_minus_M3_training_gap"]) for x in nested),
+            "transfer_identity_max_abs_error": float(d["transfer_identity_max_abs_error"]),
         })
         for model in ("M2", "M3"):
             for direction in d["models"][model]["directions"]:
@@ -234,6 +238,14 @@ def main():
         "fraction_M3_better": sum(x > 0 for x in deltas) / len(deltas),
         "all_optimizers_success": all(r["success"] for r in opt_rows),
         "optimizer_calls": len(opt_rows),
+        "max_embedding_score_error": max(r["max_embedding_score_error"] for r in subject_rows),
+        "minimum_M2_minus_M3_training_gap": min(r["min_M2_minus_M3_training_gap"] for r in subject_rows),
+        "max_transfer_identity_abs_error": max(r["transfer_identity_max_abs_error"] for r in subject_rows),
+        "all_nesting_checks_pass": (
+            max(r["max_embedding_score_error"] for r in subject_rows) <= float(profile["nested_training_tolerance"])
+            and min(r["min_M2_minus_M3_training_gap"] for r in subject_rows) >= -float(profile["nested_training_tolerance"])
+            and max(r["transfer_identity_max_abs_error"] for r in subject_rows) <= float(profile["transfer_identity_tolerance"])
+        ),
         "frozen_optimizer": expected_opt,
         "numerical_profile": profile,
         "seed": int(profile["seed"]),
@@ -275,8 +287,12 @@ def main():
         f"- Range: [{summary['min_delta']:.9f}, {summary['max_delta']:.9f}]",
         f"- M3 > M2: {summary['n_M3_better']}/{summary['n_subjects']} "
         f"({summary['fraction_M3_better']:.3f})",
-        f"- Optimizer calls successful: {summary['all_optimizers_success']} "
-        f"({summary['optimizer_calls']} calls)",
+        f"- Selected fit results valid: {summary['all_optimizers_success']} "
+        f"({summary['optimizer_calls']} model/direction results)",
+        f"- N1 nesting audit pass: {summary['all_nesting_checks_pass']}",
+        f"- Max embedded-score error: {summary['max_embedding_score_error']:.3e}",
+        f"- Minimum M2-M3 training gap: {summary['minimum_M2_minus_M3_training_gap']:.9g}",
+        f"- Max transfer-identity error: {summary['max_transfer_identity_abs_error']:.3e}",
         f"- Frozen profile: {profile['sobol_candidates']} Sobol candidates / "
         f"{profile['polish_starts']} polish starts / {profile['openblas_coretype']} kernel",
         "",
