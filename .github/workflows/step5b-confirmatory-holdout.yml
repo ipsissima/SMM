@@ -134,7 +134,7 @@ jobs:
     if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_a.result == 'success' }}
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 12
       matrix:
         subject: ${{ fromJSON(needs.gate.outputs.batch_a) }}
     uses: ./.github/workflows/step5b-reusable-fit-one.yml
@@ -147,7 +147,7 @@ jobs:
     if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_b.result == 'success' }}
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 12
       matrix:
         subject: ${{ fromJSON(needs.gate.outputs.batch_b) }}
     uses: ./.github/workflows/step5b-reusable-fit-one.yml
@@ -160,7 +160,7 @@ jobs:
     if: ${{ needs.gate.outputs.open == 'true' && needs.preprocess_c.result == 'success' }}
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 12
       matrix:
         subject: ${{ fromJSON(needs.gate.outputs.batch_c) }}
     uses: ./.github/workflows/step5b-reusable-fit-one.yml
