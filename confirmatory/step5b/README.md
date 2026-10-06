@@ -47,15 +47,17 @@ See `RESULTS_PROVENANCE_MANIFEST.md` for the complete list.
 
 Workflow:
 
-Optimizer robustness P1 currently uses:
+Historical optimizer probes P1/P2 are archived development diagnostics. Both failed their predeclared numerical-robustness criteria.
 
-`.github/workflows/step5b-development-smoke.yml`
+The active numerical-method probe is N1:
 
-The definitive 34-subject post-freeze development matrix is already prebuilt separately at:
+`.github/workflows/step5b-optimizer-n1-nested.yml`
+
+N1 uses normalized coordinates and an exact M3-in-M2 comparator anchor. The definitive 34-subject post-freeze development matrix is prebuilt separately at:
 
 `.github/workflows/step5b-development-final.yml`
 
-It remains inert while `NUMERICAL_PROFILE.json` is `PENDING`. Once P1 or the predetermined P2 passes and the final numerical profile is frozen, that matrix must:
+It remains inert while `NUMERICAL_PROFILE.json` is `PENDING`. Only a passing N1 robustness aggregate may now freeze the numerical profile. Once N1 passes and the final profile is frozen, that matrix must:
 
 1. verifies pinned package versions;
 2. forces single-thread numerical execution;
@@ -89,9 +91,11 @@ Invariant numerical settings are:
 - pinned NumPy/SciPy/MNE/pandas;
 - one BLAS/OpenMP thread.
 
-The original 32-Sobol / 4-polish profile proved runner-image sensitive and was superseded before holdout opening. P1 (256 Sobol / 8 polish) then failed its predeclared M2 training-basin recovery criterion. P2 (512 Sobol / 16 polish) is the only remaining predeclared escalation and is currently under robustness testing across Haswell, Sandybridge and Zen kernels.
+The original 32-Sobol / 4-polish profile proved runner-image sensitive and was superseded before holdout opening. P1 (256/8) failed M2 basin recovery. P2 (512/16) also failed: on Zen, M2 train block B remained below a known M2 basin and even below the simultaneously optimized M3 training score despite M2 mathematically containing M3.
 
-Production development and holdout fitting consume the versioned `NUMERICAL_PROFILE.json` only after its status becomes `FROZEN`. The profile is selected by numerical robustness, never by the sign or magnitude of DeltaELPD(M3-M2).
+The new N1 method therefore changes optimizer coordinates rather than scientific models: all search coordinates are normalized, the ordered M2 time constants use a smooth logarithmic parameterization, and every M2 fit retains the exact fitted M3 solution as a feasible M2 candidate. N1 is being tested across Haswell/Sandybridge/Zen under predeclared cross-kernel criteria.
+
+Production development and holdout fitting consume the versioned `NUMERICAL_PROFILE.json` only after its status becomes `FROZEN`. The profile is selected by numerical robustness and nesting validity, never by the sign or magnitude of DeltaELPD(M3-M2).
 
 ## Opening the holdout
 
