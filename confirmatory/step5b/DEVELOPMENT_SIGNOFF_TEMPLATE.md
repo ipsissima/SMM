@@ -7,7 +7,7 @@ The confirmatory gate may be opened only after every item below is resolved from
 ## 0. Final numerical profile
 
 - [ ] `NUMERICAL_PROFILE.json` status is `FROZEN`.
-- [ ] The passing P1/P2 robustness run and aggregate are permanently recorded.
+- [ ] The passing N1 robustness run and aggregate are permanently recorded; P1/P2 failures remain in provenance.
 - [ ] `FINAL_NUMERICAL_FREEZE_TEMPLATE.md` has been completed into the final freeze record.
 - [ ] The fit driver consumes the frozen versioned profile.
 - [ ] No optimizer profile was selected using the sign or magnitude of DeltaELPD(M3-M2).
@@ -26,14 +26,16 @@ Expected subjects:
 ## B. Numerical integrity
 
 - [ ] Seed = 97 for all subjects.
-- [ ] Every fit exactly matches the final `NUMERICAL_PROFILE.json` selected by the predeclared P1/P2 robustness rule.
-- [ ] Final profile is one of the only permitted outcomes: P1 = 256 Sobol / 8 polish starts, or P2 = 512 Sobol / 16 polish starts.
+- [ ] Every fit exactly matches the final `NUMERICAL_PROFILE.json` produced by the passing N1 nested-comparator robustness rule.
+- [ ] Final profile is exactly N1: 512 Sobol candidates / 16 Sobol polish starts / exact M3-in-M2 anchor / normalized coordinates.
 - [ ] Production kernel is the predeclared `OPENBLAS_CORETYPE=Haswell`, after cross-kernel robustness has passed on Haswell/Sandybridge/Zen.
-- [ ] L-BFGS-B for all fits.
-- [ ] maxiter = 120 for all fits.
+- [ ] N1 unit-cube L-BFGS-B is used for all fits, with the exact M3-in-M2 raw anchor retained for M2.
+- [ ] maxiter = 300, ftol = 1e-11, gtol = 1e-7, maxls = 50.
 - [ ] relative CSD floor = (10^{-6}).
 - [ ] Single-thread BLAS/OpenMP environment used with pinned NumPy/SciPy/MNE versions.
-- [ ] All 136 optimizer calls (34 subjects x 2 models x 2 CV directions) report success.
+- [ ] All selected model/direction optimizer results (34 subjects x 2 models x 2 CV directions) satisfy the N1 success schema.
+- [ ] For every subject and both training blocks, embedded M3-as-M2 score error <= 1e-8.
+- [ ] For every subject and both training blocks, training score M2 >= training score M3 - 1e-8.
 - [ ] No nonfinite score or parameter appears.
 - [ ] No implementation-level pathology remains that would justify another numerical change.
 
