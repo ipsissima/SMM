@@ -134,3 +134,41 @@ jobs:
           path: probe_out/
           if-no-files-found: error
           retention-days: 90
+
+  aggregate:
+    name: aggregate P2 cross-kernel decision
+    needs: probe
+    if: ${{ always() && needs.probe.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all P2 kernel outputs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_OPT_P2_SUB001_*
+          path: p2_outputs
+          merge-multiple: true
+
+      - name: Apply frozen P1/P2 robustness decision criteria
+        run: |
+          python confirmatory/step5b/aggregate_optimizer_probe.py p2_outputs --out p2_optimizer_robustness.json
+          cat p2_optimizer_robustness.md
+          python - <<'PY'
+          import json
+          d=json.load(open("p2_optimizer_robustness.json"))
+          assert d["profile"]["sobol_candidates"] == 512
+          assert d["profile"]["polish_starts"] == 16
+          assert d["probe_pass"] is True
+          print("P2_CROSS_KERNEL_PASS")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_OPT_P2_AGGREGATE
+          path: |
+            p2_optimizer_robustness.json
+            p2_optimizer_robustness.md
+          if-no-files-found: error
+          retention-days: 90
