@@ -52,6 +52,8 @@ jobs:
                   raise SystemExit(f"OPEN gate is incomplete: {missing}")
               if profile.get("status") != "FROZEN":
                   raise SystemExit("OPEN gate rejected: numerical profile is not FROZEN")
+              if profile.get("profile_name") != "N1" or profile.get("exact_nested_anchor") is not True:
+                  raise SystemExit("OPEN gate rejected: final profile is not frozen N1 nested comparator")
               if not profile.get("final_freeze_commit"):
                   raise SystemExit("OPEN gate rejected: numerical profile lacks final_freeze_commit")
               if cfg.get("numerical_freeze_commit") != profile.get("final_freeze_commit"):
