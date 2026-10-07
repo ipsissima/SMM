@@ -117,7 +117,7 @@ jobs:
             dev/clean-epo.fif \
             --forward-dir forward_gate \
             --network-dir confirmatory/step5b/network_frozen \
-            --out "n1_out/sub-001-\${KERNEL}.json"
+            --out "n1_out/sub-001-${KERNEL}.json"
 
       - name: Require all per-kernel N1 invariants
         env:
