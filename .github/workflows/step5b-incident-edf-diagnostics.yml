@@ -26,6 +26,10 @@ jobs:
         subject: [sub-075, sub-206, sub-230, sub-425]
     steps:
       - uses: actions/checkout@v4
+      - name: Record isolated read-only diagnostic provenance
+        run: |
+          echo "DIAGNOSTIC_CODE_COMMIT=$(git rev-parse HEAD)"
+          echo "NOT_CONFIRMATORY_INFERENCE=true"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
