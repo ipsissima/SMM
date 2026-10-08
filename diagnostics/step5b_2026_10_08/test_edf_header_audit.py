@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory() as tmp:
     d = Path(tmp)
     labels = ['Fp2', 'Fp1', 'Status']
     samples = [
-        np.array([[-1, 2], [3, -4]], dtype='<i2'),
+        np.array([[-100, -100], [100, 100]], dtype='<i2'),
         np.array([[3, 4], [5, 6]], dtype='<i2'),
         np.array([[0, 0], [1, 1]], dtype='<i2'),
     ]
@@ -70,6 +70,11 @@ with tempfile.TemporaryDirectory() as tmp:
     assert report['only_fp1_fp2_swapped'] is True
     assert report['edf_eeg_names_equal_bids_eeg_names'] is True
     assert report['max_fraction_outside_declared_digital_range'] == 0
+    first = next(ch for ch in report['edf_header']['signals'] if ch['name'] == 'Fp2')
+    assert first['fraction_at_digital_min'] == 0.5
+    assert first['fraction_at_digital_max'] == 0.5
+    assert first['longest_digital_min_run_samples'] == 2
+    assert first['longest_digital_max_run_samples'] == 2
     assert report['pinned_digest_and_byte_size_pass'] is True
     command[command.index('--sha256') + 1] = '0' * 64
     tampered = subprocess.run(command, capture_output=True, text=True)
