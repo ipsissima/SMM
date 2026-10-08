@@ -1,4 +1,5 @@
 name: Step 5B amended sub-075 preprocessing (ONLY)
+# Revision: retain newline-valid JSON provenance after successful frozen QC
 
 on:
   push:
