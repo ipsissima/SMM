@@ -1,0 +1,228 @@
+name: Step 5B POST-OPEN AMENDED completion (NOT frozen primary)
+
+on:
+  push:
+    branches:
+      - step5b-amended-analysis-2026-10-08
+    paths:
+      - .github/workflows/step5b-amended-completion.yml
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: step5b-post-open-amended-completion
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Verify amended lock, original 561 preprocessing artifacts and A1 recovery
+    runs-on: ubuntu-24.04
+    outputs:
+      batch_a: ${{ steps.plan.outputs.batch_a }}
+      batch_c: ${{ steps.plan.outputs.batch_c }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify frozen scientific Git object identities
+        run: |
+          test "$(git hash-object confirmatory/step5b/preprocess_ds005385.py)" = 797c7334c4431addf87c15bc6009b98ae24fd6cd
+          test "$(git hash-object confirmatory/step5b/fit_cv_subject_n1.py)" = f2276f20ff6eb20666634b2b20fa21b66288780d
+          test "$(git hash-object confirmatory/step5b/aggregate_confirmatory.py)" = 164ecf6f5ce55d7a71a4b78efe12305543755eed
+          test "$(git hash-object confirmatory/step5b/NUMERICAL_PROFILE.json)" = fa13dd5f898f7ef6fc5c289fc7a0c851e2cd59a1
+          test "$(git hash-object confirmatory/step5b/channels_64.txt)" = 3b335f5f334a49c92ba46ea82b21d996f8a693a2
+          python -m py_compile amended/step5b/aggregate_amended.py amended/step5b/preprocess_sub075.py
+          echo "ORIGINAL_SCIENTIFIC_CODE_UNTOUCHED=PASS"
+      - id: plan
+        name: Verify original held-out preprocess artifacts, amended-075 and exact A/C plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from pathlib import Path
+          token=os.environ['GH_TOKEN']
+          def list_artifacts(run_id):
+              results=[]
+              page=1
+              while True:
+                  url=f'https://api.github.com/repos/ipsissima/SMM/actions/runs/{run_id}/artifacts?per_page=100&page={page}'
+                  req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'})
+                  with urllib.request.urlopen(req,timeout=30) as f:
+                      data=json.load(f)
+                  results.extend(data.get('artifacts',[]))
+                  if len(data.get('artifacts',[]))<100:
+                      return results
+                  page+=1
+                  if page>15:
+                      raise RuntimeError('Unexpected artifact pagination')
+          original=list_artifacts(37752719639)
+          expected={f'SMM_STEP5B_HOLDOUT_sub-{i:03d}' for i in range(44,609) if i not in (75,206,230,425)}
+          got={a['name'] for a in original if a['name'].startswith('SMM_STEP5B_HOLDOUT_sub-')}
+          if got!=expected or len(got)!=561:
+              raise SystemExit(f'FROZEN_PREPROCESS_ARTIFACT_MISMATCH: got={len(got)}, missing={sorted(expected-got)}, extraneous={sorted(got-expected)}')
+          for a in original:
+              if a['name'] in expected and a.get('expired'):
+                  raise SystemExit('Original preprocessing artifact expired: '+a['name'])
+          pilot=list_artifacts(37786081008)
+          a1=[a for a in pilot if a['name']=='SMM_STEP5B_AMENDED_PREPROCESS_sub-075' and not a.get('expired')]
+          if len(a1)!=1:
+              raise SystemExit('Verified A1 pilot artifact unavailable')
+          for s in ('sub-206','sub-230','sub-425'):
+              d=json.loads((Path('amended/step5b/ineligible')/f'{s}.ineligible.json').read_text())
+              assert d['analysis_classification']=='POST_OPEN_AMENDED'
+              assert d['record_type']=='post_open_structural_ineligible'
+              assert d['original_holdout_run_id']==37752719639
+          batch_a=[f'sub-{i:03d}' for i in range(44,232) if i not in (206,230)]
+          batch_c=[f'sub-{i:03d}' for i in range(420,609) if i != 425]
+          assert len(batch_a)==186 and len(batch_c)==188
+          assert 'sub-075' in batch_a
+          assert len(batch_a)+len(batch_c)+188+3==565
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('batch_a='+json.dumps(batch_a,separators=(',',':'))+chr(10))
+              f.write('batch_c='+json.dumps(batch_c,separators=(',',':'))+chr(10))
+          print('AMENDED_PLAN_LOCKED_PREPROCESS_ARTIFACTS_VERIFIED 561; A1 VERIFIED; A=',len(batch_a),'C=',len(batch_c),'B original=',188,'structural=',3)
+          PY
+
+  fit_a:
+    name: Amended batch A, frozen unchanged N1 fit
+    needs: gate
+    strategy:
+      fail-fast: false
+      max-parallel: 24
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_a) }}
+    uses: ./.github/workflows/step5b-amended-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  fit_c:
+    name: Amended batch C, frozen unchanged N1 fit
+    needs: gate
+    strategy:
+      fail-fast: false
+      max-parallel: 24
+      matrix:
+        subject: ${{ fromJSON(needs.gate.outputs.batch_c) }}
+    uses: ./.github/workflows/step5b-amended-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+
+  amended_aggregate:
+    name: Explicit post-open 565-assignment amended aggregation
+    needs: [gate,fit_a,fit_c]
+    if: ${{ needs.gate.result == 'success' && needs.fit_a.result == 'success' && needs.fit_c.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check all 188 ORIGINAL B fit records have finished (never consume partial B)
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          token=os.environ['GH_TOKEN']
+          expected={f'SMM_STEP5B_HOLDOUT_FIT_sub-{i:03d}' for i in range(232,420)}
+          found=[]
+          page=1
+          while True:
+              url=f'https://api.github.com/repos/ipsissima/SMM/actions/runs/37752719639/artifacts?per_page=100&page={page}'
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=30) as f:
+                  d=json.load(f)
+              batch=d.get('artifacts',[])
+              found.extend(a for a in batch if a['name'].startswith('SMM_STEP5B_HOLDOUT_FIT_sub-'))
+              if len(batch)<100: break
+              page+=1
+              if page>15: raise RuntimeError('Unexpected artifact pagination')
+          got={a['name'] for a in found}
+          if got!=expected or len(found)!=188:
+              raise SystemExit(f'B_ORIGINAL_FITS_NOT_READY_OR_INVALID: original_B={len(got)}/188, missing={sorted(expected-got)}, unexpected={sorted(got-expected)}. Do NOT run statistical inference on partial B.')
+          print('ORIGINAL_FROZEN_BATCH_B_FITS_COMPLETE=188/188')
+          PY
+      - name: Install unchanged frozen inference dependency
+        run: python -m pip install numpy==2.3.5
+      - name: Download only this run's 374 amended A/C fit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_AMENDED_FIT_sub-*
+          path: amended_inputs
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.run_id }}
+      - name: Download original run's 188 frozen B fit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_HOLDOUT_FIT_sub-*
+          path: amended_inputs
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37752719639
+      - name: Assemble and provenance-gate 565 inputs before frozen inference
+        run: |
+          python - <<'PY'
+          import json,os,re,shutil
+          from pathlib import Path
+          inp=Path('amended_inputs')
+          A={f'sub-{i:03d}' for i in range(44,232) if i not in (206,230)}
+          C={f'sub-{i:03d}' for i in range(420,609) if i!=425}
+          B={f'sub-{i:03d}' for i in range(232,420)}
+          amendment=A|C
+          assert len(amendment)==374 and len(B)==188
+          rec={}
+          for p in inp.glob('sub-*.json'):
+              m=re.fullmatch(r'(sub-[0-9]{3})(?:\.excluded)?\.json',p.name)
+              if not m: raise SystemExit('Unexpected fit output '+str(p))
+              s=m.group(1)
+              if s in rec: raise SystemExit('Duplicate fit output '+s)
+              rec[s]=p
+          if set(rec)!=amendment|B:
+              raise SystemExit('BATCH_SOURCE_MISMATCH: missing='+str(sorted(amendment|B-set(rec)))+
+                               ' extra='+str(sorted(set(rec)-amendment-B)))
+          src={}
+          for p in inp.glob('source_sub-*.json'):
+              d=json.loads(p.read_text())
+              s=d['subject']
+              if s in src: raise SystemExit('Duplicate amended source provenance '+s)
+              src[s]=d
+          if set(src)!=amendment:
+              raise SystemExit('Missing or extraneous amended per-fit source manifests')
+          for s,d in src.items():
+              expected='A1_AMENDED_SUB075' if s=='sub-075' else 'ORIGINAL_FROZEN_PREPROCESS'
+              assert d['source_type']==expected
+              assert d['preprocessing_run_id']==(37786081008 if s=='sub-075' else 37752719639)
+              assert d['original_scientific_fit_blob']=='f2276f20ff6eb20666634b2b20fa21b66288780d'
+          for s in ('sub-206','sub-230','sub-425'):
+              p=Path('amended/step5b/ineligible')/f'{s}.ineligible.json'
+              shutil.copyfile(p,inp/p.name)
+          provenance={
+              'analysis_classification':'POST_OPEN_AMENDED',
+              'scientific_base_commit':'20fab272edf33d2513470c60ac9398754535cacb',
+              'original_preprocess_run':37752719639,
+              'original_batch_b_fit_run':37752719639,
+              'amended_preprocess_subject':'sub-075',
+              'amended_preprocess_run':37786081008,
+              'amended_preprocess_input_sha256':'bc2cf91a253a490342d849f39baba530bbe4a58b5c2ea86fb78db08e037fcb02',
+              'amended_fit_run':int(os.environ['GITHUB_RUN_ID']),
+              'sourced_fits':{s:('original_B' if s in B else 'amended_A_C') for s in sorted(amendment|B)},
+          }
+          (inp/'artifact_sources.json').write_text(json.dumps(provenance,indent=2)+chr(10))
+          print('AMENDED_INPUT_PROVENANCE_PASS: 374 amended fit-or-QC records; 188 ORIGINAL B fit-or-QC records; 3 POST-OPEN STRUCTURAL; total 565')
+          PY
+      - name: Compute audited POST-OPEN amended criterion using identical frozen statistical functions
+        run: |
+          python amended/step5b/aggregate_amended.py amended_inputs --out-dir amended_result
+          cat amended_result/amended_primary_result.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_POST_OPEN_AMENDED_RESULT
+          path: amended_result/
+          if-no-files-found: error
+          retention-days: 90

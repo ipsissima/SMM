@@ -1,0 +1,15 @@
+{
+  "subject": "sub-425",
+  "reason_code": "QC_1_45_AMPLITUDE_RMS_AND_P999_EXCEED_LIMITS",
+  "original_failure_message": "EDF amplitude sanity check failed (1-45 Hz median RMS=1298.395 uV, abs p99.9=15064.722 uV; both exceed frozen limits).",
+  "edf_sha256": "7d9cc41b0e7e8c4d2a7a9630da1c2af0c83a7a38eace92e8452d771d06818fb8",
+  "original_preprocess_job_id": 113229660519,
+  "analysis_classification": "POST_OPEN_AMENDED",
+  "record_type": "post_open_structural_ineligible",
+  "included": false,
+  "model_fit_performed": false,
+  "primary_condition": "ses-1 / EyesClosed / acq-pre",
+  "original_holdout_run_id": 37752719639,
+  "source_dataset_commit": "6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12",
+  "note": "NOT a frozen Primary QC failed exclusion; original frozen primary remains NOT_EVALUABLE"
+}

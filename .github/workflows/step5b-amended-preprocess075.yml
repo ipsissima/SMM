@@ -1,0 +1,177 @@
+name: Step 5B amended sub-075 preprocessing (ONLY)
+# Revision: retain newline-valid JSON provenance after successful frozen QC
+
+on:
+  push:
+    branches:
+      - step5b-amended-analysis-2026-10-08
+    paths:
+      - .github/workflows/step5b-amended-preprocess075.yml
+
+permissions:
+  contents: read
+
+jobs:
+  preprocess:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
+      SUBJECT: sub-075
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert holdout subject boundary before any network access
+        run: |
+          set -euo pipefail
+          N="${SUBJECT#sub-}"
+          N=$((10#${N}))
+          test "${N}" -ge 44
+          test "${N}" -le 608
+          echo "HOLDOUT_SUBJECT_BOUNDARY=PASS ${SUBJECT}"
+
+      - name: Check frozen scientific files unchanged and syntax of amendment
+        run: |
+          git fetch --no-tags --depth=1 origin 20fab272edf33d2513470c60ac9398754535cacb
+          git diff --exit-code 20fab272edf33d2513470c60ac9398754535cacb HEAD -- confirmatory/step5b .github/workflows/step5b-reusable-preprocess-one.yml .github/workflows/step5b-reusable-fit-one.yml .github/workflows/step5b-confirmatory-holdout.yml
+          python -m py_compile amended/step5b/preprocess_sub075.py
+          echo "FROZEN_CODE_UNCHANGED=PASS"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install frozen preprocessing environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-development.txt
+          python - <<'PY'
+          import mne, pyprep, mne_icalabel
+          assert mne.__version__ == "1.13.2"
+          assert pyprep.__version__ == "0.9.0"
+          assert mne_icalabel.__version__ == "0.9.0"
+          print("PREPROCESS_ENVIRONMENT=PASS",mne.__version__,pyprep.__version__,mne_icalabel.__version__)
+          PY
+
+      - name: Resolve frozen annex pointer and download EDF
+        run: |
+          set -euo pipefail
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          REL="${SUBJECT}/ses-1/eeg/${EDF}"
+          mkdir -p "holdout_raw/${SUBJECT}" "holdout_out/${SUBJECT}"
+
+          POINTER_URL="https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}"
+          POINTER="$(curl --fail --location --retry 4 --retry-delay 5 "${POINTER_URL}")"
+          printf '%s\n' "${POINTER}" | tee "holdout_out/${SUBJECT}/annex_pointer.txt"
+
+          EXPECTED_SHA256="$(printf '%s\n' "${POINTER}" | sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p')"
+          EXPECTED_SIZE="$(printf '%s\n' "${POINTER}" | sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p')"
+          test -n "${EXPECTED_SHA256}"
+          test "${EXPECTED_SHA256}" = "bc2cf91a253a490342d849f39baba530bbe4a58b5c2ea86fb78db08e037fcb02"
+          test -n "${EXPECTED_SIZE}"
+
+          DATA_URL="https://s3.amazonaws.com/openneuro.org/ds005385/${REL}"
+          curl --fail --location --retry 4 --retry-delay 5 "${DATA_URL}" -o "holdout_raw/${SUBJECT}/${EDF}"
+
+          echo "${EXPECTED_SHA256}  holdout_raw/${SUBJECT}/${EDF}" | sha256sum -c -
+          test "$(stat -c%s "holdout_raw/${SUBJECT}/${EDF}")" -eq "${EXPECTED_SIZE}"
+
+          printf '{"subject":"%s","openneuro_commit":"%s","edf":"%s","expected_sha256":"%s","expected_size":%s}\n' \
+            "${SUBJECT}" "${OPENNEURO_COMMIT}" "${EDF}" "${EXPECTED_SHA256}" "${EXPECTED_SIZE}" \
+            > "holdout_out/${SUBJECT}/input_provenance.json"
+
+      - name: Frozen preprocessing with structural QC accounting
+        run: |
+          set +e
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          python amended/step5b/preprocess_sub075.py \
+            "holdout_raw/${SUBJECT}/${EDF}" \
+            --out-dir "holdout_out/${SUBJECT}" 2>&1 | tee "holdout_out/${SUBJECT}/preprocess.log"
+          CODE=${PIPESTATUS[0]}
+          set -e
+
+          if [ "${CODE}" -eq 0 ]; then
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          qc=json.loads((out/"qc.json").read_text())
+          status={
+              "analysis_classification":"POST_OPEN_AMENDED",
+              "amendment_code":"A1 exact Fp2/Fp1 channel permutation",
+              "subject":s,
+              "included":True,
+              "primary_condition":"ses-1 / EyesClosed / acq-pre",
+              "reason":None,
+              "n_epochs_clean":int(qc["n_epochs_clean"]),
+          }
+          (out/"qc_status.json").write_text(json.dumps(status,indent=2)+"\n")
+          PY
+          elif grep -q "RuntimeError: Primary QC failed:" "holdout_out/${SUBJECT}/preprocess.log"; then
+            python - <<'PY'
+          import json,os,re
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          log=(out/"preprocess.log").read_text(errors="replace")
+          matches=re.findall(r"RuntimeError: (Primary QC failed:.*)",log)
+          if not matches:
+              raise SystemExit("Expected frozen primary-QC failure was not parseable")
+          status={
+              "analysis_classification":"POST_OPEN_AMENDED",
+              "amendment_code":"A1 exact Fp2/Fp1 channel permutation",
+              "subject":s,
+              "included":False,
+              "primary_condition":"ses-1 / EyesClosed / acq-pre",
+              "reason":matches[-1].strip(),
+              "n_epochs_clean":None,
+          }
+          (out/"qc_status.json").write_text(json.dumps(status,indent=2)+"\n")
+          print("FROZEN_QC_EXCLUSION",s,status["reason"])
+          PY
+          else
+            echo "Unexpected preprocessing failure; manual/infrastructure investigation required."
+            exit "${CODE}"
+          fi
+
+      - name: Assert structural QC outcome
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          out=Path("holdout_out")/s
+          d=json.loads((out/"qc_status.json").read_text())
+          assert d["subject"] == s
+          if d["included"]:
+              assert (out/"clean-epo.fif").is_file()
+              assert (out/"qc.json").is_file()
+              assert int(d["n_epochs_clean"]) >= 30
+          else:
+              assert str(d["reason"]).startswith("Primary QC failed:")
+          print("QC_STATUS_PASS",s,d["included"],d["reason"])
+          PY
+
+      - name: Prove specific exact channel amendment recorded
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("holdout_out/sub-075")
+          a=json.loads((p/"AMENDMENT_A1_CHANNEL_PERMUTATION.json").read_text())
+          q=json.loads((p/"qc_status.json").read_text())
+          assert a["subject"]=="sub-075" and a["frozen_parameters_and_QC_unchanged"] is True
+          assert a["observed_EDF_channel_order"][:2]==["Fp2","Fp1"]
+          assert a["canonical_after_reorder"][:2]==["Fp1","Fp2"]
+          assert q["analysis_classification"]=="POST_OPEN_AMENDED"
+          print("AMENDED_A1_PROVENANCE_PASS",q["included"])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_AMENDED_PREPROCESS_sub-075
+          path: holdout_out/${{ inputs.subject }}/
+          if-no-files-found: error
+          retention-days: 90
