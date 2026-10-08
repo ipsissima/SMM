@@ -72,7 +72,7 @@ def preprocess(edf:Path,out_dir:Path):
             'canonical_after_reorder':raw.ch_names,
             'frozen_preprocess_sha256_source_blob':'797c7334c4431addf87c15bc6009b98ae24fd6cd',
             'frozen_parameters_and_QC_unchanged':True
-        },indent=2)+'\\n',encoding='utf-8'
+        },indent=2)+'\n',encoding='utf-8'
     )
     print('AMENDMENT_A1_EXACT_CHANNEL_PERMUTATION_APPLIED',edf.name,flush=True)
     # ds005385 EDF carries one non-EEG acquisition/status channel in addition
