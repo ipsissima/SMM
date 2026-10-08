@@ -1,0 +1,68 @@
+name: Step 5B incident EDF diagnostics (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smm-step5b-incident-diagnostics
+  cancel-in-progress: false
+
+jobs:
+  blind_edf_header_audit:
+    name: blind EDF audit (${{ matrix.subject }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: [sub-075, sub-206, sub-230, sub-425]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install diagnostic-only dependency
+        run: python -m pip install numpy==2.3.5
+      - name: Verify pinned EDF and audit independently of any model
+        env:
+          SUBJECT: ${{ matrix.subject }}
+          OPENNEURO_COMMIT: 6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12
+        shell: bash
+        run: |
+          set -euo pipefail
+          EDF="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.edf"
+          REL="${SUBJECT}/ses-1/eeg/${EDF}"
+          mkdir -p raw reports metadata
+          curl --fail --location --retry 4 "https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${REL}" -o metadata/annex_pointer.txt
+          KEY="$(cat metadata/annex_pointer.txt)"
+          EXPECTED_SHA256="$(printf '%s\n' "${KEY}" | sed -n 's/.*SHA256E-s[0-9][0-9]*--\([0-9a-f]\{64\}\)\.edf.*/\1/p')"
+          EXPECTED_SIZE="$(printf '%s\n' "${KEY}" | sed -n 's/.*SHA256E-s\([0-9][0-9]*\)--[0-9a-f]\{64\}\.edf.*/\1/p')"
+          test -n "${EXPECTED_SHA256}"
+          test -n "${EXPECTED_SIZE}"
+          curl --fail --location --retry 4 "https://s3.amazonaws.com/openneuro.org/ds005385/${REL}" -o "raw/${EDF}"
+          echo "${EXPECTED_SHA256}  raw/${EDF}" | sha256sum -c -
+          test "$(stat -c%s "raw/${EDF}")" -eq "${EXPECTED_SIZE}"
+          for EXT in eeg.json channels.tsv; do
+            FILENAME="${SUBJECT}_ses-1_task-EyesClosed_acq-pre_${EXT}"
+            curl --fail --location --retry 4 "https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/${OPENNEURO_COMMIT}/${SUBJECT}/ses-1/eeg/${FILENAME}" -o "metadata/${FILENAME}"
+          done
+          python diagnostics/step5b_2026_10_08/edf_header_audit.py \
+            --subject "${SUBJECT}" \
+            --edf "raw/${EDF}" \
+            --bids-json "metadata/${SUBJECT}_ses-1_task-EyesClosed_acq-pre_eeg.json" \
+            --bids-channels "metadata/${SUBJECT}_ses-1_task-EyesClosed_acq-pre_channels.tsv" \
+            --frozen-channels confirmatory/step5b/channels_64.txt \
+            --sha256 "${EXPECTED_SHA256}" \
+            --byte-size "${EXPECTED_SIZE}" \
+            --dataset-commit "${OPENNEURO_COMMIT}" \
+            --output "reports/${SUBJECT}.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_STEP5B_INCIDENT_DIAGNOSTIC_${{ matrix.subject }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 90
