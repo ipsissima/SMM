@@ -1,0 +1,19 @@
+name: Step 5B primary development preprocessing archive
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Canonical preprocessing record
+        run: |
+          echo "Primary development preprocessing is already frozen."
+          echo "Canonical run: 37438628533"
+          echo "Outcome: 34/38 QC pass."
+          echo "Do not rerun or alter preprocessing to improve development fit."
+          echo "See confirmatory/step5b/RESULTS_PROVENANCE_MANIFEST.md"

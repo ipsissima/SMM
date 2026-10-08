@@ -1,0 +1,17 @@
+{
+  "status": "OPEN",
+  "opened_at_utc": "2026-10-08T06:37:33Z",
+  "development_run_id": "37621942072",
+  "development_aggregate_artifact_id": "11517163525",
+  "development_aggregate_sha256": "sha256:e4ea2329c7f460363f051ad1fd8ef6166de1d83879bb0dd61f8c8d9a4b593ffa",
+  "development_summary_file_sha256": "sha256:e346e4e0c92ecd2a005a9c2a4d57d77489b8cbf1d625aa957897a93a6e2b051d",
+  "development_signoff_file_sha256": "sha256:b332d398df73216603785a80e562bb2139a23acd33b2713291cb40367bd9ebbe",
+  "numerical_freeze_commit": "8ec566fd8f6e82d838a4c041db2a81d81ece4227",
+  "numerical_profile_sha256": "sha256:91ecbdeede74123672080e71adc8a4a778117b00b78436bea8fdbc4c867019df",
+  "required_development_subjects": 34,
+  "holdout_first_subject": "sub-044",
+  "holdout_last_subject": "sub-608",
+  "holdout_subject_count": 565,
+  "primary_condition": "ses-1 / EyesClosed / acq-pre",
+  "note": "Provenance-only opening record committed after the complete frozen-N1 development aggregate, permanent result recording, development sign-off, and passing static integrity CI. No scientific setting is changed by this file."
+}
