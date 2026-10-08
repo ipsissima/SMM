@@ -77,6 +77,12 @@ def edf_headers_and_counts(path: Path):
     for i in range(signal_count):
         block = counts[:, offsets[i]:offsets[i+1]]
         digital_values = block.reshape(-1).astype(np.float64)
+        # Forensic diagnostics only: exact ADC boundary samples, never QC decisions.
+        at_min = (block.reshape(-1) == digital_min[i])
+        at_max = (block.reshape(-1) == digital_max[i])
+        def longest_run(mask):
+            edges = np.flatnonzero(np.diff(np.concatenate(([False], mask, [False])).astype(np.int8)))
+            return int(np.max(edges[1::2] - edges[::2])) if len(edges) else 0
         denominator = digital_max[i] - digital_min[i]
         gain = (physical_max[i] - physical_min[i]) / denominator if denominator else None
         physical_values = None if gain is None else physical_min[i] + (digital_values - digital_min[i]) * gain
@@ -92,7 +98,15 @@ def edf_headers_and_counts(path: Path):
             'observed_digital_min': int(np.min(block)),
             'observed_digital_max': int(np.max(block)),
             'observed_digital_rms': float(np.sqrt(np.mean(digital_values ** 2))),
-            'fraction_at_either_digital_limit': float(np.mean((block == digital_min[i]) | (block == digital_max[i]))),
+            'fraction_at_either_digital_limit': float(np.mean(at_min | at_max)),
+            'fraction_at_digital_min': float(np.mean(at_min)),
+            'fraction_at_digital_max': float(np.mean(at_max)),
+            'longest_digital_min_run_samples': longest_run(at_min),
+            'longest_digital_max_run_samples': longest_run(at_max),
+            'longest_digital_min_run_seconds': longest_run(at_min)/(samples_per_record[i]/record_seconds),
+            'longest_digital_max_run_seconds': longest_run(at_max)/(samples_per_record[i]/record_seconds),
+            'first_digital_min_sample_time_sec': float(np.flatnonzero(at_min)[0]/(samples_per_record[i]/record_seconds)) if np.any(at_min) else None,
+            'first_digital_max_sample_time_sec': float(np.flatnonzero(at_max)[0]/(samples_per_record[i]/record_seconds)) if np.any(at_max) else None,
             'fraction_outside_declared_digital_range': float(np.mean((block < digital_min[i]) | (block > digital_max[i]))),
             'raw_physical_median': None if physical_values is None else float(np.median(physical_values)),
             'raw_physical_rms': None if physical_values is None else float(np.sqrt(np.mean(physical_values ** 2))),
