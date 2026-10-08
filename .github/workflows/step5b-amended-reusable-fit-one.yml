@@ -62,7 +62,7 @@ jobs:
           name: SMM_STEP5B_AMENDED_PREPROCESS_sub-075
           path: holdout
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: __PILOT_RUN_ID__
+          run-id: 37786081008
 
       - name: Audit original vs amended preprocessing origin before fits
         run: |
@@ -239,7 +239,7 @@ jobs:
               'subject':s,
               'analysis_classification':'POST_OPEN_AMENDED',
               'source_type':source,
-              'preprocessing_run_id':__PILOT_RUN_ID__ if s=='sub-075' else 37752719639,
+              'preprocessing_run_id':37786081008 if s=='sub-075' else 37752719639,
               'original_scientific_fit_blob':'f2276f20ff6eb20666634b2b20fa21b66288780d',
               'epochs_sha256':hashlib.sha256((p/'clean-epo.fif').read_bytes()).hexdigest() if q['included'] else None,
               'ordinary_frozen_qc_pass':bool(q['included']),
