@@ -45,57 +45,39 @@ See `RESULTS_PROVENANCE_MANIFEST.md` for the complete list.
 
 ## Development workflow
 
-Workflow:
+P1 and P2 are archived failed numerical-robustness probes. N1, the normalized nested-comparator method, passed the predeclared Haswell/Sandybridge/Zen robustness gate in canonical run `37599448753`. The numerical profile is now **FROZEN**.
 
-Historical optimizer probes P1/P2 are archived development diagnostics. Both failed their predeclared numerical-robustness criteria.
+The definitive post-freeze development workflow `.github/workflows/step5b-development-final.yml` completed in canonical run `37621942072`:
 
-The active numerical-method probe is N1:
+1. pinned package versions and one-thread execution were verified;
+2. the frozen network and canonical forward operator were hash-gated;
+3. all 34 frozen-QC-passed development recordings were fit with the frozen N1 M2/M3 two-block CV procedure;
+4. 136/136 selected model/direction fits passed;
+5. all exact M3-in-M2 nesting checks passed;
+6. the complete aggregate was produced and permanently recorded.
 
-`.github/workflows/step5b-optimizer-n1-nested.yml`
-
-N1 uses normalized coordinates and an exact M3-in-M2 comparator anchor. The definitive 34-subject post-freeze development matrix is prebuilt separately at:
-
-`.github/workflows/step5b-development-final.yml`
-
-It remains inert while `NUMERICAL_PROFILE.json` is `PENDING`. Only a passing N1 robustness aggregate may now freeze the numerical profile. Once N1 passes and the final profile is frozen, that matrix must:
-
-1. verifies pinned package versions;
-2. forces single-thread numerical execution;
-3. reconstructs/hash-gates the network;
-4. downloads/hash-gates the canonical forward operator;
-5. downloads each frozen QC-passed development epoch artifact;
-6. runs M2/M3 two-block CV;
-7. requires successful optimization in all directions;
-8. uploads one fit JSON per subject;
-9. aggregates all 34 fits in-run.
-
-The aggregate artifact is:
-
-`SMM_STEP5B_DEVELOPMENT_AGGREGATE`
-
-The aggregate is descriptive only. It intentionally does not compute the confirmatory p-value or bootstrap decision.
+The descriptive development aggregate is `confirmatory/step5b/development_summary.json`; the sign-off is `confirmatory/step5b/DEVELOPMENT_SIGNOFF_2026-10-08.md`. Development performance did not alter any scientific setting or confirmatory criterion.
 
 ## Numerical freeze
 
-The scientific fit architecture is frozen, but the **final numerical search profile is still being resolved in development** under the predeclared robustness rule.
-
-Invariant numerical settings are:
+The final production profile is N1:
 
 - seed 97;
-- L-BFGS-B;
-- maxiter 120;
-- ftol \(10^{-9}\);
-- gtol \(10^{-6}\);
-- maxls 30;
+- 512 Sobol candidates;
+- 16 Sobol polish starts;
+- normalized unit-cube coordinates;
+- smooth ordered logarithmic M2 time constants over unchanged 0.03-30 s bounds;
+- exact fitted-M3 point retained as a feasible M2 anchor;
+- L-BFGS-B maxiter 300;
+- ftol \(10^{-11}\);
+- gtol \(10^{-7}\);
+- maxls 50;
 - relative CSD/model eigenvalue floor \(10^{-6}\);
 - pinned NumPy/SciPy/MNE/pandas;
-- one BLAS/OpenMP thread.
+- one BLAS/OpenMP thread;
+- production OpenBLAS kernel Haswell.
 
-The original 32-Sobol / 4-polish profile proved runner-image sensitive and was superseded before holdout opening. P1 (256/8) failed M2 basin recovery. P2 (512/16) also failed: on Zen, M2 train block B remained below a known M2 basin and even below the simultaneously optimized M3 training score despite M2 mathematically containing M3.
-
-The new N1 method therefore changes optimizer coordinates rather than scientific models: all search coordinates are normalized, the ordered M2 time constants use a smooth logarithmic parameterization, and every M2 fit retains the exact fitted M3 solution as a feasible M2 candidate. N1 is being tested across Haswell/Sandybridge/Zen under predeclared cross-kernel criteria.
-
-Production development and holdout fitting consume the versioned `NUMERICAL_PROFILE.json` only after its status becomes `FROZEN`. The profile is selected by numerical robustness and nesting validity, never by the sign or magnitude of DeltaELPD(M3-M2).
+The permanent final-freeze record is `confirmatory/step5b/FINAL_NUMERICAL_FREEZE_TEMPLATE.md`. The sign or magnitude of DeltaELPD(M3-M2) was never used to choose the numerical profile.
 
 ## Opening the holdout
 
