@@ -1,38 +1,24 @@
 # Step 5B final numerical freeze
 
-**Status:** PENDING N1 ROBUSTNESS VERDICT
-**Holdout:** CLOSED
-**Scientific model:** unchanged from the pre-EEG lock
+**Status: FROZEN FOR FINAL DEVELOPMENT AND CONFIRMATORY HOLDOUT**
 
-P1 and P2 both failed their predeclared numerical-robustness criteria. This
-template is therefore now controlled only by
-`N1_NESTED_OPTIMIZER_PROTOCOL.md`.
+**Canonical N1 robustness run:** `37599448753`  
+**Canonical N1 commit:** `8ec566fd8f6e82d838a4c041db2a81d81ece4227`  
+**Frozen-profile commit:** `901739e232bedd29785dbae5a416cb8fd346f388`  
+**Holdout:** CLOSED at the time of this freeze.
 
-## Selection rule
+The confirmatory holdout remained closed throughout P1, P2 and N1 numerical-method development. P1 and P2 failed their predeclared robustness criteria. N1 passed the predeclared nested-comparator and cross-kernel criteria; the sign and magnitude of DeltaELPD(M3-M2) were audit-only and were not used to select N1.
 
-N1 may be frozen only if all predeclared numerical conditions pass:
+## Selected method
 
-- exact analytic M3-in-M2 transfer identity;
-- exact embedded M3-as-M2 score equality;
-- M2 training score never below its contained M3 solution;
-- recovery of all historical training basins;
-- cross-kernel training-objective reproducibility;
-- per-model CV numerical reproducibility;
-- finite outputs and unchanged physical-bound compliance.
-
-The sign or magnitude of DeltaELPD(M3-M2) is not a selection criterion.
-
-## Final profile
-
-- Profile: **PENDING N1**
-- Robustness run ID: **PENDING**
+- Profile: **N1**
 - Search coordinates: normalized unit cube
-- M2 ordered time constants: logarithmic parameterization over unchanged 0.03–30 s bounds
+- M2 time constants: ordered logarithmic parameterization over the unchanged 0.03-30 s physical domain
+- Exact comparator safeguard: fitted M3 solution embedded exactly as a feasible M2 candidate
 - Sobol candidates: 512
-- Sobol polish starts: 16
-- Exact M3-in-M2 raw anchor: required
-- Exact M3-in-M2 local-polish start: required
-- L-BFGS-B maxiter: 300
+- L-BFGS-B Sobol polish starts: 16
+- Exact nested anchor: retained feasible candidate plus deterministic local start
+- maxiter: 300
 - ftol: 1e-11
 - gtol: 1e-7
 - maxls: 50
@@ -41,37 +27,34 @@ The sign or magnitude of DeltaELPD(M3-M2) is not a selection criterion.
 - production OpenBLAS kernel: Haswell
 - thread policy: one BLAS/OpenMP thread
 
-## Robustness evidence
+## Robustness provenance
 
-- Kernels required: Haswell, Sandybridge, Zen
-- Aggregate artifact/digest: **PENDING**
-- Transfer-identity max error: **PENDING**
-- Embedded-score max error: **PENDING**
-- Minimum M2-M3 training nesting gap: **PENDING**
-- Training-score ranges: **PENDING**
-- Per-model CV ELPD ranges: **PENDING**
-- Historical best training basins recovered: **PENDING**
-- Finite/bounds audit: **PENDING**
-- Verdict: **PENDING**
+- Robustness run ID: `37599448753`
+- Aggregate artifact: `SMM_STEP5B_OPT_N1_AGGREGATE`
+- Aggregate artifact ID: `11480529099`
+- Aggregate artifact digest: `sha256:31bddc93ebd2030c63e54fde00b345cb0bc50a41727230aeaa23fb161d680152`
+- Kernels tested: Haswell, Sandybridge, Zen
 
-## Activation sequence
+## Frozen N1 pass criteria
 
-When and only when N1 returns PASS:
+- Analytic transfer-identity pass: True
+- Max transfer identity error: 1.023e-18
+- Embedded M3-as-M2 score equality pass: True
+- Max embedded score error: 1.137e-13
+- M2 >= contained M3 training invariant pass: True
+- Minimum M2-M3 training gap: 0.00430180409501
+- Training-score cross-kernel range pass: True
+- Per-model CV cross-kernel range pass: True
+- Training-score ranges: `{"M2_A": 3.964970483139041e-05, "M2_B": 0.0002054554164487854, "M3_A": 0.0, "M3_B": 1.1368683772161603e-13}`
+- CV-score ranges: `{"M2": 0.00015412882703458308, "M3": 4.0055283534456976e-08}`
+- Finite/bounds audit: True
 
-1. generate the completed freeze document directly from the N1 aggregate;
-2. commit that completed freeze record without opening the holdout;
-3. use that completed-freeze commit SHA as `final_freeze_commit`;
-4. generate and commit `NUMERICAL_PROFILE.json` with status `FROZEN`;
-5. rerun all 34 QC-passed development subjects from scratch using the exact
-   N1 production fitter;
-6. require the M3-in-M2 nesting invariant on both training blocks of every
-   development subject;
-7. aggregate and sign off the complete 34-subject result;
-8. only then create a provenance-only holdout-opening commit.
+## Selection firewall
 
-If N1 fails, no numerical profile is frozen and the holdout remains closed.
-A new numerical-method protocol must be written before further testing.
+**The sign and magnitude of DeltaELPD(M3-M2) were not N1 selection criteria.**
 
-No biological parameter, equation, comparator bound, frequency range, QC
-threshold, subject split, likelihood, or confirmatory success criterion may be
-altered by this process.
+## Scientific invariants
+
+N1 changes no biological mechanism, K-to-QIF mapping, astroglial topology or constants, neuronal equations, M2 flexibility or physical bounds, M3 constraints, structural network, EEG forward model, primary condition, preprocessing/QC threshold, 1-40-Hz endpoint, likelihood, development/holdout split, primary M3-vs-M2 contrast, or confirmatory success criterion.
+
+After this freeze, the only admissible development operation was a complete fresh 34-subject rerun under this exact profile, followed by permanent aggregation/sign-off before any holdout opening.
