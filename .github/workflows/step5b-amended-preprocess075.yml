@@ -31,6 +31,7 @@ jobs:
 
       - name: Check frozen scientific files unchanged and syntax of amendment
         run: |
+          git fetch --no-tags --depth=1 origin 20fab272edf33d2513470c60ac9398754535cacb
           git diff --exit-code 20fab272edf33d2513470c60ac9398754535cacb HEAD -- confirmatory/step5b .github/workflows/step5b-reusable-preprocess-one.yml .github/workflows/step5b-reusable-fit-one.yml .github/workflows/step5b-confirmatory-holdout.yml
           python -m py_compile amended/step5b/preprocess_sub075.py
           echo "FROZEN_CODE_UNCHANGED=PASS"
