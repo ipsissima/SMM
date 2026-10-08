@@ -8,7 +8,8 @@
 
 - Pre-EEG lock ID: `SMM_STEP5B_PRE_EEG_LOCK_2026-10-05`
 - Original freeze record: `confirmatory/step5b/FREEZE_COMMIT.txt`
-- Development numerical freeze: `confirmatory/step5b/DEVELOPMENT_NUMERICAL_FREEZE_2026-10-06.md`
+- Development numerical freeze history: `confirmatory/step5b/DEVELOPMENT_NUMERICAL_FREEZE_2026-10-06.md`
+- Final N1 numerical freeze record: `confirmatory/step5b/FINAL_NUMERICAL_FREEZE_TEMPLATE.md`
 - Confirmatory holdout gate: `confirmatory/step5b/HOLDOUT_GATE.json`
 - Development aggregation code: `confirmatory/step5b/aggregate_development.py`
 - Confirmatory aggregation/inference code: `confirmatory/step5b/aggregate_confirmatory.py`
@@ -107,40 +108,37 @@ A development-only optimizer robustness probe now tests a broader search using t
 
 ### Final numerical freeze
 
-- final optimizer profile: **PENDING**
-- P1 robustness-probe run ID: `37499465520` — **FAIL**
-- P1 failure record: `confirmatory/step5b/P1_OPTIMIZER_PROBE_RESULT.md`
-- P2 robustness-probe run ID: `37503947541` — **FAIL**
-- P2 decisive failed job: Zen `112407717464`
-- P2 failure record: `confirmatory/step5b/P2_OPTIMIZER_PROBE_RESULT.md`
-- new method protocol: `confirmatory/step5b/N1_NESTED_OPTIMIZER_PROTOCOL.md`
-- N1 attempt `37515959819`: **INVALID INFRASTRUCTURE ATTEMPT** — GitHub expressions were escaped literally, so artifact authentication failed before any N1 fit ran.
-- N1 attempt `37516169155`: **SUPERSEDED BEFORE INTERPRETATION** — an audit found that the frozen N1 text required retention of finite raw Sobol candidates while the implementation retained only local polishes plus the M2 anchor. No output from this run is admissible for the N1 verdict.
-- canonical N1 robustness-probe run ID: `37517846200` (**running**)
-- canonical N1 commit SHA: `7c1749c2c8e1dcea1e05dc00cd33f27226c69664`
-- N1 method: normalized unit-cube search + exact M3-in-M2 feasible anchor + retention of finite raw Sobol candidates
-- final numerical-freeze commit: **PENDING**
-- canonical 34-subject rerun: **PENDING**
+- final optimizer profile: **N1 - FROZEN**
+- canonical N1 robustness-probe run ID: `37599448753` - **PASS**
+- canonical N1 commit SHA: `8ec566fd8f6e82d838a4c041db2a81d81ece4227`
+- frozen-profile commit SHA: `901739e232bedd29785dbae5a416cb8fd346f388`
+- robustness aggregate artifact: `SMM_STEP5B_OPT_N1_AGGREGATE`
+- robustness aggregate artifact ID: `11480529099`
+- robustness aggregate digest: `sha256:31bddc93ebd2030c63e54fde00b345cb0bc50a41727230aeaa23fb161d680152`
+- permanent N1 aggregate files: `confirmatory/step5b/n1_optimizer_robustness.json`, `confirmatory/step5b/n1_optimizer_robustness.md`
+- final freeze record: `confirmatory/step5b/FINAL_NUMERICAL_FREEZE_TEMPLATE.md`
+- production kernel: Haswell; robustness passed Haswell/Sandybridge/Zen
+- selection used training/nesting/cross-kernel criteria only; DeltaELPD sign was not a selection criterion.
 
 ## Canonical development fit
 
-The previous 34-subject attempt `37495554793` was cancelled/superseded after its first completed sub-001 result exposed cross-runner-image optimizer instability. It is not canonical.
+The definitive frozen-N1 34-subject development rerun is complete and signed off.
 
-After the optimizer robustness probe passes and a new final numerical freeze is committed, the definitive 34-subject workflow is:
+- run ID: `37621942072`
+- commit SHA: `901739e232bedd29785dbae5a416cb8fd346f388`
+- aggregate artifact: `SMM_STEP5B_DEVELOPMENT_AGGREGATE`
+- aggregate artifact ID: `11517163525`
+- aggregate artifact digest: `sha256:e4ea2329c7f460363f051ad1fd8ef6166de1d83879bb0dd61f8c8d9a4b593ffa`
+- subjects: 34/34
+- selected optimizer results: 136/136 successful
+- N1 nesting audit: PASS
+- mean DeltaELPD(M3-M2): `-0.01124290182314232`
+- median DeltaELPD(M3-M2): `-0.0066539431952037376`
+- M3 > M2: `2/34`
+- development sign-off: `confirmatory/step5b/DEVELOPMENT_SIGNOFF_2026-10-08.md` - **PASS - HOLDOUT MAY OPEN**
+- permanent aggregate files committed: `development_subject_results.csv`, `development_optimizer_diagnostics.csv`, `development_summary.json`, `development_summary.md`
 
-`.github/workflows/step5b-development-final.yml`
-
-Its aggregate artifact must be named:
-
-`SMM_STEP5B_DEVELOPMENT_AGGREGATE`
-
-When complete, record here:
-
-- run ID: **PENDING**
-- commit SHA: **PENDING**
-- aggregate artifact ID: **PENDING**
-- aggregate artifact digest: **PENDING**
-- permanent aggregate files committed to repository: **PENDING**
+These are descriptive development quantities only. No confirmatory inference was performed on development data.
 
 ## Confirmatory holdout
 
