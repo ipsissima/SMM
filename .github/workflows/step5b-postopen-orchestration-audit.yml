@@ -90,3 +90,6 @@ jobs:
           print('EXACT_565_SOURCE_ASSIGNMENT_AND_JOB_NAME_MATCH_PASS')
           print('NO_FITTING_RESTARTED_NO_PREDICTIVE_OUTPUT_READ')
           PY
+
+      - name: Execute synthetic-only assembler acceptance and fail-closed regression tests
+        run: python amended/step5b/test_postopen_artifact_assembly.py
