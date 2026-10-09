@@ -62,7 +62,7 @@ jobs:
                            {s:'success' for s in expected[37752719639][1]}),
               37787000597:(r'Amended batch [AC], frozen unchanged N1 fit \((sub-[0-9]{3})\) / fit',
                            {**{s:'success' for s in expected[37787000597][1]},'sub-075':'failure'}),
-              37968393249:(r'Isolated post-open unchanged N1 fit for sub-075 / fit',
+              37968393249:(r'Isolated post-open unchanged N1 fit for (sub-075) / fit',
                            {'sub-075':'success'}),
           }
           for run,(pattern,expected_jobs) in requirements.items():
