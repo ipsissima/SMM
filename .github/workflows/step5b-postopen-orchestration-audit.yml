@@ -1,0 +1,92 @@
+name: SMM Step 5B isolated orchestration static audit
+on:
+  push:
+    branches:
+      - step5b-postopen-artifact-path-repair-2026-10-09
+    paths:
+      - .github/workflows/step5b-postopen-orchestration-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify untouched frozen scientific Git blobs
+        run: |
+          test "$(git hash-object confirmatory/step5b/preprocess_ds005385.py)" = 797c7334c4431addf87c15bc6009b98ae24fd6cd
+          test "$(git hash-object confirmatory/step5b/fit_cv_subject_n1.py)" = f2276f20ff6eb20666634b2b20fa21b66288780d
+          test "$(git hash-object confirmatory/step5b/aggregate_confirmatory.py)" = 164ecf6f5ce55d7a71a4b78efe12305543755eed
+          test "$(git hash-object confirmatory/step5b/NUMERICAL_PROFILE.json)" = fa13dd5f898f7ef6fc5c289fc7a0c851e2cd59a1
+          test "$(git hash-object confirmatory/step5b/channels_64.txt)" = 3b335f5f334a49c92ba46ea82b21d996f8a693a2
+          test "$(git hash-object amended/step5b/aggregate_amended.py)" = 734a950ea66ddf0cb60e3fe561dfefd262141a10
+      - name: Install YAML parser for static checks only
+        run: python -m pip install PyYAML==6.0.2
+      - name: Parse workflows and compile every embedded Python stage without executing fits
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          import yaml
+          aggregate=Path('.github/workflows/step5b-postopen-final-aggregate-only.yml')
+          recovery=Path('.github/workflows/step5b-amended-reusable-fit-one.yml')
+          pilot=Path('.github/workflows/step5b-postopen-repair-fit075-only.yml')
+          static=Path('.github/workflows/step5b-postopen-orchestration-audit.yml')
+          docs={}
+          compiled=0
+          for path in (aggregate,recovery,pilot,static):
+              d=yaml.load(path.read_text(),Loader=yaml.BaseLoader)
+              assert isinstance(d,dict) and isinstance(d['jobs'],dict)
+              docs[path.name]=d
+              for job in d['jobs'].values():
+                  for step in job.get('steps',[]):
+                      script=step.get('run','')
+                      lines=script.splitlines()
+                      for index,line in enumerate(lines):
+                          if line.strip()!="python - <<'PY'": continue
+                          end=next((n for n in range(index+1,len(lines)) if lines[n].strip()=='PY'),None)
+                          assert end is not None, f'Unterminated heredoc: {path} {index+1}'
+                          code='\n'.join(lines[index+1:end])
+                          compile(code,f'{path}:{index+1}','exec')
+                          compiled+=1
+          main=docs[aggregate.name]
+          assert set(main['jobs'])=={'aggregate'}
+          assert 'workflow_dispatch' in main['on']
+          assert main['on']['push']['paths']==['amended/step5b/POST_OPEN_AGGREGATE_READY.trigger']
+          runs=[step for step in main['jobs']['aggregate']['steps'] if 'run' in step]
+          allscripts='\n'.join(x['run'] for x in runs)
+          assert 'TOTAL_565' not in allscripts or '565' in allscripts
+          assert 'assert len(b)==188 and len(ac)==373' in allscripts
+          assert "copygroup('src_075',{'sub-075'},True)" in allscripts
+          assert "copygroup('src_b',b,False)" in allscripts
+          assert 'EXACT_SUBJECT_FIT_JOB_CONCLUSIONS_PASS' in allscripts
+          assert "if run==37968393249" in allscripts
+          assert 'amended/step5b/aggregate_amended.py amended_inputs --out-dir amended_result' in allscripts
+          assert 'fit_cv_subject_n1.py ' not in allscripts
+          batchB={f'sub-{i:03d}' for i in range(232,420)}
+          batchAC={f'sub-{i:03d}' for i in range(44,232) if i not in (75,206,230)}
+          batchAC|={f'sub-{i:03d}' for i in range(420,609) if i!=425}
+          structural={'sub-206','sub-230','sub-425'}
+          allsubjects={f'sub-{i:03d}' for i in range(44,609)}
+          assert len(batchB)==188 and len(batchAC)==373
+          assert len(batchB|batchAC|{'sub-075'}|structural)==565
+          assert batchB.isdisjoint(batchAC) and allsubjects==batchB|batchAC|{'sub-075'}|structural
+          jobs=[
+              (r'fit batch B \((sub-[0-9]{3})\) / fit','fit batch B (sub-232) / fit','sub-232'),
+              (r'Amended batch [AC], frozen unchanged N1 fit \((sub-[0-9]{3})\) / fit','Amended batch A, frozen unchanged N1 fit (sub-044) / fit','sub-044'),
+              (r'Isolated post-open unchanged N1 fit for (sub-075) / fit','Isolated post-open unchanged N1 fit for sub-075 / fit','sub-075'),
+          ]
+          for pattern,label,expected in jobs:
+              match=re.fullmatch(pattern,label)
+              assert match and match.group(1)==expected
+          print('WORKFLOW_YAML_PARSE_PASS')
+          print('HEREDOC_PYTHON_COMPILE_PASS',compiled)
+          print('EXACT_565_SOURCE_ASSIGNMENT_AND_JOB_NAME_MATCH_PASS')
+          print('NO_FITTING_RESTARTED_NO_PREDICTIVE_OUTPUT_READ')
+          PY
