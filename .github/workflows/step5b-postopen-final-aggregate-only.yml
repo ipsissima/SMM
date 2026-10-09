@@ -1,0 +1,144 @@
+name: SMM Step 5B post-open aggregate only
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify scientific and inferential Git blobs
+        run: |
+          test "$(git hash-object confirmatory/step5b/fit_cv_subject_n1.py)" = f2276f20ff6eb20666634b2b20fa21b66288780d
+          test "$(git hash-object confirmatory/step5b/aggregate_confirmatory.py)" = 164ecf6f5ce55d7a71a4b78efe12305543755eed
+          test "$(git hash-object confirmatory/step5b/NUMERICAL_PROFILE.json)" = fa13dd5f898f7ef6fc5c289fc7a0c851e2cd59a1
+          test "$(git hash-object amended/step5b/aggregate_amended.py)" = 734a950ea66ddf0cb60e3fe561dfefd262141a10
+      - name: Fail closed before downloading any incomplete batch
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          token=os.environ['GH_TOKEN']
+          base='https://api.github.com/repos/ipsissima/SMM/'
+          def get(url):
+              req=urllib.request.Request(base+url,headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=60) as r: return json.load(r)
+          expected={
+              37752719639:('SMM_STEP5B_HOLDOUT_FIT_',{f'sub-{i:03d}' for i in range(232,420)},'20fab272edf33d2513470c60ac9398754535cacb'),
+              37787000597:('SMM_STEP5B_AMENDED_FIT_',({f'sub-{i:03d}' for i in range(44,232) if i not in (75,206,230)}|{f'sub-{i:03d}' for i in range(420,609) if i!=425}),'0f1fb40addc047c3719ea3efa2b9317fbdc5e8f7'),
+              37968393249:('SMM_STEP5B_AMENDED_FIT_',{'sub-075'},'f5039b3ddcedd62528b14c0dcc22928c47c4f574'),
+          }
+          for run,(prefix,subjects,sha) in expected.items():
+              info=get(f'actions/runs/{run}')
+              assert info['head_sha']==sha, f'Unexpected commit in {run}'
+              if run==37968393249: assert info['status']=='completed' and info['conclusion']=='success','Repaired 075 not finished'
+              a=[]
+              for page in range(1,20):
+                  batch=get(f'actions/runs/{run}/artifacts?per_page=100&page={page}')['artifacts']
+                  a+=batch
+                  if len(batch)<100: break
+              found=[z for z in a if z['name'].startswith(prefix)]
+              assert len(found)==len(subjects) and set(z['name'] for z in found)=={prefix+s for s in subjects},f'Incomplete or duplicate fit artifacts: {run}, {len(found)}/{len(subjects)}'
+              assert all(not z['expired'] and z['size_in_bytes']>0 for z in found)
+              print('COMPLETE_AND_UNEXPIRED',run,len(found))
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_HOLDOUT_FIT_sub-*
+          path: src_b
+          merge-multiple: true
+          run-id: 37752719639
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: SMM_STEP5B_AMENDED_FIT_sub-*
+          path: src_ac
+          merge-multiple: true
+          run-id: 37787000597
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_AMENDED_FIT_sub-075
+          path: src_075
+          run-id: 37968393249
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Assemble 565 assignments with strict run and per-subject provenance
+        run: |
+          python - <<'PY'
+          import json,hashlib,re,shutil
+          from pathlib import Path
+          b={f'sub-{i:03d}' for i in range(232,420)}
+          ac={f'sub-{i:03d}' for i in range(44,232) if i not in (75,206,230)}|{f'sub-{i:03d}' for i in range(420,609) if i!=425}
+          assert len(b)==188 and len(ac)==373
+          dest=Path('amended_inputs');dest.mkdir()
+          def copygroup(folder,expected,amended):
+              p=Path(folder)
+              entries={x.name:x for x in p.iterdir() if x.is_file()}
+              files={x.name:x for x in entries.values() if re.fullmatch(r'sub-[0-9]{3}(?:\.excluded)?\.json',x.name)}
+              subjects={name[:7] for name in files}
+              assert subjects==expected and len(files)==len(expected),f'Wrong fit source: {folder}'
+              source={name[7:14]:x for name,x in entries.items() if re.fullmatch(r'source_sub-[0-9]{3}\.json',name)}
+              assert set(source)==(expected if amended else set()),f'Wrong provenance: {folder}'
+              assert len(entries)==len(files)+len(source),f'Unexpected file: {folder}'
+              for s in expected:
+                  if amended:
+                      m=json.loads(source[s].read_text())
+                      assert m['subject']==s and m['analysis_classification']=='POST_OPEN_AMENDED'
+                      assert m['original_scientific_fit_blob']=='f2276f20ff6eb20666634b2b20fa21b66288780d'
+                      assert m['source_type']==('A1_AMENDED_SUB075' if s=='sub-075' else 'ORIGINAL_FROZEN_PREPROCESS')
+                      assert m['preprocessing_run_id']==(37786081008 if s=='sub-075' else 37752719639)
+              for name,f in entries.items():
+                  dst=dest/name;assert not dst.exists(),f'Collision: {name}'
+                  shutil.copyfile(f,dst)
+                  assert hashlib.sha256(f.read_bytes()).digest()==hashlib.sha256(dst.read_bytes()).digest()
+          copygroup('src_b',b,False)
+          copygroup('src_ac',ac,True)
+          copygroup('src_075',{'sub-075'},True)
+          for s in ('sub-206','sub-230','sub-425'):
+              p=Path('amended/step5b/ineligible')/(s+'.ineligible.json')
+              shutil.copyfile(p,dest/p.name)
+          assert len(b|ac|{'sub-075','sub-206','sub-230','sub-425'})==565
+          m={
+            'analysis_classification':'POST_OPEN_AMENDED',
+            'scientific_base_commit':'20fab272edf33d2513470c60ac9398754535cacb',
+            'original_preprocess_run':37752719639,'original_batch_b_fit_run':37752719639,
+            'amended_preprocess_subject':'sub-075','amended_preprocess_run':37786081008,
+            'amended_preprocess_input_sha256':'bc2cf91a253a490342d849f39baba530bbe4a58b5c2ea86fb78db08e037fcb02',
+            'amended_fit_run':37787000597,'isolated_sub075_fit_run':37968393249,
+            'sourced_fits':{s:('original_B' if s in b else 'amended_A_C') for s in sorted(b|ac|{'sub-075'})},
+          }
+          (dest/'artifact_sources.json').write_text(json.dumps(m,indent=2)+'\n')
+          print('COMPLETE_PROVENANCE_565_PASS')
+          PY
+      - run: python -m pip install numpy==2.3.5
+      - name: Apply unchanged frozen 10000 bootstrap 100000 sign-flip inference
+        run: python amended/step5b/aggregate_amended.py amended_inputs --out-dir amended_result
+      - name: Verify final classification, accounting and fixed inference
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('amended_result/amended_primary_result.json').read_text())
+          assert d['analysis_classification']=='POST_OPEN_AMENDED'
+          assert d['untouched_frozen_primary_verdict']=='NOT_EVALUABLE'
+          assert d['n_holdout_assigned']==565
+          assert d['n_structural_ineligible_post_open']==3
+          assert d['n_fit_included_amended']+d['n_frozen_qc_excluded']+3==565
+          assert d['bootstrap']['resamples']==10000 and d['sign_flip']['permutations']==100000
+          assert d['all_optimizers_success'] and d['all_nesting_checks_pass']
+          assert d['unchanged_inferential_rule']=='CI_low > 0 AND one-sided sign-flip p < 0.05'
+          assert d['NOT_a_frozen_confirmatory_PASS'] is True
+          print('POST_OPEN_FINAL_AUDIT_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_POST_OPEN_AMENDED_RESULT
+          path: amended_result/
+          if-no-files-found: error
+          retention-days: 90
