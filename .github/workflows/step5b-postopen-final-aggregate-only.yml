@@ -1,6 +1,11 @@
 name: SMM Step 5B post-open aggregate only
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - step5b-postopen-artifact-path-repair-2026-10-09
+    paths:
+      - amended/step5b/POST_OPEN_AGGREGATE_READY.trigger
 
 permissions:
   actions: read
@@ -16,14 +21,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify scientific and inferential Git blobs
         run: |
+          test "$(git hash-object confirmatory/step5b/preprocess_ds005385.py)" = 797c7334c4431addf87c15bc6009b98ae24fd6cd
           test "$(git hash-object confirmatory/step5b/fit_cv_subject_n1.py)" = f2276f20ff6eb20666634b2b20fa21b66288780d
+          test "$(git hash-object confirmatory/step5b/channels_64.txt)" = 3b335f5f334a49c92ba46ea82b21d996f8a693a2
           test "$(git hash-object confirmatory/step5b/aggregate_confirmatory.py)" = 164ecf6f5ce55d7a71a4b78efe12305543755eed
           test "$(git hash-object confirmatory/step5b/NUMERICAL_PROFILE.json)" = fa13dd5f898f7ef6fc5c289fc7a0c851e2cd59a1
           test "$(git hash-object amended/step5b/aggregate_amended.py)" = 734a950ea66ddf0cb60e3fe561dfefd262141a10
       - name: Fail closed before downloading any incomplete batch
         run: |
           python - <<'PY'
-          import json,os,urllib.request
+          import json,os,re,urllib.request
           token=os.environ['GH_TOKEN']
           base='https://api.github.com/repos/ipsissima/SMM/'
           def get(url):
@@ -47,6 +54,37 @@ jobs:
               assert len(found)==len(subjects) and set(z['name'] for z in found)=={prefix+s for s in subjects},f'Incomplete or duplicate fit artifacts: {run}, {len(found)}/{len(subjects)}'
               assert all(not z['expired'] and z['size_in_bytes']>0 for z in found)
               print('COMPLETE_AND_UNEXPIRED',run,len(found))
+          # All required FIT-or-QC jobs must have actually succeeded.
+          # The one historical amended sub-075 failure is recognized only
+          # as the known path-only stop, replaced by the successful isolated fit.
+          requirements={
+              37752719639:(r'fit batch B \((sub-[0-9]{3})\) / fit',
+                           {s:'success' for s in expected[37752719639][1]}),
+              37787000597:(r'Amended batch [AC], frozen unchanged N1 fit \((sub-[0-9]{3})\) / fit',
+                           {**{s:'success' for s in expected[37787000597][1]},'sub-075':'failure'}),
+              37968393249:(r'Isolated post-open unchanged N1 fit for sub-075 / fit',
+                           {'sub-075':'success'}),
+          }
+          for run,(pattern,expected_jobs) in requirements.items():
+              seen={}
+              for page in range(1,20):
+                  batch=get(f'actions/runs/{run}/jobs?per_page=100&page={page}')['jobs']
+                  for job in batch:
+                      m=re.fullmatch(pattern,job['name'])
+                      if m is None: continue
+                      subject=m.group(1)
+                      if subject in seen:
+                          raise SystemExit(f'DUPLICATE_SUBJECT_FIT_JOB run={run} subject={subject}')
+                      seen[subject]=job['conclusion'] if job['status']=='completed' else job['status']
+                  if len(batch)<100: break
+              if seen!=expected_jobs:
+                  missing=set(expected_jobs)-set(seen)
+                  extra=set(seen)-set(expected_jobs)
+                  wrong={s:(seen[s],expected_jobs[s]) for s in set(seen)&set(expected_jobs)
+                         if seen[s]!=expected_jobs[s]}
+                  raise SystemExit(f'SOURCE_FIT_JOBS_NOT_ALL_PASS run={run} missing={sorted(missing)} '
+                                   f'extra={sorted(extra)} wrong={wrong}')
+              print('EXACT_SUBJECT_FIT_JOB_CONCLUSIONS_PASS',run,len(seen))
           PY
       - uses: actions/download-artifact@v4
         with:
