@@ -64,6 +64,34 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: 37786081008
 
+      # Only an archive-directory normalization for the existing 075 pilot ZIP.
+      # The pilot uploader used an undefined inputs.subject in a push workflow,
+      # yielding holdout/sub-075/* instead of holdout/*. File bytes are preserved.
+      - name: Normalize only sub-075 pilot artifact ZIP directory (no data changes)
+        if: ${{ inputs.subject == 'sub-075' }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          root=Path('holdout')
+          nested=root/'sub-075'
+          assert nested.is_dir(), 'Expected the pilot ZIP sub-075 directory'
+          assert not (root/'qc_status.json').exists(), 'Unexpected double layout'
+          required={'qc_status.json','input_provenance.json','AMENDMENT_A1_CHANNEL_PERMUTATION.json','clean-epo.fif'}
+          items=list(nested.iterdir())
+          assert required.issubset({p.name for p in items}), 'Missing A1 source/QC records'
+          assert all(p.is_file() for p in items), 'Unexpected nested source structure'
+          before={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in items}
+          for p in items:
+              destination=root/p.name
+              assert not destination.exists(), 'Packaging name collision'
+              p.replace(destination)
+          nested.rmdir()
+          after={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in before}
+          assert before==after, 'Artifact-file SHA256 changed in path normalization'
+          print('SUB075_PILOT_ARTIFACT_PATH_ONLY=PASS; all file SHA256 identities preserved')
+          PY
+
       - name: Audit original vs amended preprocessing origin before fits
         run: |
           python - <<'PY'
