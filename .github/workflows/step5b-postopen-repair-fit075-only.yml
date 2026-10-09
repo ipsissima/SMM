@@ -1,0 +1,18 @@
+name: Step 5B POST_OPEN_AMENDED isolated sub-075 artifact-path recovery
+on:
+  push:
+    branches:
+      - step5b-postopen-artifact-path-repair-2026-10-09
+    paths:
+      - .github/workflows/step5b-postopen-repair-fit075-only.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  fit_only_sub075:
+    name: Isolated post-open unchanged N1 fit for sub-075
+    uses: ./.github/workflows/step5b-amended-reusable-fit-one.yml
+    with:
+      subject: sub-075
