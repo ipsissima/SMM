@@ -1,0 +1,31 @@
+name: SMM extended source FEniCS amplitude and spatial runs
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-original-extended.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ffian-extended:
+    runs-on: ubuntu-22.04
+    container: ghcr.io/scientificcomputing/fenics:2023-01-16
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin original FEniCS model and execute extended cases
+        run: |
+          git clone https://github.com/martejulie/fluid-flow-in-astrocyte-networks.git ffian-parent
+          git -C ffian-parent checkout --detach 99bfe1671d9c5735333fa24c2406aa32bde010fc
+          test "$(git -C ffian-parent rev-parse HEAD)" = "99bfe1671d9c5735333fa24c2406aa32bde010fc"
+          python3 -m pip install --no-deps ./ffian-parent
+          mkdir -p repro_outputs/extended
+          python3 reproduction/run_ffian_extended.py > repro_outputs/extended/run.log 2>&1 || { tail -150 repro_outputs/extended/run.log; exit 1; }
+          tail -30 repro_outputs/extended/run.log
+          test -s repro_outputs/extended/parent_spatiotemporal.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_ORIGINAL_FENICS_EXTENDED_SPATIAL
+          path: repro_outputs/extended/
+          retention-days: 30
