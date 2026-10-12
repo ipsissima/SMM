@@ -1,0 +1,27 @@
+name: SMM frozen EDF independent audit additional participants
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-original-edf-validation-pair.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preprocess:
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: [sub-075, sub-608]
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: ${{ matrix.subject }}
+  fit:
+    needs: preprocess
+    strategy:
+      fail-fast: false
+      matrix:
+        subject: [sub-075, sub-608]
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: ${{ matrix.subject }}
