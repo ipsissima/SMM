@@ -2,7 +2,7 @@ name: SMM extended source FEniCS amplitude and spatial runs
 on:
   push:
     branches: [smm-reproduction-2026-10-12]
-    paths: ['.github/workflows/smm-original-extended.yml']
+    paths: ['.github/workflows/smm-original-extended.yml', 'reproduction/run_ffian_extended.py']
   workflow_dispatch:
 permissions:
   contents: read
