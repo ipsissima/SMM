@@ -1,0 +1,56 @@
+name: SMM original source FEniCS and cellular recovery
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-original-reference.yml','reproduction/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ffian:
+    runs-on: ubuntu-22.04
+    container: ghcr.io/scientificcomputing/fenics:2023-01-16
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned original source
+        run: |
+          git clone https://github.com/martejulie/fluid-flow-in-astrocyte-networks.git ffian-parent
+          git -C ffian-parent checkout --detach 99bfe1671d9c5735333fa24c2406aa32bde010fc
+          test "$(git -C ffian-parent rev-parse HEAD)" = "99bfe1671d9c5735333fa24c2406aa32bde010fc"
+          python3 -m pip install --no-deps ./ffian-parent
+          python3 -c 'import dolfin,ffian; print("UPSTREAM_DOLFIN_READY",dolfin.__version__)'
+      - name: Execute original reference models M0 and M3
+        run: |
+          mkdir -p repro_outputs/ffian
+          python3 reproduction/run_ffian_reference.py > repro_outputs/ffian/run.log 2>&1 || { tail -100 repro_outputs/ffian/run.log; exit 1; }
+          tail -30 repro_outputs/ffian/run.log
+          test -s repro_outputs/ffian/reference_parent_K_tseries.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_ORIGINAL_FENICS_REFERENCE_OUTPUT
+          path: repro_outputs/ffian/
+          retention-days: 30
+  cellular:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recover published cellular source
+        run: |
+          mkdir -p repro_outputs/cellular
+          URL='https://itbgit.biologie.hu-berlin.de/contreras/activity-mediated_accumulation_potassium_induces_switch_firing'
+          { date -u; git ls-remote "$URL" HEAD || true; curl -IL --max-time 20 "$URL" || true; } > repro_outputs/cellular/access.log 2>&1
+          if git clone --depth=1 "$URL" repro_outputs/cellular/upstream_checkout > repro_outputs/cellular/clone.log 2>&1; then
+            git -C repro_outputs/cellular/upstream_checkout rev-parse HEAD > repro_outputs/cellular/upstream_commit.txt
+            find repro_outputs/cellular/upstream_checkout -type f | sort | head -300 > repro_outputs/cellular/file_inventory.txt
+          else
+            echo 'Unable to clone original public cellular source' > repro_outputs/cellular/source_status.txt
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_ORIGINAL_CELLULAR_SOURCE_RECOVERY
+          path: repro_outputs/cellular/
+          retention-days: 30
