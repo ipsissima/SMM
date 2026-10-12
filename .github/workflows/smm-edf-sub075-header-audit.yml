@@ -1,0 +1,42 @@
+name: SMM original EDF channel-label discrepancy audit sub-075
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-edf-sub075-header-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose-edf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch only the original EDF signal-label header (no brain signals)
+        run: |
+          mkdir -p output
+          SRC='sub-075/ses-1/eeg/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf'
+          curl -fsSL --retry 3 --range 0-4095 "https://s3.amazonaws.com/openneuro.org/ds005385/${SRC}" -o output/edf_header_bytes.bin
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          hdr=Path('output/edf_header_bytes.bin').read_bytes()
+          n=int(hdr[252:256].decode().strip())
+          assert len(hdr)>=256+16*n
+          labs=[hdr[256+i*16:256+(i+1)*16].decode('latin-1').strip() for i in range(n)]
+          expected=Path('confirmatory/step5b/channels_64.txt').read_text().splitlines()
+          obj={'subject':'sub-075','n_original_edf_signals':n,'labels':labs,'expected_frozen_64':expected,
+               'match_64_plus_status':labs==expected+['Status'],
+               'missing_expected':sorted(set(expected)-set(labs)),
+               'extra_labels':sorted(set(labs)-set(expected)-{'Status'}),
+               'positions_different':[(i,labs[i],expected[i]) for i in range(min(len(expected),len(labs))) if labs[i]!=expected[i]]}
+          Path('output/diagnostic.json').write_text(json.dumps(obj,indent=2)+'\n')
+          print(json.dumps(obj,indent=2))
+          PY
+          rm -f output/edf_header_bytes.bin
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_EDF_SUB075_HEADER_DIAGNOSTIC
+          path: output/diagnostic.json
+          retention-days: 30
