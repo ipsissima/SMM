@@ -1,0 +1,19 @@
+name: SMM independent frozen sub-044 EDF reprocessing
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-original-edf-sub044.yml']
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  preprocess:
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: sub-044
+  fit:
+    needs: preprocess
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: sub-044
