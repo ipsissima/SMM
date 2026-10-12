@@ -1,0 +1,19 @@
+name: SMM frozen EDF separate sub-608 reproduction
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-original-edf-sub608.yml']
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  preprocess:
+    uses: ./.github/workflows/step5b-reusable-preprocess-one.yml
+    with:
+      subject: sub-608
+  fit:
+    needs: preprocess
+    uses: ./.github/workflows/step5b-reusable-fit-one.yml
+    with:
+      subject: sub-608
