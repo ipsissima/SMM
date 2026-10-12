@@ -12,7 +12,7 @@ OUT=Path("repro_outputs/extended")
 OUT.mkdir(parents=True,exist_ok=True)
 from ffian import zero_flow_model,flow_model
 L=3e-4;N=31;DT=.01;TEND=4.;T0=.1;T1=2.1
-CASES=[("M0",2.5e-8),("M3",2.5e-8),("M3",5e-8),("M3",1e-7)]
+CASES=[("M0",2.5e-8),("M3",2.5e-8),("M3",5e-8),("M3",1e-7),("M3",1.2e-7)]
 xs=[L*(i+.5)/N for i in range(N)]
 all_rows=[];reports=[]
 
