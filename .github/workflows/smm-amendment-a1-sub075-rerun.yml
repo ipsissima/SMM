@@ -1,0 +1,108 @@
+name: SMM independent post-open amendment A1 raw sub075 rerun
+on:
+  push:
+    branches: [smm-reproduction-2026-10-12]
+    paths: ['.github/workflows/smm-amendment-a1-sub075-rerun.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  rerun-a1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      OPENBLAS_CORETYPE: Haswell
+      MKL_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      PYTHONHASHSEED: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Ensure scientific fitting and original preprocessing frozen
+        run: |
+          git fetch --no-tags --depth=1 origin 20fab272edf33d2513470c60ac9398754535cacb
+          git diff --exit-code 20fab272edf33d2513470c60ac9398754535cacb HEAD -- confirmatory/step5b
+          python -m py_compile amended/step5b/preprocess_sub075.py
+      - name: Install pinned original preprocessing dependencies
+        run: |
+          python -m pip install -r confirmatory/step5b/requirements-development.txt
+          python - <<'PY'
+          import mne,pyprep,mne_icalabel
+          assert (mne.__version__,pyprep.__version__,mne_icalabel.__version__)==('1.13.2','0.9.0','0.9.0')
+          PY
+      - name: Retrieve exact SHA-verified original sub075 EDF
+        run: |
+          set -euo pipefail
+          mkdir -p raw repro
+          curl -fLSs --retry 4 'https://raw.githubusercontent.com/OpenNeuroDatasets/ds005385/6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12/sub-075/ses-1/eeg/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf' -o repro/annex_pointer.txt
+          grep 'bc2cf91a253a490342d849f39baba530bbe4a58b5c2ea86fb78db08e037fcb02' repro/annex_pointer.txt
+          curl -fLSs --retry 4 'https://s3.amazonaws.com/openneuro.org/ds005385/sub-075/ses-1/eeg/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf' -o raw/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf
+          echo 'bc2cf91a253a490342d849f39baba530bbe4a58b5c2ea86fb78db08e037fcb02  raw/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf' | sha256sum -c -
+      - name: Execute already documented A1 exact data-channel permutation
+        run: |
+          python amended/step5b/preprocess_sub075.py raw/sub-075_ses-1_task-EyesClosed_acq-pre_eeg.edf --out-dir repro > repro/preprocessing.log 2>&1 || { tail -100 repro/preprocessing.log; exit 1; }
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('repro')
+          a=json.loads((p/'AMENDMENT_A1_CHANNEL_PERMUTATION.json').read_text())
+          q=json.loads((p/'qc.json').read_text())
+          assert a['observed_EDF_channel_order'][:2]==['Fp2','Fp1']
+          assert a['canonical_after_reorder'][:2]==['Fp1','Fp2']
+          assert q['n_epochs_clean']>=30
+          print('A1_REPRODUCED',q['n_epochs_clean'])
+          PY
+      - name: Install and pin original final N1 optimizer environment
+        run: |
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
+          python - <<'PY'
+          import mne,numpy,scipy,pandas
+          assert (mne.__version__,numpy.__version__,scipy.__version__,pandas.__version__)==('1.13.2','2.3.5','1.17.0','2.2.3')
+          PY
+      - name: Reconstruct frozen original connectome
+        run: python confirmatory/step5b/reconstruct_network_frozen.py
+      - name: Get cryptographically frozen source projection
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_FORWARD_GATE
+          path: forward_gate
+          run-id: 37376954431
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check frozen forward identity
+        run: |
+          echo '86afbddbd637ef4239b5755ef3853aafb62890ac989340fd093482ad7c9853b2  forward_gate/leadfield_DK68_64x68.csv' | sha256sum -c -
+          echo '17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy' | sha256sum -c -
+      - name: Independently refit unchanged final N1 M2 and M3
+        run: |
+          python confirmatory/step5b/fit_cv_subject_n1.py repro/clean-epo.fif --forward-dir forward_gate --network-dir confirmatory/step5b/network_frozen --out repro/sub-075-fit.json > repro/fitting.log 2>&1 || { tail -80 repro/fitting.log; exit 1; }
+          python - <<'PY'
+          import json
+          d=json.load(open('repro/sub-075-fit.json'))
+          print('RAW_A1_INDEPENDENT_REFIT',d['n_epochs'],d['delta_elpd_M3_minus_M2'])
+          assert len(d['nestedness'])==2 and len(d['models'])==2
+          PY
+      - name: Remove raw and epoch-level EEG from result artifact
+        if: always()
+        run: |
+          rm -rf raw
+          rm -f repro/clean-epo.fif repro/ica.fif
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_EDF_SUB075_A1_ORIGINAL_SOURCE_REFIT
+          path: |
+            repro/annex_pointer.txt
+            repro/preprocessing.log
+            repro/fitting.log
+            repro/qc.json
+            repro/AMENDMENT_A1_CHANNEL_PERMUTATION.json
+            repro/sub-075-fit.json
+          retention-days: 30
