@@ -1,0 +1,132 @@
+name: Step 5B optimizer robustness probe sub-001
+
+on:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - '.github/workflows/step5b-development-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: step5b-development-fit-34
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - kernel: haswell
+            coretype: Haswell
+          - kernel: sandybridge
+            coretype: Sandybridge
+          - kernel: zen
+            coretype: Zen
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      OPENBLAS_CORETYPE: ${{ matrix.coretype }}
+      OPENBLAS_VERBOSE: "2"
+      MKL_NUM_THREADS: "1"
+      VECLIB_MAXIMUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      OMP_DYNAMIC: "FALSE"
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install pinned fit environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
+          python - <<'PY'
+          import os,mne,numpy,scipy,pandas,platform
+          assert mne.__version__ == "1.13.2"
+          assert numpy.__version__ == "2.3.5"
+          assert scipy.__version__ == "1.17.0"
+          assert pandas.__version__ == "2.2.3"
+          for k in ("OMP_NUM_THREADS","OPENBLAS_NUM_THREADS","MKL_NUM_THREADS","VECLIB_MAXIMUM_THREADS","NUMEXPR_NUM_THREADS"):
+              assert os.environ[k] == "1"
+          assert os.environ["OMP_DYNAMIC"] == "FALSE"
+          assert os.environ["PYTHONHASHSEED"] == "0"
+          print("RUNNER_IMAGE",os.environ.get("ImageOS"),os.environ.get("ImageVersion"))
+          print("PLATFORM",platform.platform())
+          print("OPENBLAS_CORETYPE",os.environ.get("OPENBLAS_CORETYPE"))
+          print("VERSIONS",mne.__version__,numpy.__version__,scipy.__version__,pandas.__version__)
+          PY
+
+      - name: Reconstruct and verify frozen DK68 network
+        run: python confirmatory/step5b/reconstruct_network_frozen.py
+
+      - name: Download validated forward gate
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_FORWARD_GATE
+          path: forward_gate
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37376954431
+
+      - name: Verify forward gate material hashes
+        run: |
+          echo "86afbddbd637ef4239b5755ef3853aafb62890ac989340fd093482ad7c9853b2  forward_gate/leadfield_DK68_64x68.csv" | sha256sum -c -
+          echo "17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy" | sha256sum -c -
+
+      - name: Download frozen development sub-001 epochs
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_DEV_sub-001
+          path: dev
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37438628533
+
+      - name: Run broad optimizer robustness probe
+        env:
+          KERNEL: ${{ matrix.kernel }}
+        run: |
+          mkdir -p probe_out
+          PYTHONPATH=confirmatory/step5b python confirmatory/step5b/optimizer_robustness_probe.py \
+            dev/clean-epo.fif \
+            --forward-dir forward_gate \
+            --network-dir confirmatory/step5b/network_frozen \
+            --sobol-m 8 \
+            --polish-starts 8 \
+            --train-tolerance 0.0005 \
+            --out "probe_out/sub-001-${KERNEL}.json"
+
+      - name: Require recovery of all previously observed best training basins
+        env:
+          KERNEL: ${{ matrix.kernel }}
+        run: |
+          python - <<'PY'
+          import json,os
+          p=f"probe_out/sub-001-{os.environ['KERNEL']}.json"
+          d=json.load(open(p))
+          assert d["profile"]["sobol_candidates"] == 256
+          assert d["profile"]["polish_starts"] == 8
+          assert d["all_previous_best_training_basins_recovered"] is True
+          for m in ("M2","M3"):
+              for x in d["models"][m]["directions"]:
+                  assert x["optimizer"]["success"] is True
+          print("ROBUSTNESS_PROBE_PASS",os.environ["KERNEL"],d["models"]["M2"]["cv_elpd"],d["models"]["M3"]["cv_elpd"],d["delta_elpd_M3_minus_M2"])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_OPT_ROBUST_SUB001_${{ matrix.kernel }}
+          path: probe_out/
+          if-no-files-found: error
+          retention-days: 90

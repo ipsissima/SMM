@@ -1,0 +1,176 @@
+name: Step 5B static integrity checks
+
+on:
+  push:
+    branches:
+      - step5b-confirmatory-gate-2026-10-05
+    paths:
+      - 'confirmatory/step5b/**'
+      - 'manuscript/**'
+      - 'theory/definitive/**'
+      - '.github/workflows/step5b-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: step5b-static-integrity
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Python syntax
+        run: |
+          python -m py_compile \
+            confirmatory/step5b/preprocess_ds005385.py \
+            confirmatory/step5b/empirical_csd_lock.py \
+            confirmatory/step5b/model_frequency_lock.py \
+            confirmatory/step5b/statistical_lock.py \
+            confirmatory/step5b/fit_cv_subject.py \
+            confirmatory/step5b/fit_cv_subject_n1.py \
+            confirmatory/step5b/reconstruct_network_frozen.py \
+            confirmatory/step5b/aggregate_development.py \
+            confirmatory/step5b/aggregate_confirmatory.py \
+            confirmatory/step5b/optimizer_robustness_probe.py \
+            confirmatory/step5b/aggregate_optimizer_probe.py \
+            confirmatory/step5b/nested_optimizer_probe.py \
+            confirmatory/step5b/aggregate_nested_optimizer_probe.py \
+            confirmatory/step5b/prepare_frozen_numerical_profile.py \
+            confirmatory/step5b/prepare_final_numerical_freeze.py \
+            confirmatory/step5b/prepare_holdout_gate.py \
+            confirmatory/step5b/prepare_development_signoff.py \
+            manuscript/scripts/generate_primary_figures.py \
+            manuscript/scripts/generate_result_tables.py
+
+      - name: Static split and gate invariants
+        run: |
+          python - <<'PY'
+          import csv,json
+          from pathlib import Path
+
+          rows=list(csv.DictReader(Path("confirmatory/step5b/subject_split.csv").open()))
+          assert len(rows) == 608
+          dev_primary=[r for r in rows if r["role"]=="development_primary"]
+          dev_sens=[r for r in rows if r["role"]=="development_sensitivity_only"]
+          hold=[r for r in rows if r["role"]=="confirmatory_holdout"]
+          assert len(dev_primary) == 38
+          assert len(dev_sens) == 5
+          assert len(hold) == 565
+          assert hold[0]["subject"] == "sub-044"
+          assert hold[-1]["subject"] == "sub-608"
+          assert all(r["development_qc_status"]=="UNOPENED" for r in hold)
+          assert sum(r["development_qc_status"]=="PASS" for r in dev_primary) == 34
+
+          gate=json.loads(Path("confirmatory/step5b/HOLDOUT_GATE.json").read_text())
+          profile=json.loads(Path("confirmatory/step5b/NUMERICAL_PROFILE.json").read_text())
+          assert gate["holdout_first_subject"] == "sub-044"
+          assert gate["holdout_last_subject"] == "sub-608"
+          assert gate["holdout_subject_count"] == 565
+          assert profile["status"] in {"PENDING","FROZEN"}
+
+          if profile["status"] == "FROZEN":
+              assert profile["profile_name"] == "N1"
+              src=Path("confirmatory/step5b/fit_cv_subject_n1.py").read_text()
+              assert "require_frozen_n1" in src
+              assert int(profile["sobol_candidates"]) == 512
+              assert int(profile["polish_starts"]) == 16
+              assert int(profile["polish_maxiter"]) == 300
+              assert profile["method"] == "N1-normalized-nested-comparator"
+              assert float(profile["ftol"]) == 1e-11
+              assert float(profile["gtol"]) == 1e-7
+              assert int(profile["maxls"]) == 50
+              assert float(profile["rel_floor"]) == 1e-6
+              assert int(profile["seed"]) == 97
+              assert profile["openblas_coretype"] == "Haswell"
+              assert profile["exact_nested_anchor"] is True
+              assert float(profile["nested_training_tolerance"]) == 1e-8
+              assert float(profile["transfer_identity_tolerance"]) == 1e-12
+              assert profile["robustness_run_id"]
+              assert profile["final_freeze_commit"]
+
+          if gate["status"] == "CLOSED":
+              assert gate["development_run_id"] is None
+              assert gate["development_aggregate_artifact_id"] is None
+              assert gate["development_aggregate_sha256"] is None
+              assert gate["numerical_profile_sha256"] is None
+          if gate["status"] == "OPEN":
+              assert gate["development_run_id"]
+              assert gate["development_aggregate_artifact_id"]
+              assert gate["development_aggregate_sha256"]
+              assert gate["numerical_freeze_commit"]
+              assert gate["numerical_profile_sha256"]
+              assert profile["status"] == "FROZEN"
+              assert profile["final_freeze_commit"] == gate["numerical_freeze_commit"]
+
+          required_theory=[
+              "SMM_GENEALOGY_ORIGINAL_TO_DEFINITIVE.md",
+              "SMM_DEFINITIVE_FOUNDATIONS_STEP1.md",
+              "SMM_DEFINITIVE_STEP2_NEURONAL_CORE.md",
+              "SMM_DEFINITIVE_STEP2A_K_TO_QIF_BRIDGE.md",
+              "SMM_DEFINITIVE_STEP2B_CELLULAR_CALIBRATION.md",
+              "SMM_DEFINITIVE_STEP2B_EXECUTED_RESULTS.md",
+              "SMM_DEFINITIVE_STEP3_ASTROGLIAL_MESH.md",
+              "SMM_DEFINITIVE_STEP3A_KNP_REDUCTION.md",
+              "SMM_DEFINITIVE_STEP3B_RESULTS.md",
+              "SMM_DEFINITIVE_STEP3B_NONLINEAR_R2_RESULTS.md",
+              "SMM_DEFINITIVE_STEP4_CLOSED_LOOP_RESULTS.md",
+              "SMM_DEFINITIVE_STEP5_WHOLEBRAIN_EEG_ARCHITECTURE.md",
+              "SMM_DEFINITIVE_STEP5B_PRE_EEG_LOCK.md",
+          ]
+          root=Path("theory/definitive")
+          for name in required_theory:
+              p=root/name
+              assert p.is_file() and p.stat().st_size > 1000,p
+
+          print("STEP5B_STATIC_INTEGRITY=PASS")
+          PY
+
+      - name: Workflow YAML parse
+        run: |
+          python -m pip install PyYAML
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          files=[
+            ".github/workflows/step5b-development-primary.yml",
+            ".github/workflows/step5b-development-smoke.yml",
+            ".github/workflows/step5b-development-final.yml",
+            ".github/workflows/step5b-forward-gate.yml",
+            ".github/workflows/step5b-reusable-preprocess-one.yml",
+            ".github/workflows/step5b-reusable-fit-one.yml",
+            ".github/workflows/step5b-confirmatory-holdout.yml",
+            ".github/workflows/step5b-optimizer-n1-nested.yml",
+            ".github/workflows/step5b-static-check.yml",
+          ]
+          for p in files:
+              with Path(p).open() as f:
+                  obj=yaml.safe_load(f)
+              assert isinstance(obj,dict),p
+              assert "jobs" in obj,p
+              print("YAML_PARSE_PASS",p)
+          PY
+
+
+      - name: Reject literal escaped GitHub expressions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          bad=[]
+          for p in Path(".github/workflows").glob("step5b-*.yml"):
+              txt=p.read_text()
+              needle="\\" + "$" + "{{"
+              if needle in txt:
+                  bad.append(str(p))
+          assert not bad, f"Literal escaped GitHub expressions found: {bad}"
+          print("GITHUB_EXPRESSION_ESCAPE_CHECK=PASS")
+          PY

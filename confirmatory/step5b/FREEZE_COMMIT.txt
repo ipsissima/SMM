@@ -1,0 +1,4 @@
+git_commit=95ec719c2475d8790845eddb42f236fa731b04a4
+git_tree=219f23ae2f357991ca2c01abe527097b17be441c
+lock_id=SMM_STEP5B_PRE_EEG_LOCK_2026-10-05
+raw_EEG_signal_opened=false

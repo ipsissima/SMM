@@ -1,0 +1,72 @@
+{
+  "protocol": "N1-normalized-nested-comparator",
+  "kernels": [
+    "Haswell",
+    "Sandybridge",
+    "Zen"
+  ],
+  "profile": {
+    "sobol_candidates": 512,
+    "polish_starts": 16,
+    "method": "L-BFGS-B-unit-cube-plus-exact-nested-anchor",
+    "maxiter": 300,
+    "ftol": 1e-11,
+    "gtol": 1e-07,
+    "maxls": 50,
+    "rel_floor": 1e-06,
+    "seed": 97
+  },
+  "criteria": {
+    "transfer_identity_max_abs_error": 1.0228342838563028e-18,
+    "transfer_identity_pass": true,
+    "embedding_score_max_abs_error": 1.1368683772161603e-13,
+    "embedding_score_pass": true,
+    "minimum_nested_training_gap_M2_minus_M3": 0.0043018040950073555,
+    "nestedness_pass": true,
+    "training_ranges": {
+      "M2_A": 3.964970483139041e-05,
+      "M2_B": 0.0002054554164487854,
+      "M3_A": 0.0,
+      "M3_B": 1.1368683772161603e-13
+    },
+    "training_range_pass": true,
+    "cv_ranges": {
+      "M2": 0.00015412882703458308,
+      "M3": 4.0055283534456976e-08
+    },
+    "cv_range_pass": true,
+    "all_kernel_internal_pass": true,
+    "all_outputs_finite_and_in_bounds": true
+  },
+  "kernel_results": {
+    "Haswell": {
+      "M2_cv_elpd": 534.9389173523753,
+      "M3_cv_elpd": 534.9323886905204,
+      "delta_elpd_M3_minus_M2": -0.006528661854872553,
+      "directions": [
+        {"train":"A","M2_train":535.9507611828315,"M3_train":535.9409257005208,"nested_gap":0.009835482310677435,"embedding_score_error":1.1368683772161603e-13,"M2_selected_source":"sobol-102","M3_selected_source":"sobol-464"},
+        {"train":"B","M2_train":534.0987553101508,"M3_train":534.0944535060557,"nested_gap":0.0043018040950073555,"embedding_score_error":0.0,"M2_selected_source":"sobol-138","M3_selected_source":"sobol-312"}
+      ]
+    },
+    "Sandybridge": {
+      "M2_cv_elpd": 534.9390714812023,
+      "M3_cv_elpd": 534.9323887305757,
+      "delta_elpd_M3_minus_M2": -0.006682750626623601,
+      "directions": [
+        {"train":"A","M2_train":535.9508008325363,"M3_train":535.9409257005208,"nested_gap":0.009875132015508825,"embedding_score_error":0.0,"M2_selected_source":"sobol-102","M3_selected_source":"sobol-464"},
+        {"train":"B","M2_train":534.0989607655672,"M3_train":534.0944535060559,"nested_gap":0.004507259511342454,"embedding_score_error":0.0,"M2_selected_source":"sobol-138","M3_selected_source":"sobol-464"}
+      ]
+    },
+    "Zen": {
+      "M2_cv_elpd": 534.9389173523753,
+      "M3_cv_elpd": 534.9323886905204,
+      "delta_elpd_M3_minus_M2": -0.006528661854872553,
+      "directions": [
+        {"train":"A","M2_train":535.9507611828315,"M3_train":535.9409257005208,"nested_gap":0.009835482310677435,"embedding_score_error":1.1368683772161603e-13,"M2_selected_source":"sobol-102","M3_selected_source":"sobol-464"},
+        {"train":"B","M2_train":534.0987553101508,"M3_train":534.0944535060557,"nested_gap":0.0043018040950073555,"embedding_score_error":0.0,"M2_selected_source":"sobol-138","M3_selected_source":"sobol-312"}
+      ]
+    }
+  },
+  "selection_uses_delta_sign": false,
+  "probe_pass": true
+}

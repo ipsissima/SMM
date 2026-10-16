@@ -1,0 +1,187 @@
+name: Step 5B reusable fit one subject
+
+on:
+  workflow_call:
+    inputs:
+      subject:
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  fit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      SUBJECT: ${{ inputs.subject }}
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      OPENBLAS_CORETYPE: "Haswell"
+      MKL_NUM_THREADS: "1"
+      VECLIB_MAXIMUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      OMP_DYNAMIC: "FALSE"
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert holdout subject boundary before downloads
+        run: |
+          set -euo pipefail
+          N="${SUBJECT#sub-}"
+          N=$((10#${N}))
+          test "${N}" -ge 44
+          test "${N}" -le 608
+          echo "HOLDOUT_SUBJECT_BOUNDARY=PASS ${SUBJECT}"
+
+      - name: Download this run's preprocessed holdout artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_HOLDOUT_${{ inputs.subject }}
+          path: holdout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.run_id }}
+
+      - id: qc
+        name: Read frozen QC inclusion status
+        run: |
+          mkdir -p fit_out
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          s=os.environ["SUBJECT"]
+          p=Path("holdout/qc_status.json")
+          if not p.is_file():
+              raise SystemExit("Missing qc_status.json from frozen preprocessing")
+          d=json.loads(p.read_text())
+          assert d["subject"] == s
+          included=bool(d["included"])
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:
+              f.write("included=" + ("true" if included else "false") + "\n")
+          if not included:
+              reason=str(d["reason"])
+              assert reason.startswith("Primary QC failed:")
+              out={
+                  "subject":s,
+                  "included":False,
+                  "primary_condition":"ses-1 / EyesClosed / acq-pre",
+                  "reason":reason,
+              }
+              Path(f"fit_out/{s}.excluded.json").write_text(json.dumps(out,indent=2)+"\n")
+              print("FIT_SKIPPED_FROZEN_QC",s,reason)
+          else:
+              assert Path("holdout/clean-epo.fif").is_file()
+              print("FIT_QC_INCLUDED",s)
+          PY
+
+      - uses: actions/setup-python@v5
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install frozen deterministic fit environment
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r confirmatory/step5b/requirements-gate.txt
+          python - <<'PY'
+          import json,os,mne,numpy,scipy,pandas
+          profile=json.load(open("confirmatory/step5b/NUMERICAL_PROFILE.json"))
+          assert profile["status"] == "FROZEN"
+          assert profile["profile_name"] == "N1"
+          assert profile["openblas_coretype"] == "Haswell"
+          assert profile["method"] == "N1-normalized-nested-comparator"
+          assert int(profile["sobol_candidates"]) == 512
+          assert int(profile["polish_starts"]) == 16
+          assert int(profile["polish_maxiter"]) == 300
+          assert float(profile["ftol"]) == 1e-11
+          assert float(profile["gtol"]) == 1e-7
+          assert int(profile["maxls"]) == 50
+          assert profile["exact_nested_anchor"] is True
+          assert mne.__version__ == "1.13.2"
+          assert numpy.__version__ == "2.3.5"
+          assert scipy.__version__ == "1.17.0"
+          assert pandas.__version__ == "2.2.3"
+          for k in ("OMP_NUM_THREADS","OPENBLAS_NUM_THREADS","MKL_NUM_THREADS","VECLIB_MAXIMUM_THREADS","NUMEXPR_NUM_THREADS"):
+              assert os.environ[k] == "1"
+          assert os.environ["OPENBLAS_CORETYPE"] == "Haswell"
+          assert os.environ["OMP_DYNAMIC"] == "FALSE"
+          assert os.environ["PYTHONHASHSEED"] == "0"
+          print("DETERMINISTIC_NUMERICAL_ENVIRONMENT=PASS")
+          PY
+
+      - name: Reconstruct and verify frozen DK68 network
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        run: python confirmatory/step5b/reconstruct_network_frozen.py
+
+      - name: Download validated forward gate
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: SMM_STEP5B_FORWARD_GATE
+          path: forward_gate
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: 37376954431
+
+      - name: Verify forward gate material hashes
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        run: |
+          echo "86afbddbd637ef4239b5755ef3853aafb62890ac989340fd093482ad7c9853b2  forward_gate/leadfield_DK68_64x68.csv" | sha256sum -c -
+          echo "17eb1218c6cfb8b3e27ed51283e91d3e7068261a9c7595b6da2b2e358e3b8891  forward_gate/leadfield_U20.npy" | sha256sum -c -
+
+      - name: Run frozen deterministic M2-M3 two-block CV fit
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        run: |
+          PYTHONPATH=confirmatory/step5b python confirmatory/step5b/fit_cv_subject_n1.py \
+            holdout/clean-epo.fif \
+            --forward-dir forward_gate \
+            --network-dir confirmatory/step5b/network_frozen \
+            --out "fit_out/${SUBJECT}.json"
+
+      - name: Validate included fit output against final profile
+        if: ${{ steps.qc.outputs.included == 'true' }}
+        run: |
+          python - <<'PY'
+          import os,json,math
+          s=os.environ["SUBJECT"]
+          d=json.load(open(f"fit_out/{s}.json"))
+          profile=json.load(open("confirmatory/step5b/NUMERICAL_PROFILE.json"))
+          expected={
+              "sobol_candidates":int(profile["sobol_candidates"]),
+              "polish_starts":int(profile["polish_starts"]),
+              "polish_maxiter":int(profile["polish_maxiter"]),
+              "method":profile["method"],
+              "ftol":float(profile["ftol"]),
+              "gtol":float(profile["gtol"]),
+              "maxls":int(profile["maxls"]),
+              "rel_floor":float(profile["rel_floor"]),
+          }
+          assert profile["status"] == "FROZEN"
+          assert d["seed"] == int(profile["seed"])
+          assert d["optimizer"] == expected
+          assert d["environment"]["thread_env"]["OPENBLAS_CORETYPE"] == profile["openblas_coretype"] == "Haswell"
+          assert d["n_epochs"] >= 30
+          assert set(d["models"]) == {"M2","M3"}
+          assert math.isfinite(d["delta_elpd_M3_minus_M2"])
+          for m in ("M2","M3"):
+              assert len(d["models"][m]["directions"]) == 2
+              for direction in d["models"][m]["directions"]:
+                  assert direction["optimizer"]["success"] is True
+          assert d["transfer_identity_max_abs_error"] <= 1e-12
+          assert len(d["nestedness"]) == 2
+          for x in d["nestedness"]:
+              assert x["embedding_score_error"] <= 1e-8
+              assert x["M2_minus_M3_training_gap"] >= -1e-8
+          print("FIT_PASS",s,d["models"]["M2"]["cv_elpd"],d["models"]["M3"]["cv_elpd"],d["delta_elpd_M3_minus_M2"])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM_STEP5B_HOLDOUT_FIT_${{ inputs.subject }}
+          path: fit_out/
+          if-no-files-found: error
+          retention-days: 90
