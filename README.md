@@ -1,6 +1,9 @@
 
 # SMM - Syncytium Mesh Model
 
+> **Scientific correction (2026-11-25):** The historical IP3/Ca two-state reaction-diffusion equations do **not** derive the telegraph-wave coefficient used in this repository. Their exact elimination includes a mixed space-time Laplacian and produces real modal poles in the cooperative regime. The legacy telegraph solver remains reproducible as a **phenomenological** simulation, not a validated microscopic astrocytic wave mechanism. See [the mathematical erratum](IP3_CA_MODEL_CORRECTION.md) and [`src/smm/ip3_ca_exact.py`](src/smm/ip3_ca_exact.py). This does not concern the distinct SMM-K potassium model.
+
+
 A multi-layer computational neuroscience model combining neural mass dynamics, 
 Kuramoto phase oscillators, and a 2D continuous mesh field governed by a damped 
 wave PDE. This project provides reproducible numerical implementations for 

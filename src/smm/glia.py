@@ -1,8 +1,11 @@
 """
 Glial (astrocytic) field solver implementing telegraph equation.
 
-This module implements the mesoscopic glial field derived from a linearized
-IP₃/Ca reaction-diffusion-ODE system in the astrocytic syncytium.
+This module contains a HISTORICAL PHENOMENOLOGICAL telegraph model.
+Its claimed exact derivation from the linear IP3/Ca equations is incorrect.
+See IP3_CA_MODEL_CORRECTION.md and smm.ip3_ca_exact for the exact linear
+reaction-diffusion modal model. Do not treat the telegraph speed as an
+experimentally calibrated astrocytic propagation speed.
 
 MICROSCOPIC MODEL (conceptual basis):
 --------------------------------------
@@ -20,17 +23,18 @@ where:
     δ > 0  ~ IP₃ degradation by phosphatase (typical: 0.5-2.0 s⁻¹)
     D      ~ IP₃ diffusion via gap junctions (typical: 50-300 μm²/s)
 
-MESOSCOPIC TELEGRAPH EQUATION:
--------------------------------
+HISTORICAL PHENOMENOLOGICAL TELEGRAPH EQUATION (NOT EXACTLY DERIVED):
+-------------------------------------------------------------------
 The mesoscopic field ψ(r,t) (a linear combination of c and i, or simply c)
 obeys, to leading order:
 
     ∂²ψ/∂t² + 2γ₀·∂ψ/∂t + ω₀²·ψ - c_eff²·Δψ = S_ψ(r,t) + ξ(r,t)
 
-with parameters derived from the micro-model:
+with historically assigned coefficients (the speed mapping is NOT derived
+from the two microscopic equations):
 
     γ₀ = (α + δ) / 2                   (damping rate, ~0.5-2 s⁻¹)
-    c_eff² = D·(δ - α) / 2             (effective wave speed squared)
+    c_eff² = D·(δ - α) / 2             (LEGACY HEURISTIC; not the exact coefficient)
     ω₀² = α·δ - β·γ                    (local oscillation frequency squared)
 
 PHYSIOLOGICAL RANGES:
@@ -102,7 +106,13 @@ class GliaMicroParams:
             - 'c_eff_um_per_s': effective wave speed (μm/s)
             - 'c_eff_mm_per_s': effective wave speed (mm/s)
         """
-        # Damping coefficient
+        warnings.warn(
+            "Legacy IP3/Ca-to-telegraph mapping is NOT a mathematical derivation: "
+            "the exact c equation includes -D*Laplacian(c_t) and has spatial "
+            "coefficient alpha*D. Use smm.ip3_ca_exact for exact modal "
+            "dynamics. The returned c_eff is a historical heuristic, not a "
+            "validated physiological wave speed.", RuntimeWarning, stacklevel=2)
+        # Historical parameter mapping retained for numerical backwards compatibility.
         gamma0 = (self.alpha + self.delta) / 2.0
         
         # Oscillation frequency (can be imaginary if system is overdamped)
