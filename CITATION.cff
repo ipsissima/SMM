@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this research software or manuscript, please cite the corresponding version and commit."
+title: "The Syncytial Mesh Model: Identifying Independent Astroglial Transport Geometry in Neuronal–Ionic Dynamics"
+authors:
+  - family-names: "Ballús Santacana"
+    given-names: "Andreu"
+    affiliation: "Universitat Autònoma de Barcelona"
+type: software
+repository-code: "https://github.com/ipsissima/SMM"
+license: MIT

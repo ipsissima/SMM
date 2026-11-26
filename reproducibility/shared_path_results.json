@@ -1,0 +1,197 @@
+{
+  "description": "Synthetic alternative L+chords versus fitted shared-path family; finite forward separation, not experimental power. All 392 observations independent with sigma=1 uM; one pulse at each site; nuisance bounds illustrative.",
+  "fits": {
+    "5.0": {
+      "scaled_path": {
+        "success": true,
+        "nfev": 16,
+        "multistart_cost_range": [
+          2.3735373097846613e-05,
+          2.373537309814163e-05
+        ],
+        "parameters": [
+          6.372475398596058
+        ],
+        "relative_residual": 5.2445520129407816e-05,
+        "whitened_norm": 0.006889901755155382,
+        "squared_whitened_distance": 4.747074619569322e-05,
+        "max_abs_difference_uM": 0.0029946762757152023,
+        "nominal_N_for_3_sigma_separation": 189590.44719664686
+      },
+      "weighted_shared_support": {
+        "success": true,
+        "nfev": 30,
+        "multistart_cost_range": [
+          7.694891097357125e-06,
+          7.69489122661305e-06
+        ],
+        "parameters": [
+          3.6073470139258363,
+          4.422797696241733,
+          15.52463349346341,
+          15.089267115276284,
+          3.6628101668945927,
+          2.77167261302159
+        ],
+        "relative_residual": 2.9861498970055508e-05,
+        "whitened_norm": 0.0039229812891109035,
+        "squared_whitened_distance": 1.5389782194714247e-05,
+        "max_abs_difference_uM": 0.0015317735407392036,
+        "nominal_N_for_3_sigma_separation": 584803.5980061581
+      },
+      "weighted_shared_support_plus_local_nuisances": {
+        "success": true,
+        "nfev": 49,
+        "multistart_cost_range": [
+          3.942671848122925e-06,
+          3.942673495347292e-06
+        ],
+        "parameters": [
+          6.180566846381829,
+          3.3596936041485175,
+          31.57964069177798,
+          99.99996044346449,
+          2.71624562264092,
+          4.314567742482176,
+          0.9996295061305602,
+          1.000000258695543,
+          1.0000006492153697,
+          1.0000005279408166
+        ],
+        "relative_residual": 2.1374978247186516e-05,
+        "whitened_norm": 0.0028080854146991067,
+        "squared_whitened_distance": 7.885343696245855e-06,
+        "max_abs_difference_uM": 0.0007071757941335549,
+        "nominal_N_for_3_sigma_separation": 1141357.9859917613
+      }
+    },
+    "14.759877679228888": {
+      "scaled_path": {
+        "success": true,
+        "nfev": 7,
+        "multistart_cost_range": [
+          0.7587945598222152,
+          0.7587945598222421
+        ],
+        "parameters": [
+          6.341370901181906
+        ],
+        "relative_residual": 0.00805580354601827,
+        "whitened_norm": 1.2319046714922508,
+        "squared_whitened_distance": 1.5175891196444304,
+        "max_abs_difference_uM": 0.36067457939855524,
+        "nominal_N_for_3_sigma_separation": 5.9304589651438
+      },
+      "weighted_shared_support": {
+        "success": true,
+        "nfev": 12,
+        "multistart_cost_range": [
+          0.37415907270404186,
+          0.37415907272109244
+        ],
+        "parameters": [
+          3.0096256365254814,
+          4.822322174134601,
+          13.067227023620424,
+          13.279982493359825,
+          4.019956498799358,
+          2.4185022399750493
+        ],
+        "relative_residual": 0.0056568531233113905,
+        "whitened_norm": 0.8650538396007983,
+        "squared_whitened_distance": 0.7483181454080836,
+        "max_abs_difference_uM": 0.2818478155290939,
+        "nominal_N_for_3_sigma_separation": 12.026970153305571
+      },
+      "weighted_shared_support_plus_local_nuisances": {
+        "success": true,
+        "nfev": 15,
+        "multistart_cost_range": [
+          0.3253761353957409,
+          0.32537613541015153
+        ],
+        "parameters": [
+          3.3510254748287895,
+          4.553371649942204,
+          14.55221225655589,
+          15.935715244611176,
+          3.775555806340906,
+          2.646337365809373,
+          0.9916051209638564,
+          1.0005692022711634,
+          1.0009611129846503,
+          1.0006528145828444
+        ],
+        "relative_residual": 0.0052752082707227844,
+        "whitened_norm": 0.806692178461823,
+        "squared_whitened_distance": 0.6507522707914816,
+        "max_abs_difference_uM": 0.26817884286759774,
+        "nominal_N_for_3_sigma_separation": 13.830147667489033
+      }
+    },
+    "36.980111000660955": {
+      "scaled_path": {
+        "success": true,
+        "nfev": 13,
+        "multistart_cost_range": [
+          66.82918359618175,
+          66.82918359663148
+        ],
+        "parameters": [
+          3.7624140720515546
+        ],
+        "relative_residual": 0.05437065745466063,
+        "whitened_norm": 11.561071195713806,
+        "squared_whitened_distance": 133.65836719236344,
+        "max_abs_difference_uM": 1.9228815887227575,
+        "nominal_N_for_3_sigma_separation": 0.06733585176188067
+      },
+      "weighted_shared_support": {
+        "success": true,
+        "nfev": 12,
+        "multistart_cost_range": [
+          49.13228641101332,
+          49.13228641450071
+        ],
+        "parameters": [
+          2.136946601947839,
+          3.9614300243378264,
+          6.66436276864516,
+          6.340472435104278,
+          3.3709054495737183,
+          1.8536068480711303
+        ],
+        "relative_residual": 0.0466192190557299,
+        "whitened_norm": 9.912848875173406,
+        "squared_whitened_distance": 98.26457282202666,
+        "max_abs_difference_uM": 2.489150136611695,
+        "nominal_N_for_3_sigma_separation": 0.09158946852901384
+      },
+      "weighted_shared_support_plus_local_nuisances": {
+        "success": true,
+        "nfev": 12,
+        "multistart_cost_range": [
+          45.370024648850986,
+          45.37002464907313
+        ],
+        "parameters": [
+          2.306865662074369,
+          3.9959724757987867,
+          6.690029105481189,
+          6.363374711215658,
+          3.3992346651056993,
+          2.008303992199641,
+          0.9569298147994834,
+          0.9948125827047173,
+          1.0240014702562499,
+          1.0824223314061956
+        ],
+        "relative_residual": 0.04479876218038124,
+        "whitened_norm": 9.525757150888426,
+        "squared_whitened_distance": 90.74004929770197,
+        "max_abs_difference_uM": 2.418280668871035,
+        "nominal_N_for_3_sigma_separation": 0.09918442925320219
+      }
+    }
+  }
+}
