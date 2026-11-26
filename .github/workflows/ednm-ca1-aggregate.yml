@@ -1,0 +1,185 @@
+name: CA1 aggregate constrained EDNM screening
+on:
+  push:
+    branches: [research/ednm-high-load-topology-20261126]
+    paths: [.github/workflows/ednm-ca1-aggregate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  calibration:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        mobility: ['0.17988168474408803', '1']
+        dt: ['0.002','0.001']
+    env:
+      MU: ${{ matrix.mobility }}
+      DT: ${{ matrix.dt }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install exact pinned EDNM
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install numpy==1.26.4 scipy==1.12.0 numba==0.59.1
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Install conservative graph adapter and variable duration KCl input
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = '+os.environ['DT']+'                # screening grid')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          s=s.replace(old,
+              '        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+              '        if round(stim_start/dt) <= round(t/dt) < round(stim_end/dt):\n'
+              '            i = stimulus_protocol.get("kcl_site", 0)\n'
+              '            for ion in (1, 2):\n'
+              '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n'+old)
+          old='    alpha = [alpha_s[0:-1], alpha_d[0:-1]]'
+          assert s.count(old)==1
+          s=s.replace(old,'    if rsd >= tol and N_iter >= itermax: raise RuntimeError("Unconverged Newton step")\n'+old)
+          p.write_text(s)
+          PY
+      - name: Fit coupled amplitudes only and predict pharmacological endpoints
+        run: |
+          cat > /tmp/ca1.py <<'PY'
+          import contextlib, json, os, tempfile
+          from pathlib import Path
+          import numpy as np
+          from scipy.optimize import brentq,curve_fit
+          from ednm import model, solver
+          from ednm_graph_adapter import closed_path
+          # One-dimensional screening model, not reconstruction of a 3D slice.
+          N=15; d_um=5.; src=N//2; dt=float(os.environ['DT'])
+          mu=float(os.environ['MU']); E=closed_path(N); G=mu*E
+          # Both chemical and electrical axial fluxes scaled together under
+          # a Nernst-Einstein assumption. No independently fitted migration coefficient.
+          # 10 um recorder proxy, not measured positions of pooled Figure 5 groups.
+          sensor=src+2; t0=.1; out=Path('output');out.mkdir(exist_ok=True)
+          history=[]
+          def run(g,rate,duration,T):
+              solver.graph_glial=g;solver.graph_ecs=E
+              with tempfile.TemporaryDirectory() as tmp,open(os.devnull,'w') as sink:
+                  with contextlib.redirect_stdout(sink):
+                      solver.solve_system(model.Model(N,d_um*1e-4,0,0),tmp+'/',T,
+                          dict(j_stim=0.,stim_start=t0,stim_end=t0+duration,N_stim=1,
+                               spike_train=np.zeros((2,N)),kcl_rate_tissue=rate,kcl_site=src))
+                  with np.load(Path(tmp)/'data.npz') as a:
+                      t,alpha,c,phi,ap=[a[k] for k in ('t','alpha','c','phi','t_AP')]
+              assert all(np.isfinite(x).all() for x in (t,alpha,c,phi))
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              mass=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.clip(np.rint(t/dt).astype(int)-round(t0/dt)+1,0,round((t0+duration)/dt)-round(t0/dt))
+              expected=mass[0]+(nsteps*dt*rate)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=float(np.max(abs(mass-expected)/np.maximum(abs(expected),1e-12)))
+              assert err<1e-7,err
+              return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],err,int(np.count_nonzero(ap))
+          # Use long matched no-source trajectory for drift subtraction.
+          B=run(G,0.,.5,12.)
+          B0=run(E*0,0.,.5,12.)
+          assert np.max(abs(B[1]-B0[1]))<1e-7
+          def response(g,q,dur,T):
+              t,k,v,err,ap=run(g,q,dur,T)
+              assert np.allclose(t,B[0][:len(t)],rtol=0,atol=1e-10)
+              return t,k-B[1][:len(t)],v-B[2][:len(t)],err,ap
+          def peak(r):return float(np.max(r[1][:,sensor]))
+          def calibrate(dur,target):
+              # Fit effective source rate ONLY; source strength/volume is unknown.
+              # 1.6 s is sufficient for the fitted near-source peak; check below.
+              def f(q):
+                  r=response(G,q,dur,1.6)
+                  v=peak(r)
+                  row=dict(duration_s=dur,q_mM_tissue_s=q,predicted_peak_at_10um_mM=v,target=target,mass_error=r[3],spikes=r[4])
+                  history.append(row);print('CA1_FIT_EVAL',json.dumps(row),flush=True)
+                  (out/'fit_trace.json').write_text(json.dumps(history,indent=2))
+                  return v-target
+              upper=10.
+              while f(upper)<0:
+                  upper*=2.
+                  if upper>640:raise RuntimeError('Target not bracketed within prescribed source bound')
+              return float(brentq(f,0.,upper,xtol=.015,rtol=1e-5))
+          def summaries(r):
+              t,k,v,err,ap=r
+              pk=np.max(k,axis=0);ix=int(np.argmax(k[:,sensor]))
+              rad=np.arange(1,src+1)*d_um
+              # Average symmetric positions; exclude source and outermost two bins.
+              p=(pk[src+1:]+pk[src-1::-1])/2
+              sel=(rad<=25)&(p>0)
+              slope,intercept=np.polyfit(rad[sel],np.log(p[sel]),1)
+              y=k[ix:,sensor];x=t[ix:]-t[ix]
+              fit=dict(single_tau_s=None,fast_tau_s=None,slow_tau_s=None,fast_fraction=None)
+              try:
+                  z,_=curve_fit(lambda x,A,tau:A*np.exp(-x/tau),x,y,p0=[y[0],2.],bounds=([0,.01],[np.inf,100.]),maxfev=5000)
+                  fit['single_tau_s']=float(z[1])
+                  z,_=curve_fit(lambda x,A,B,tf,ts:A*np.exp(-x/tf)+B*np.exp(-x/ts),x,y,
+                                p0=[.7*y[0],.3*y[0],1.,6.],bounds=([0,0,.01,.01],[np.inf,np.inf,100.,100.]),maxfev=5000)
+                  A,B,tf,ts=z
+                  if tf>ts:A,B,tf,ts=B,A,ts,tf
+                  fit.update(fast_tau_s=float(tf),slow_tau_s=float(ts),fast_fraction=float(A/(A+B)))
+              except (RuntimeError,ValueError):pass
+              return dict(peak_mM=peak(r),source_peak_mM=float(pk[src]),peak_time_s=float(t[ix]),
+                          radial_distance_um=rad.tolist(),radial_peak_mM=p.tolist(),
+                          spatial_decay_um=float(-1/slope) if slope<0 else None,
+                          decay=fit,mass_error=err,spike_events=ap)
+          rows=[]
+          # Before CBX pooled treatment-group baseline means, Figure 5, not
+          # post-treatment data. Pooled distances unknown; 10 um is proxy.
+          for name,dur,target in [('weak',.2,2.30),('strong',.5,8.28)]:
+              q=calibrate(dur,target)
+              a=response(G,q,dur,12.);b=response(E*0,q,dur,12.)
+              A,B= summaries(a),summaries(b)
+              assert abs(A['peak_mM']-target)<.05,(A['peak_mM'],target)
+              row=dict(protocol=name,duration_s=dur,rate_mM_tissue_s=q,fit_target_mM=target,
+                       coupled=A,uncoupled=B,uncoupling_peak_change_percent=100*(B['peak_mM']/A['peak_mM']-1))
+              rows.append(row)
+              np.savez_compressed(out/f'{name}.npz',t=a[0],coupled_K=a[1],uncoupled_K=b[1],
+                                   coupled_V=a[2],uncoupled_V=b[2])
+              print('CA1_AGGREGATE_RESULT',json.dumps(row),flush=True)
+              # Preserve the strong pipette's fitted source per nA; no further
+              # fitting to blockade. Test duration- and current-response ramps.
+              if name=='strong':
+                  for axis,values in [('duration',[.1,.2,.3,.4,.5,.6]),('current',[190,380,570,760,950])]:
+                      for val in values:
+                          Q=q if axis=='duration' else q*val/900.
+                          D=val if axis=='duration' else .5
+                          c=response(G,Q,D,2.5);u=response(E*0,Q,D,2.5)
+                          row=dict(protocol='ramp',axis=axis,value=val,rate=Q,duration=D,coupled_peak_mM=peak(c),
+                                   uncoupled_peak_mM=peak(u),uncoupling_peak_change_percent=100*(peak(u)/peak(c)-1),
+                                   coupled_spikes=c[4],uncoupled_spikes=u[4],mass_error=max(c[3],u[3]))
+                          rows.append(row);print('CA1_RAMP_RESULT',json.dumps(row),flush=True)
+                          (out/'summary.json').write_text(json.dumps(dict(mobility=mu,dt_s=dt,rows=rows),indent=2))
+          (out/'summary.json').write_text(json.dumps(dict(mobility=mu,dt_s=dt,rows=rows),indent=2))
+          PY
+          python /tmp/ca1.py
+      - name: Save source provenance
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_CA1_MU${{ matrix.mobility }}_DT${{ matrix.dt }}
+          path: output/
+          retention-days: 90
