@@ -1,0 +1,24 @@
+name: SMM-II Phase VI compact source audit
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase6-compact.yml']
+permissions:
+  contents: read
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy scipy
+      - run: python -u research/smm-ii/phase6/compact_sources.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase6-compact-source-files
+          path: output/
+          retention-days: 90
