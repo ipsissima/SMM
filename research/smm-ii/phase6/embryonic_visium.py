@@ -55,8 +55,16 @@ with tarfile.open(raw) as t:
         h=member("filtered_feature_bc_matrix.h5");pos=member("tissue_positions_list.csv.gz")
         with h5py.File(io.BytesIO(h),"r") as f:
             m=f["matrix"];g=m["features"]["name"][:].astype(str);bc=m["barcodes"][:].astype(str)
-            assert len(set(g))==len(g),"duplicate gene symbols"
+            ids=m["features"]["id"][:].astype(str);assert len(set(ids))==len(ids)
             X=sparse.csc_matrix((m["data"][:],m["indices"][:],m["indptr"][:]),shape=tuple(m["shape"][:])).T.tocsr()
+            # Multiple distinct feature IDs may have the same gene symbol.
+            # Sum their counts once, preserving all UMIs and unique symbols.
+            ug,inv=np.unique(g,return_inverse=True)
+            duplicates=sorted(set(g[np.isin(g,ug[np.bincount(inv)>1])]))
+            X2=X@sparse.csr_matrix((np.ones(len(g),dtype=int),(np.arange(len(g)),inv)),shape=(len(g),len(ug)))
+            assert np.array_equal(np.asarray(X.sum(1)),np.asarray(X2.sum(1)))
+            X=X2.tocsr();g=ug
+            print("DUPLICATE_SYMBOLS",gsm,json.dumps(duplicates),flush=True)
         if genes is None:genes=g
         assert np.array_equal(genes,g)
         p=pd.read_csv(io.BytesIO(gzip.decompress(pos)),header=None,names=["barcode","in_tissue","row","col","pixel_y","pixel_x"]).set_index("barcode")
