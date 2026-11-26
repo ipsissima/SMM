@@ -1,0 +1,151 @@
+name: Neutral KCl electrical onset diagnostic
+on:
+  push:
+    branches: [research/ednm-high-load-topology-20261126]
+    paths: [.github/workflows/ednm-neutral-onset.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  onset:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        migration: ['0','1']
+        dt: ['0.0001','0.00005','0.000025']
+    env:
+      MIGRATION: ${{ matrix.migration }}
+      DT: ${{ matrix.dt }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install exact pinned solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Apply identical neutral KCl protocol and graph correction
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = '+os.environ['DT']+'                # onset refinement')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          s=s.replace(old,
+              '        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+              '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+              '            i = stimulus_protocol.get("kcl_site", 0)\n'
+              '            for ion in (1, 2):\n'
+              '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n'+old)
+          p.write_text(s)
+          # Avoid printing multi-megabyte logs for every optimization call;
+          # preserve convergence check in the actual Newton loop.
+          old='    alpha = [alpha_s[0:-1], alpha_d[0:-1]]'
+          assert s.count(old)==1
+          s=s.replace(old,'    if rsd >= tol and N_iter >= itermax: raise RuntimeError("Unconverged Newton step")\n'+old)
+          p.write_text(s)
+          p=Path('validation/graph_extensions/ednm_graph_adapter.py')
+          s=p.read_text().replace('import numpy as np','import numpy as np\nimport os')
+          old='        if new_edges == original_edges:'
+          assert s.count(old)==1
+          s=s.replace(old,'        migration=float(os.environ["MIGRATION"]) if r==1 else 1.0\n        if new_edges == original_edges and migration==1.0:')
+          old='                    f2 = f1 * model.z[ion] / (2 * model.psi)'
+          assert s.count(old)==1
+          s=s.replace(old,old+' * (migration if sign>0 else 1.0)')
+          p.write_text(s)
+          PY
+      - name: Neutral KCl early-time topology response
+        run: |
+          cat > /tmp/onset.py <<'PY'
+          import contextlib,json,os,tempfile
+          from pathlib import Path
+          import numpy as np
+          from ednm import model,solver
+          from ednm_graph_adapter import closed_path
+          dt=float(os.environ['DT']); migration=float(os.environ['MIGRATION'])
+          N=7; spacing_um=30.; mu=.17988168474408803; T=.12; rate=3.; onset=.08
+          E=closed_path(N); G=mu*E
+          C=G.copy()
+          for i,j,w in [(0,4,.8),(1,5,.5),(2,6,.6)]:C[i,j]=C[j,i]=mu*w
+          out=Path('output');out.mkdir(exist_ok=True)
+          def run(g,q):
+              solver.graph_glial=g;solver.graph_ecs=E
+              with tempfile.TemporaryDirectory() as tmp,open(os.devnull,'w') as sink:
+                  with contextlib.redirect_stdout(sink):
+                      solver.solve_system(model.Model(N,spacing_um*1e-4,0,0),tmp+'/',T,
+                          dict(j_stim=0.,stim_start=.08,stim_end=.28,N_stim=1,
+                               spike_train=np.zeros((2,N)),kcl_rate_tissue=q,kcl_site=0))
+                  with np.load(Path(tmp)/'data.npz') as a:
+                      t,alpha,c,phi=[a[k] for k in ('t','alpha','c','phi')]
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert all(np.isfinite(x).all() for x in (t,alpha,c,phi))
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              inv=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.maximum(np.rint(t/dt).astype(int)-round(onset/dt)+1,0)
+              expected=inv[0]+(nsteps*dt*q)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=float(np.max(abs(inv-expected)/np.maximum(abs(expected),1e-12)))
+              assert err<1e-7,err
+              return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],inv,err
+          b0,a0,b1,a1=run(G,0.),run(G,rate),run(C,0.),run(C,rate)
+          t=b0[0]; assert all(np.allclose(x[0],t,atol=1e-12,rtol=0) for x in [a0,b1,a1])
+          k=(a1[1]-b1[1])-(a0[1]-b0[1]); v=(a1[2]-b1[2])-(a0[2]-b0[2])
+          elapsed=t-onset+dt
+          pre=elapsed<=0.5*dt
+          assert np.any(pre)
+          # Independent baseline roundoff floor plus conservative minimum.
+          floor=max(1e-10,100*float(np.max(abs(k[pre]))))
+          windows=[(.0005,.002),(.002,.005),(.005,.01),(.01,.02),(.02,.04)]
+          metrics={}
+          signals={'chord_endpoint_4':abs(k[:,4]),'distal_4_6_norm':np.linalg.norm(k[:,4:7],axis=1),'whole_field_norm':np.linalg.norm(k,axis=1)}
+          for name,y in signals.items():
+              rows=[]
+              for lo,hi in windows:
+                  sel=(elapsed>=lo-1e-10)&(elapsed<=hi+1e-10)&(elapsed>10*dt)&(y>floor)
+                  row={'window_s':[lo,hi],'n':int(sel.sum()),'slope':None,'r_squared':None}
+                  if sel.sum()>=6:
+                      X=np.log(elapsed[sel]);Y=np.log(y[sel]);coef=np.polyfit(X,Y,1)
+                      ss=np.sum((Y-Y.mean())**2)
+                      row.update(slope=float(coef[0]),r_squared=float(1-np.sum((Y-np.polyval(coef,X))**2)/ss) if ss>0 else None)
+                  rows.append(row)
+              metrics[name]=rows
+          result=dict(dt_s=dt,migration=migration,mu=mu,spacing_um=spacing_um,rate=rate,
+                      onset_s=onset,elapsed_convention='first injected inventory step at onset label; physical elapsed=t-onset+dt',
+                      numerical_floor_mM=floor,baseline_graph_difference_mM=float(np.max(abs(b1[1]-b0[1]))),
+                      max_mass_error=max(x[4] for x in [b0,a0,b1,a1]),metrics=metrics,
+                      scope='Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required')
+          np.savez_compressed(out/'onset.npz',t=t,elapsed_s=elapsed,delta_K_graph=k,delta_Vm_graph=v,
+                             K_path=a0[1]-b0[1],K_shortcut=a1[1]-b1[1])
+          (out/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
+          print('NEUTRAL_ONSET_RESULT',json.dumps(result),flush=True)
+          PY
+          python /tmp/onset.py
+      - name: Archive provenance
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source.diff
+          git diff -- validation/graph_extensions > output/adapter.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_NEUTRAL_ONSET_m${{ matrix.migration }}_dt${{ matrix.dt }}
+          path: output/
+          retention-days: 90
