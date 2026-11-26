@@ -1,0 +1,26 @@
+{
+  "source_commit": "826c211c70d9027a4acb02202ca91a60de79a15d",
+  "run_baseline": "https://github.com/ipsissima/SMM/actions/runs/45815761030",
+  "run_paired": "https://github.com/ipsissima/SMM/actions/runs/45815996342",
+  "scopes": [
+    "original unchanged solver; two units, sealed boundaries; short 2ms baseline",
+    "original unchanged solver; two units, localized charge-neutral K transfer; 6ms pulse comparison"
+  ],
+  "observed": {
+    "rest_initial_Ke_mM": 3.543992191091376,
+    "rest_final_Ke_mM": 3.54399048291541,
+    "stimulated_site_0_peak_delta_Ke_mM": 0.009465405615157518,
+    "neighbor_site_1_peak_delta_Ke_mM": 0.0009392260280112197,
+    "max_full_system_charge_constraint_deviation_mM_equivalent_baseline": 1.6067147612375265e-12,
+    "max_full_system_charge_constraint_deviation_mM_equivalent_stimulated": 2.304822999121825e-13,
+    "max_abs_relative_ion_inventory_drift_stimulated": 7.930157302775002e-15,
+    "max_voltage_difference_mV": 17.73944100132634
+  },
+  "limits": [
+    "The 6ms model output is not a physiological experiment",
+    "Strong voltage response means this stimulus is not automatically a small-signal perturbation",
+    "Glial-specific contribution not yet separated from extracellular/electrical transfer",
+    "No long-time stable equilibrium or causal identifiability established",
+    "No model comparison to SMM-K or biological data yet"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "source_commit": "826c211c70d9027a4acb02202ca91a60de79a15d",
+  "research_run": "https://github.com/ipsissima/SMM/actions/runs/45817190584",
+  "protocol": "Original full 2-unit sealed source, 6ms, local charge-neutral neuronal-to-ECS K transfer j=-3e-4",
+  "modified_parameter": "Nernst-Planck interunit flux coefficient for glial domain r=1 only; E/I/transport/pumps otherwise unchanged; AOT residual+Jacobian rebuilt per variant",
+  "native": {
+    "K_neighbour_peak_mM": 0.0009392260280192133,
+    "K_center_peak_mM": 0.009465405615157518
+  },
+  "glial_off": {
+    "K_neighbour_peak_mM": 0.0009351146159288781,
+    "K_center_peak_mM": 0.009467476678464148
+  },
+  "glial_x2000": {
+    "K_neighbour_peak_mM": 0.0009392412700583996,
+    "K_center_peak_mM": 0.009465395712585867
+  },
+  "native_minus_off_neighbor_percent": 0.4377446927238541,
+  "x2000_minus_native_neighbor_percent": 0.0016228297269925591,
+  "conclusion": "Short-time extracellular K is weakly sensitive to interunit astroglial transport in this independent electrodiffusive reference, despite altered glial intracellular K response.",
+  "limitations": [
+    "6-ms numerical reference only; no biological measurement",
+    "No longer-time equilibrium or physiological glial oscillatory mode analysis",
+    "No direct SMM-to-EDNM predictive model fitting or held-out validation",
+    "Does not establish neuron or EEG effect detectability or unique glial attribution in biological tissue"
+  ]
+}

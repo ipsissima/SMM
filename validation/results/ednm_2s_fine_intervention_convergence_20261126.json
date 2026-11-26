@@ -1,0 +1,32 @@
+{
+  "source_commit": "826c211c70d9027a4acb02202ca91a60de79a15d",
+  "coarse_workflow": "https://github.com/ipsissima/SMM/actions/runs/45839123584",
+  "fine_glial_off_workflow": "https://github.com/ipsissima/SMM/actions/runs/45840811721",
+  "contrast": "native minus glial-interunit-transport-off at each numerical timestep",
+  "coarse_dt_s": 0.002,
+  "fine_dt_s": 0.001,
+  "neighbor_K": {
+    "peak_abs_contrast_coarse_mM": 0.00004112603133066273,
+    "peak_abs_contrast_fine_mM": 0.000041129935764327996,
+    "relative_RMS_cross_timestep_error_percent": 0.9254448271153606,
+    "peak_difference_percent": 0.009492924296409178
+  },
+  "neighbor_membrane_voltage": {
+    "peak_abs_contrast_coarse_mV": 0.00006831095538473164,
+    "peak_abs_contrast_fine_mV": 0.00006834392667087741,
+    "relative_RMS_cross_timestep_error_percent": 0.6903456646913542,
+    "peak_difference_percent": 0.04824318377921964
+  },
+  "neighbor_intracellular_glial_K": {
+    "peak_abs_contrast_coarse_mM": 0.0002942344166285693,
+    "peak_abs_contrast_fine_mM": 0.00029434231591096705,
+    "relative_RMS_cross_timestep_error_percent": 0.08161703720310519
+  },
+  "interpretation": "The small glial interunit contrast is numerically convergent but does not yield evidence of physiologically meaningful or experimentally identifiable neuronal influence in this tested two-unit protocol.",
+  "qualifications": [
+    "Glial intervention modifies interunit transport of Na, K and Cl (not K alone)",
+    "2-unit geometry cannot distinguish glial vs neuronal graph topology",
+    "No independent neuronal firing-rate observation or physiological preparation measurement",
+    "Experimental power and competing-mechanism identifiability remain unestablished"
+  ]
+}
