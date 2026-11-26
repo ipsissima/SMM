@@ -1,0 +1,175 @@
+name: SMM Step 8 mechanistic audit and published nonlinear EDNM positive control
+on:
+  push:
+    branches: [research/ednm-mechanism-high-load-20261126]
+    paths: [.github/workflows/ednm-step8-mechanism.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ednm:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {variant: pump_k_clamp, dt: '0.001'}
+          - {variant: pump_k_clamp, dt: '0.002'}
+          - {variant: weak, dt: '0.0001'}
+          - {variant: strong, dt: '0.0001'}
+          - {variant: weak, dt: '0.00005'}
+          - {variant: strong, dt: '0.00005'}
+    env:
+      VARIANT: ${{ matrix.variant }}
+      DT: ${{ matrix.dt }}
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Retrieve and install pinned solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = "826c211c70d9027a4acb02202ca91a60de79a15d"
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+      - name: Apply restricted predeclared changes
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          solver=Path('external-ednm/src/ednm/solver.py')
+          s=solver.read_text()
+          a='dt = 5e-5                # time step'
+          assert s.count(a)==1
+          s=s.replace(a,'dt = '+os.environ['DT']+'                # audited time step')
+          solver.write_text(s)
+          path=Path('external-ednm/src/ednm/model.py')
+          m=path.read_text()
+          variant=os.environ['VARIANT']
+          if variant=='strong':
+              a='f_1 = D[k] * upsilon[k][r] / (lambdas[r]**2 * dxu)'
+              assert m.count(a)==1
+              m=m.replace(a,'f_1 = (2000.0 if r == 1 else 1.0) * D[k] * upsilon[k][r] / (lambdas[r]**2 * dxu)')
+          if variant=='pump_k_clamp':
+              # At unstimulated soma only, freeze extracellular K input to the
+              # neuronal pump at the initial control concentration. Na remains
+              # dynamic and pump 3Na/2K stoichiometry remains unchanged.
+              start=m.index('    def set_membrane_fluxes_s(')
+              stop=m.index('    def set_membrane_fluxes_d(')
+              segment=m[start:stop]
+              a='self.j_pump_n(Na_n_, K_e_)'
+              assert segment.count(a)==2
+              segment=segment.replace(a,'self.j_pump_n(Na_n_, np.where(np.arange(self.N_units)==1, 3.543992191091376, K_e_))')
+              m=m[:start]+segment+m[stop:]
+          path.write_text(m)
+          PY
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/model.py src/ednm/solver.py > output/source.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - name: Recompile changed AOT functions
+        if: ${{ matrix.variant != 'weak' }}
+        run: |
+          cd external-ednm
+          python src/ednm/compile_residual_function.py
+          python src/ednm/compile_jacobian_function.py
+          python ../validation/fix_aot.py .
+          cd ..
+          python -c 'from ednm.aot_residual import residual;from ednm.aot_jacobian import jacobian;print("AOT OK")'
+      - name: Run source-matched experiments and verify solver
+        run: |
+          cat > /tmp/step8.py <<'PY'
+          import contextlib, json, os, re
+          from pathlib import Path
+          import numpy as np
+          from ednm import model,solver
+          dt=float(os.environ['DT'])
+          variant=os.environ['VARIANT']
+          clamp=variant=='pump_k_clamp'
+          out=Path('output')
+          def run(label,stim):
+              p=out/label
+              p.mkdir(exist_ok=True)
+              m=model.Model(2,5e-4 if clamp else .1,0,0)
+              protocol=dict(j_stim=stim,stim_start=.05 if clamp else .1,
+                            stim_end=.55 if clamp else 10.,N_stim=1,
+                            spike_train=np.zeros((2,2),dtype=float))
+              log=p/'solver.log'
+              with log.open('w') as f,contextlib.redirect_stdout(f):
+                  solver.solve_system(m,str(p)+'/',2. if clamp else 10.,protocol)
+              d=np.load(p/'data.npz')
+              t,alpha,c,phi,ss=[d[k] for k in ('t','alpha','c','phi','ss')]
+              for ar in (t,alpha,c,phi,ss):
+                  assert np.isfinite(ar).all()
+              assert np.min(c[:,:,0:3,:,:])>0
+              assert np.min(c)>=-1e-8
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0
+              inventories=np.einsum('tldu,tlidu->ti',fr,c)
+              drift=np.max(np.abs(inventories-inventories[0])/np.maximum(np.abs(inventories[0]),1e-12),axis=0)
+              bad=0; maxiter=0; finalres=0.
+              with log.open() as f:
+                  for line in f:
+                      z=re.search(r'N_iter:\s*(\d+),\s*rsd:\s*([0-9.eE+-]+)',line)
+                      if z:
+                          i,r=int(z.group(1)),float(z.group(2))
+                          bad+=i>=10 and r>1e-12
+                          maxiter=max(maxiter,i)
+                          if i>=10: finalres=max(finalres,r)
+              assert bad==0, (bad,finalres)
+              assert max(drift)<1e-7, drift
+              vm=phi[:,0,0,:]-phi[:,0,2,:]
+              ke=c[:,0,1,2,:]
+              # Source's hysteretic AP rule: crossing -20 mV from armed
+              # state, reset below -40 mV; final continuous voltage used too.
+              ap=[]; armed=True
+              for ti,vi in zip(t,vm[:,0]):
+                  if armed and vi>=-20: ap.append(float(ti));armed=False
+                  if vi < -40: armed=True
+              stats=dict(n_samples=len(t),end_t=float(t[-1]),
+                  max_relative_inventory_drift=drift.tolist(),
+                  max_newton_iterations=maxiter,nonconverged=bad,
+                  final_Ke_increase_mM=(ke[-1]-ke[0]).tolist(),
+                  peak_Ke_increase_mM=np.max(ke-ke[0],axis=0).tolist(),
+                  final_Vm_mV=vm[-1].tolist(),
+                  final_1s_Vm_range_mV=[float(np.min(vm[t>=t[-1]-1,0])),float(np.max(vm[t>=t[-1]-1,0]))],
+                  AP_count=len(ap),last_AP_s=ap[-1] if ap else None,
+                  AP_count_final_1s=sum(x>=t[-1]-1 for x in ap))
+              if not clamp:
+                  # Preserve full-precision observable traces and spike times;
+                  # leave full state in its own compressed archive.
+                  np.savez_compressed(p/'full_state.npz',t=t,alpha=alpha,c=c,phi=phi,ss=ss,dt=dt)
+                  np.savez_compressed(p/'observable.npz',t=t,vm=vm,ke=ke,ap=np.array(ap))
+                  (p/'data.npz').unlink()
+                  log.unlink()
+              return t,vm,ke,stats
+          if clamp:
+              t,vb,kb,b=run('baseline',0.)
+              t2,vs,ks,s=run('stimulated',-1e-4)
+              assert np.allclose(t,t2,rtol=0,atol=1e-12)
+              j=int(np.argmin(abs(t-.4)))
+              r=dict(variant=variant,dt_s=dt,baseline=b,stimulated=s,
+                  anchor_t=float(t[j]),delta_Vm_mV=(vs[j]-vb[j]).tolist(),
+                  delta_K_e_mM=(ks[j]-kb[j]).tolist(),
+                  peak_abs_delta_Vm_mV=np.max(abs(vs-vb),axis=0).tolist())
+          else:
+              t,vm,ke,s=run('stimulated',2e-4)
+              r=dict(variant=variant,dt_s=dt,stimulus_j=2e-4,
+                   dxu_cm=.1,stimulus_s=[.1,10.],results=s,
+                   reference='Saetra & Mori 2024 Table 4 and Figures 9-11')
+          (out/'summary.json').write_text(json.dumps(r,indent=2)+'\n')
+          print('STEP8_RESULT',json.dumps(r),flush=True)
+          PY
+          python /tmp/step8.py
+      - name: Archive source provenance and result summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EDNM_STEP8_${{ matrix.variant }}_${{ matrix.dt }}
+          path: output/
+          retention-days: 30
