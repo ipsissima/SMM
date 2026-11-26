@@ -1,0 +1,66 @@
+name: SMM-II calibration source panels
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-calibration-panels.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45895727236
+          pattern: SMM-II-FalconMoya
+          path: raw
+      - name: Retrieve Maul source panels and inspect full Falcon workbook
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request,zipfile,io,xml.etree.ElementTree as E,json,hashlib,re
+          from pathlib import Path
+          from collections import defaultdict
+          ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+          def parse(b,i):
+            with zipfile.ZipFile(io.BytesIO(b)) as z:
+              names=[a.get('name') for a in E.fromstring(z.read('xl/workbook.xml')).findall('.//x:sheet',ns)]
+              ss=[]
+              if 'xl/sharedStrings.xml' in z.namelist():ss=[''.join(t.text or '' for t in a.findall('.//x:t',ns)) for a in E.fromstring(z.read('xl/sharedStrings.xml')).findall('x:si',ns)]
+              out={'id':i,'sha256':hashlib.sha256(b).hexdigest(),'sheets':[]}
+              for k,n in enumerate(names,1):
+                d={};cols=defaultdict(list)
+                for c in E.fromstring(z.read(f'xl/worksheets/sheet{k}.xml')).findall('.//x:c',ns):
+                  v=c.find('x:v',ns)
+                  if c.get('t')=='inlineStr':val=''.join(t.text or '' for t in c.findall('.//x:t',ns))
+                  elif v is None:continue
+                  elif c.get('t')=='s':val=ss[int(v.text)]
+                  else:
+                    try:val=float(v.text)
+                    except (ValueError,TypeError):val=v.text
+                  if val in ('',None):continue
+                  a=c.get('r');d[a]=val;cols[re.match('[A-Z]+',a)[0]].append([int(re.search(r'\d+$',a).group()),val])
+                rec={'name':n,'cells':len(d),'strings':[[a,v] for a,v in d.items() if isinstance(v,str)][:150]}
+                out['sheets'].append(rec)
+                if i.startswith('Maul') and len(d)<=2000:print('PANEL '+json.dumps([i,k,n,d],separators=(',',':')))
+                if i=='FalconMoya':print('FALCON_SCHEMA '+json.dumps([k,rec],separators=(',',':')))
+                Path(f'output/{i}_{k}.json').write_text(json.dumps(d))
+              print('INV '+json.dumps({'id':i,'sha256':out['sha256'],'sheets':[[x['name'],x['cells']] for x in out['sheets']]}))
+              Path(f'output/{i}_inventory.json').write_text(json.dumps(out,indent=2))
+          for f in Path('raw').rglob('FalconMoya.xlsx'):parse(f.read_bytes(),'FalconMoya')
+          for i,fn in [('Maul1','elife-72251-fig1-data1-v2.xlsx'),('Maul2','elife-72251-fig2-data1-v2.xlsx'),('Maul3','elife-72251-fig3-data1-v2.xlsx')]:
+            url='https://cdn.elifesciences.org/articles/72251/'+fn
+            try:
+              with urllib.request.urlopen(url,timeout=25) as r:b=r.read(20*1024*1024)
+              parse(b,i);Path(f'output/{i}.xlsx').write_bytes(b)
+              print('RETRIEVED '+json.dumps([i,url,hashlib.sha256(b).hexdigest(),len(b)]))
+            except Exception as e:print('FAILED '+json.dumps([i,url,repr(e)]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-calibration-panels
+          path: output/
+          retention-days: 90
