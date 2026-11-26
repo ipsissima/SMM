@@ -52,19 +52,7 @@ jobs:
             cd external-ednm
             python src/ednm/compile_residual_function.py
             python src/ednm/compile_jacobian_function.py
-            python - <<'PY'
-            from pathlib import Path
-            import shutil
-            for name in ('aot_residual','aot_jacobian'):
-                binaries=list(Path('.').rglob(name+'*.so'))
-                assert binaries, 'Missing compiled library: '+name
-                latest=max(binaries,key=lambda p:p.stat().st_mtime)
-                target=Path('src/ednm')/latest.name
-                print('Library candidate:',latest,'target:',target)
-                if latest.resolve()!=target.resolve():
-                    shutil.copy2(latest,target)
-                assert target.exists()
-            PY
+            python ../validation/fix_aot.py .
             python -c 'from ednm.aot_residual import residual;from ednm.aot_jacobian import jacobian'
           fi
       - name: Execute matched source-model baseline and K transfer
