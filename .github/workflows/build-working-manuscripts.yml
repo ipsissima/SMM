@@ -2,7 +2,7 @@ name: Build and preflight SMM working manuscripts
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/build-working-manuscripts.yml, paper/manuscript.md, paper/supplement.md, paper/*.png]
+    paths: [.github/workflows/build-working-manuscripts.yml, paper/manuscript.md, paper/supplement.md, paper/*.png, reproducibility/plot_peak_refinement.py, reproducibility/peak_refinement_results.json]
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
       - name: Install reproducible typesetting environment
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends pandoc texlive-xetex texlive-fonts-recommended texlive-latex-extra tex-gyre fonts-texgyre lmodern poppler-utils
+          sudo apt-get install -y --no-install-recommends pandoc texlive-xetex texlive-fonts-recommended texlive-latex-extra tex-gyre fonts-texgyre lmodern poppler-utils python3-matplotlib
           pandoc --version
           xelatex --version
           fc-match "TeX Gyre Termes"
@@ -23,6 +23,7 @@ jobs:
       - name: Build canonical manuscript and independent supplement
         run: |
           set -euo pipefail
+          python3 reproducibility/plot_peak_refinement.py
           mkdir -p build
           cp paper/*.png build/
           cd build

@@ -273,4 +273,4 @@ A broader joint-source glial-only optimization fits sources 0 and 2 together and
 
 47. Anders, S., Minge, D., Griemsmann, S., Herde, M. K., Steinhäuser, C., & Henneberger, C. (2014). Spatial properties of astrocyte gap junction coupling in the rat hippocampus. *Philosophical Transactions of the Royal Society B*, 369, 20130600. <https://doi.org/10.1098/rstb.2013.0600>.
 
-48. Rouach, N., Segal, M., Koulakoff, A., Giaume, C., & Avignone, E. (2003). Carbenoxolone blockade of neuronal network activity in culture is not mediated by an action on gap junctions. *Journal of Physiology*, 553, 729–745. <https://pubmed.ncbi.nlm.nih.gov/14514879/>.
+48. Rouach, N., Segal, M., Koulakoff, A., Giaume, C., & Avignone, E. (2003). Carbenoxolone blockade of neuronal network activity in culture is not mediated by an action on gap junctions. *Journal of Physiology*, 553, 729–745. <https://doi.org/10.1113/jphysiol.2003.053439>.

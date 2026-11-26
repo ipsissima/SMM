@@ -1,0 +1,170 @@
+name: Refine frozen empirical EDNM rival candidates
+on:
+  workflow_run:
+    workflows: ["Empirical regime bounded shared support"]
+    types: [completed]
+    branches: [research/ednm-high-load-topology-20261126]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  refine:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.id == 45881427345
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        cap: ['0.9322643711725827','3.107547903908609']
+        dt: ['0.001','0.00025']
+    env:
+      CAP: ${{ matrix.cap }}
+      DT: ${{ matrix.dt }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 52b9e7e96358b6296a8d7f2fe7cd00e6b03f86d3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45881427345
+          github-token: ${{ github.token }}
+          pattern: EDNM_EMPIRICAL_RIVAL_*
+          path: data/empirical
+      - name: Install exact pinned solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Apply identical neutral KCl protocol and graph correction
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = '+os.environ['DT']+'                # frozen candidate validation')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          s=s.replace(old,
+              '        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+              '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+              '            i = stimulus_protocol.get("kcl_site", 0)\n'
+              '            for ion in (1, 2):\n'
+              '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n'+old)
+          p.write_text(s)
+          # Avoid printing multi-megabyte logs for every optimization call;
+          # preserve convergence check in the actual Newton loop.
+          old='    alpha = [alpha_s[0:-1], alpha_d[0:-1]]'
+          assert s.count(old)==1
+          s=s.replace(old,'    if rsd >= tol and N_iter >= itermax: raise RuntimeError("Unconverged Newton step")\n'+old)
+          p.write_text(s)
+          PY
+      - name: Evaluate frozen fitted candidates without reoptimization
+        run: |
+          cat > /tmp/fit.py <<'PY'
+          import contextlib, json, os, tempfile
+          from pathlib import Path
+          import numpy as np
+          from scipy.optimize import least_squares
+          from ednm import model,solver
+          from ednm_graph_adapter import closed_path
+          N=7; dt=float(os.environ['DT']); d=37e-4
+          E=closed_path(N); G=E.copy()
+          for i,j,w in [(0,4,.8),(1,5,.5),(2,6,.6)]:G[i,j]=G[j,i]=w
+          mu=.17988168474408803; G*=mu
+          out=Path('output');out.mkdir(exist_ok=True)
+          def path(weights):
+              a=np.zeros((N,N))
+              for i,w in enumerate(weights):a[i,i+1]=a[i+1,i]=w
+              return a
+          def simulate(g,e,source,rate):
+              solver.graph_glial=g;solver.graph_ecs=e
+              with tempfile.TemporaryDirectory() as tmp,open(os.devnull,'w') as sink:
+                  with contextlib.redirect_stdout(sink):
+                      solver.solve_system(model.Model(N,d,0,0),tmp+'/',.8,
+                          dict(j_stim=0.,stim_start=.08,stim_end=.28,N_stim=1,
+                               spike_train=np.zeros((2,N)),kcl_rate_tissue=rate,kcl_site=source))
+                  with np.load(Path(tmp)/'data.npz') as a:
+                      t,alpha,c,phi=[a[k] for k in ('t','alpha','c','phi')]
+              assert all(np.isfinite(x).all() for x in (t,alpha,c,phi))
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              mass=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.clip(np.rint(t/dt).astype(int)-round(.08/dt)+1,0,round(.28/dt)-round(.08/dt))
+              expected=mass[0]+(nsteps*dt*rate)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=float(np.max(abs(mass-expected)/np.maximum(abs(expected),1e-12)))
+              assert err<1e-7,err
+              return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],err
+          # Uniform initial state and no synapses imply spatially uniform baseline;
+          # confirm invariance numerically for shortcut and ordinary path before reusing.
+          b=simulate(E,E,0,0.); b2=simulate(G,E,0,0.)
+          assert np.max(abs(b[1]-b2[1]))<1e-7 and np.max(abs(b[2]-b2[2]))<1e-6
+          assert np.max(np.ptp(b[1],axis=1))<1e-7 and np.max(np.ptp(b[2],axis=1))<1e-6
+          t=b[0]
+          def response(g,e,src):
+              r=simulate(g,e,src,30.)
+              assert np.allclose(r[0],t,atol=1e-12,rtol=0)
+              return r[1]-b[1],r[2]-b[2],r[3]
+          y=response(G,E,0); y2=response(G,E,2); hold=response(G,E,4)
+          cap=float(os.environ['CAP'])
+          paths=sorted(Path('data/empirical').glob('*/summary.json'))
+          candidates=[r for p in paths if abs((r:=json.loads(p.read_text()))['glial_cap']-cap)<1e-10]
+          assert candidates, (cap,'No saved candidate; do not silently substitute')
+          def cost(r):return r['train']['D2']+r['train2']['D2']
+          fit=min(candidates,key=cost)
+          weights=np.asarray(fit['weights'],float)
+          g=path(weights[:6]); e=path(weights[6:]) if len(weights)==12 else E
+          # Select by original training cost alone, never held-out scores.
+          b3=simulate(g,e,0,0.)
+          assert np.max(abs(b[1]-b3[1]))<1e-7 and np.max(abs(b[2]-b3[2]))<1e-6
+          ix=np.array([np.argmin(abs(t-x)) for x in np.linspace(.1,.8,15)])
+          def features(r):return np.r_[r[0][ix].ravel()/.001,r[1][ix].ravel()/.01]
+          def score(r,z):
+              k=r[0]-z[0];v=r[1]-z[1];delta=features(r)-features(z)
+              return dict(D2=float(delta@delta),relative_K_residual=float(np.linalg.norm(k)/np.linalg.norm(z[0])),
+                          relative_Vm_residual=float(np.linalg.norm(v)/np.linalg.norm(z[1])),
+                          K_RMS_mM=float(np.sqrt(np.mean(k*k))),Vm_RMS_mV=float(np.sqrt(np.mean(v*v))),
+                          max_abs_K_mM_by_node=np.max(abs(k),axis=0).tolist(),
+                          max_abs_Vm_mV_by_node=np.max(abs(v),axis=0).tolist())
+          targets={0:y,2:y2,4:hold}
+          scores={}; arrays={'t':t}
+          for src,z in targets.items():
+              r=response(g,e,src)
+              scores[str(src)]=score(r,z)
+              arrays.update({f'K_target_{src}':z[0],f'Vm_target_{src}':z[1],f'K_rival_{src}':r[0],f'Vm_rival_{src}':r[1]})
+          result=dict(target_glial_mu=mu,glial_cap=cap,dt_s=dt,selected_start=fit['start'],
+                      original_fit_success=fit['success'],original_fit_training_cost=cost(fit),
+                      weights=weights.tolist(),scores=scores,training_sources=[0,2],
+                      held_out_sources=[4],samples_s=t[ix].tolist(),
+                      description='Frozen-candidate forward numerical refinement, not reoptimization or a proof of global minimality')
+          (out/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
+          np.savez_compressed(out/'responses.npz',**arrays)
+          print('EMPIRICAL_RIVAL_REFINEMENT',json.dumps(result),flush=True)
+          PY
+          python /tmp/fit.py
+      - name: Archive solver provenance
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_EMPIRICAL_RIVAL_REFINED_${{ matrix.cap }}_dt${{ matrix.dt }}
+          path: output/
+          retention-days: 90
