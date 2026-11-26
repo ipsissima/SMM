@@ -1,0 +1,211 @@
+name: Empirically constrained EDNM topology and robustness
+on:
+  push:
+    branches: [research/ednm-high-load-topology-20261126]
+    paths: [.github/workflows/ednm-empirical-topology.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  challenge:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {case: '00', mu: '0.11900244408271873', d: 15, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '01', mu: '0.11900244408271873', d: 15, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '02', mu: '0.11900244408271873', d: 37, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '03', mu: '0.11900244408271873', d: 37, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '04', mu: '0.11900244408271873', d: 60, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '05', mu: '0.11900244408271873', d: 60, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '06', mu: '0.17988168474408803', d: 15, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '07', mu: '0.17988168474408803', d: 15, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '08', mu: '0.17988168474408803', d: 37, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '09', mu: '0.17988168474408803', d: 37, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '10', mu: '0.17988168474408803', d: 60, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '11', mu: '0.17988168474408803', d: 60, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '12', mu: '0.3107547903908609', d: 15, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '13', mu: '0.3107547903908609', d: 15, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '14', mu: '0.3107547903908609', d: 37, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '15', mu: '0.3107547903908609', d: 37, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '16', mu: '0.3107547903908609', d: 60, rate: 3, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '17', mu: '0.3107547903908609', d: 60, rate: 30, source: 0, dt: '0.001', ecs: '1'}
+          - {case: '18', mu: '0.17988168474408803', d: 15, rate: 3, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '19', mu: '0.17988168474408803', d: 15, rate: 30, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '20', mu: '0.17988168474408803', d: 37, rate: 3, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '21', mu: '0.17988168474408803', d: 37, rate: 30, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '22', mu: '0.17988168474408803', d: 60, rate: 3, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '23', mu: '0.17988168474408803', d: 60, rate: 30, source: 2, dt: '0.001', ecs: '1'}
+          - {case: '24', mu: '0.17988168474408803', d: 37, rate: 3, source: 0, dt: '0.0005', ecs: '1'}
+          - {case: '25', mu: '0.17988168474408803', d: 37, rate: 3, source: 2, dt: '0.0005', ecs: '1'}
+          - {case: '26', mu: '0.17988168474408803', d: 37, rate: 30, source: 0, dt: '0.0005', ecs: '1'}
+          - {case: '27', mu: '0.17988168474408803', d: 37, rate: 30, source: 2, dt: '0.0005', ecs: '1'}
+          - {case: '28', mu: '0.17988168474408803', d: 37, rate: 3, source: 0, dt: '0.001', ecs: '0.7'}
+          - {case: '29', mu: '0.17988168474408803', d: 37, rate: 30, source: 0, dt: '0.001', ecs: '0.7'}
+          - {case: '30', mu: '0.17988168474408803', d: 37, rate: 3, source: 0, dt: '0.001', ecs: '1.3'}
+          - {case: '31', mu: '0.17988168474408803', d: 37, rate: 30, source: 0, dt: '0.001', ecs: '1.3'}
+    env:
+      MU: ${{ matrix.mu }}
+      D_UM: ${{ matrix.d }}
+      RATE: ${{ matrix.rate }}
+      ECS: ${{ matrix.ecs }}
+      SOURCE: ${{ matrix.source }}
+      DT: ${{ matrix.dt }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install pinned original full-physics solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Add graph adapter and prescribed neutral KCl mass source
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = '+os.environ['DT']+'                # high-load topology challenge')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          # Original residual convention is -new inventory + previous inventory + influx.
+          # Add identical prescribed K and Cl amounts to the same somatic ECS control
+          # volume: zero net external charge, positive KCl and osmotic load.
+          # The source is state independent, so its state Jacobian is identically zero.
+          add="""        source_rate = stimulus_protocol.get('kcl_rate_tissue', 0.0)
+          if round(0.08/dt) <= round(t/dt) < round(0.28/dt):
+              i = stimulus_protocol.get('kcl_site', 0)
+              for ion in (1, 2):
+                  Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m
+          """
+          # The YAML indentation above is removed by the YAML block scalar.
+          # Construct the exact Python indentation independently.
+          add = ('        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+                 '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+                 '            i = stimulus_protocol.get("kcl_site", 0)\n'
+                 '            for ion in (1, 2):\n'
+                 '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n')
+          s=s.replace(old,add+old)
+          p.write_text(s)
+          PY
+      - name: Run paired baseline and high-load challenge
+        run: |
+          cat > /tmp/challenge.py <<'PY'
+          import contextlib, json, os, re
+          from pathlib import Path
+          import numpy as np
+          from ednm import model, solver
+          from ednm_graph_adapter import closed_path
+          N=7; d_um=float(os.environ['D_UM']); dt=float(os.environ['DT'])
+          source=int(os.environ['SOURCE']); variant=os.environ['GRAPH']
+          # Same physical graph and source volume for every competing model.
+          E=closed_path(N)*float(os.environ['ECS']); G=closed_path(N)
+          chords=[(0,4,.8),(1,5,.5),(2,6,.6)]
+          if variant=='shortcut':
+              for i,j,w in chords: G[i,j]=G[j,i]=w
+          elif variant=='weight_matched_path':
+              G *= (6+sum(w for _,_,w in chords))/6
+          elif variant!='path': raise ValueError(variant)
+          G *= float(os.environ['MU'])
+          solver.graph_glial=G; solver.graph_ecs=E
+          rate=float(os.environ['RATE']) # same duration, neutral KCl, scaled glial diffusion AND migration
+          root=Path('output')/variant; root.mkdir(parents=True,exist_ok=True)
+          def run(label,q):
+              out=root/label; out.mkdir(exist_ok=True)
+              m=model.Model(N,d_um*1e-4,0,0)
+              protocol=dict(j_stim=0.,stim_start=.08,stim_end=.28,N_stim=1,
+                            spike_train=np.zeros((2,N)),kcl_rate_tissue=q,kcl_site=source)
+              with (out/'solver.log').open('w') as f,contextlib.redirect_stdout(f):
+                  solver.solve_system(m,str(out)+'/',.8,protocol)
+              d=np.load(out/'data.npz')
+              t,alpha,c,phi,ss=[d[k] for k in ('t','alpha','c','phi','ss')]
+              assert all(np.isfinite(a).all() for a in (t,alpha,c,phi,ss))
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              assert np.min(c)>=-1e-8
+              inv=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.clip(np.rint(t/dt).astype(int)-round(.08/dt)+1,0,round(.28/dt)-round(.08/dt))
+              expected=inv[0]+(nsteps*dt*q)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=np.max(abs(inv-expected)/np.maximum(abs(expected),1e-12),axis=0)
+              rows=[(int(i),float(e)) for i,e in re.findall(r'N_iter:\s*(\d+),\s*rsd:\s*([0-9.eE+-]+)',(out/'solver.log').read_text())]
+              assert rows
+              bad=sum(i>=10 and e>1e-12 for i,e in rows)
+              assert bad==0 and max(err)<1e-7,(bad,err)
+              ke=c[:,0,1,2,:]
+              vm=phi[:,0,0,:]-phi[:,0,2,:]
+              # Save exact full state, observable arrays, and numerical diagnostics.
+              np.savez_compressed(out/'full_state.npz',t=t,alpha=alpha,c=c,phi=phi,ss=ss,dt=dt)
+              d.close()
+              (out/'data.npz').unlink()
+              return t,ke,vm,dict(max_relative_mass_balance_error=err.tolist(),
+                      max_newton_iterations=max(i for i,_ in rows),unconverged_timesteps=int(bad),
+                      minimum_volume_fraction=float(np.min(fr)),minimum_noncalcium_concentration=float(np.min(c[:,:,:3,:,:])))
+          t,k0,v0,a=run('baseline',0.)
+          t1,k1,v1,b=run('high_load',rate)
+          assert np.allclose(t,t1,rtol=0,atol=1e-12)
+          k=k1-k0; v=v1-v0
+          np.savez_compressed(root/'response.npz',t=t,dKe=k,dVm=v,Ke=k1,Vm=v1)
+          ap=[]
+          for j in range(N):
+              armed=True; spikes=[]
+              for ti,vi in zip(t,v1[:,j]):
+                  if armed and vi>=-20: spikes.append(float(ti));armed=False
+                  if vi < -40: armed=True
+              ap.append(spikes)
+          r=dict(graph=variant,source=source,spacing_um=d_um,dt_s=dt,T_s=.8,
+                 mu=float(os.environ['MU']),ecs_scale=float(os.environ['ECS']),
+                 pulse_s=[.08,.28],source_rate_mM_tissue_s=rate,
+                 total_delivered_K_and_Cl_each_mM_source_tissue=rate*.2,
+                 G=G.tolist(),E=E.tolist(),
+                 peak_delta_Ke_mM=np.max(k,axis=0).tolist(),
+                 peak_absolute_Ke_mM=np.max(k1,axis=0).tolist(),
+                 peak_abs_delta_Vm_mV=np.max(abs(v),axis=0).tolist(),
+                 source_peak_delta_K_above_10mM=bool(np.max(k[:,source])>10),
+                 spike_times_s=ap,baseline=a,high_load=b)
+          (root/'summary.json').write_text(json.dumps(r,indent=2)+'\n')
+          print('HIGH_LOAD_RESULT',json.dumps(r),flush=True)
+          PY
+          for variant in path shortcut weight_matched_path; do
+            GRAPH="$variant" python /tmp/challenge.py
+          done
+          python - <<'PY'
+          import json, numpy as np
+          from pathlib import Path
+          p=Path('output'); names=['path','shortcut','weight_matched_path']
+          a={g:np.load(p/g/'response.npz') for g in names}; s={g:json.loads((p/g/'summary.json').read_text()) for g in names}
+          b=a['shortcut']; rows=[]
+          for g in ['path','weight_matched_path']:
+              x=a[g]; assert np.allclose(x['t'],b['t'],atol=1e-12,rtol=0)
+              dk=b['dKe']-x['dKe'];dv=b['dVm']-x['dVm']; z=s[g]
+              row={k:z[k] for k in ['source','spacing_um','dt_s','mu','ecs_scale','source_rate_mM_tissue_s']}
+              row.update(rival=g,relative_K=float(np.linalg.norm(dk)/np.linalg.norm(x['dKe'])),relative_Vm=float(np.linalg.norm(dv)/np.linalg.norm(x['dVm'])),max_K_mM_by_node=np.max(abs(dk),axis=0).tolist(),max_Vm_mV_by_node=np.max(abs(dv),axis=0).tolist(),source_peak_K_mM={g:s[g]['peak_delta_Ke_mM'][z['source']] for g in names},spike_counts={g:[len(v) for v in s[g]['spike_times_s']] for g in names})
+              rows.append(row); print('EMPIRICAL_TOPOLOGY_RESULT',json.dumps(row),flush=True)
+          (p/'contrast.json').write_text(json.dumps(rows,indent=2)+'\n')
+          PY
+      - name: Archive exact source and environment
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source_changes.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_EMPIRICAL_TOPOLOGY_${{ matrix.case }}
+          path: output/
+          retention-days: 90
