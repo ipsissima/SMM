@@ -1,0 +1,83 @@
+name: Distal neuronal current and volume audit
+on:
+  push:
+    branches: [research/ednm-high-load-topology-20261126]
+    paths: [.github/workflows/ednm-distal-current-audit.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  accounting:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7b5b240b2c2c11d521d142014b9ddd6d2681ed01
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python -m pip install numpy==1.26.4 scipy==1.12.0
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 45867493269
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: EDNM_HIGH_LOAD_*_src*_dt0.00025
+          path: data
+      - name: Four-way paired current reconstruction at distal nodes
+        run: |
+          cat > /tmp/audit.py <<'PY'
+          import json, numpy as np
+          from pathlib import Path
+          import ednm_voltage_audit as audit
+          out=Path('output');out.mkdir(exist_ok=True)
+          rows=[]
+          for src,node in [(0,5),(2,6)]:
+              for rival in ['path','weight_matched_path']:
+                  def runs(g):
+                      root=Path(f'data/EDNM_HIGH_LOAD_{g}_src{src}_dt0.00025')
+                      return [audit.read_run(root/label/'full_state.npz',node) for label in ['high_load','baseline']]
+                  A,B=runs('shortcut'),runs(rival)
+                  aa=[audit.currents(x) for x in A+B]
+                  t,dt=A[0][:2]
+                  assert all(np.allclose(x[0],t,atol=1e-12,rtol=0) and x[1]==dt for x in A+B)
+                  def four(a,b,c,d):return (a-b)-(c-d)
+                  dv=four(*[x[0] for x in aa])
+                  di={k:four(*[x[1][k] for x in aa]) for k in aa[0][1]}
+                  integ={k:-dt/audit.CM*np.cumsum(i) for k,i in di.items()}
+                  pred=np.sum(list(integ.values()),axis=0)
+                  err=dv[1:]-dv[0]-pred
+                  abs_current_closure=[float(1000*np.max(abs(x[2]))) for x in aa]
+                  assert max(abs_current_closure)<0.01 and np.max(abs(err))<0.001,(abs_current_closure,np.max(abs(err)))
+                  # Volume fractions and concentration are four-way paired
+                  # on the same tissue and source. Report rather than infer causality.
+                  def volume(x):
+                      a=x[2]
+                      return np.concatenate([a,1-a.sum(axis=2,keepdims=True)],axis=2)
+                  dalpha=four(*[volume(x) for x in A+B])
+                  dke=four(*[x[3][:,0,1,2] for x in A+B])
+                  dEK=four(*[audit.PSI*np.log(x[3][:,0,1,2]/x[3][:,0,1,0]) for x in A+B])
+                  idx=int(np.argmax(abs(dv[1:])))
+                  row=dict(source=src,node=node,rival=rival,dt_s=dt,peak_t_s=float(t[idx+1]),
+                      delta_Vm_mV=float(dv[idx+1]),delta_Ke_mM=float(dke[idx+1]),delta_EK_mV=float(dEK[idx+1]),
+                      integrated_mV={k:float(v[idx]) for k,v in integ.items()},
+                      instantaneous_uA_cm2={k:float(1000*v[idx]) for k,v in di.items()},
+                      four_way_voltage_closure_max_mV=float(np.max(abs(err))),
+                      absolute_current_closure_max_uA_cm2=abs_current_closure,
+                      soma_delta_volume_fraction_at_peak=dalpha[idx+1,0].tolist(),
+                      max_abs_delta_volume_fraction=np.max(abs(dalpha),axis=0).tolist(),
+                      max_abs_delta_Ke_mM=float(np.max(abs(dke))))
+                  np.savez_compressed(out/f'source{src}_{rival}.npz',t=t,delta_Vm=dv,delta_Ke=dke,delta_EK=dEK,
+                       delta_alpha=dalpha,closure=err,**{'I_'+k:v for k,v in di.items()},**{'V_'+k:v for k,v in integ.items()})
+                  print('DISTAL_CURRENT_RESULT',json.dumps(row),flush=True)
+                  rows.append(row)
+          (out/'summary.json').write_text(json.dumps(rows,indent=2)+'\n')
+          PY
+          PYTHONPATH=reproducibility python /tmp/audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_DISTAL_CURRENT_VOLUME
+          path: output/
+          retention-days: 90
