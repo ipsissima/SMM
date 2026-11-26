@@ -94,13 +94,13 @@ jobs:
               assert err<1e-7,err
               return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],err,int(np.count_nonzero(ap))
           # Use long matched no-source trajectory for drift subtraction.
-          B=run(G,0.,.5,12.)
+          baseline=run(G,0.,.5,12.)
           B0=run(E*0,0.,.5,12.)
-          assert np.max(abs(B[1]-B0[1]))<1e-7
+          assert np.max(abs(baseline[1]-B0[1]))<1e-7
           def response(g,q,dur,T):
               t,k,v,err,ap=run(g,q,dur,T)
-              assert np.allclose(t,B[0][:len(t)],rtol=0,atol=1e-10)
-              return t,k-B[1][:len(t)],v-B[2][:len(t)],err,ap
+              assert np.allclose(t,baseline[0][:len(t)],rtol=0,atol=1e-10)
+              return t,k-baseline[1][:len(t)],v-baseline[2][:len(t)],err,ap
           def peak(r):return float(np.max(r[1][:,sensor]))
           def calibrate(dur,target):
               # Fit effective source rate ONLY; source strength/volume is unknown.
