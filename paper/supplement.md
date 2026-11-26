@@ -177,6 +177,23 @@ Allowing all six extracellular path weights to vary in addition to the six glial
 
 A broader joint-source glial-only optimization fits sources 0 and 2 together and withholds source 4, with bounds 0–500. It yields training potassium RMS discrepancies 0.0422 and 0.0482 mM, and held-out potassium RMS discrepancy 0.0662 mM (maximum 0.187 mM). The held-out neuronal voltage RMS discrepancy is 0.0539 mV (maximum 0.156 mV). The fitted path weights span 2.59–217.46; the large weights are not empirically constrained. These comparisons show finite predictive separation for the fitted alternatives, not a certificate of separation from the entire shared-support cone. The joint fit allowing independent ECS weights is a further stress test.
 
+## Supplement I. Neutral-source early-time response
+
+This diagnostic uses seven units at 30 µm intrinsic scale, central mobility 0.179881685, the specified independent graph and an ordinary shared path, and the neutral KCl source of 3 mM tissue/s at node 0 beginning at 0.08 s. The observation ends at 0.12 s. Glial migration is multiplied by zero or one while chemical flux and other source-model terms are preserved. The time since input is measured from the start of the first stimulated inventory step (the solver labels that first step at the stimulus onset). For each geometry the no-input trajectory is subtracted before differencing the two responses. This isolates the graph contrast, rather than the absolute response to the stimulus. Fitted slopes use samples at elapsed times greater than ten timesteps and absolute contrast above a floor of $10^{-10}$ mM or 100 times the maximum prestimulus numerical contrast, whichever is larger; six samples are required. The floor is $10^{-10}$ mM for all six cases. These are finite-window fits, not estimates of a rigorously established asymptotic exponent.
+
+Table S4. Least-squares slopes of log absolute extracellular K topology contrast versus log elapsed time, node 4. A dash indicates insufficient samples above the numerical floor.
+
+| Timestep (µs) | Migration | 0.5–2 ms | 2–5 ms | 5–10 ms | 10–20 ms | 20–40 ms |
+|--:|:--|--:|--:|--:|--:|--:|
+| 100 | Retained | 2.732 | 2.541 | 2.306 | 2.160 | 2.075 |
+| 100 | Disabled | — | 3.188 | 2.907 | 2.652 | 2.553 |
+| 50 | Retained | 2.925 | 2.594 | 2.324 | 2.167 | 2.078 |
+| 50 | Disabled | — | 3.268 | 2.938 | 2.663 | 2.557 |
+| 25 | Retained | 3.045 | 2.623 | 2.333 | 2.171 | 2.079 |
+| 25 | Disabled | — | 3.307 | 2.954 | 2.668 | 2.559 |
+
+All six jobs completed; maximum relative inventory error was below $4.58\times10^{-11}$. The finite-window ordering is consistent across time resolutions. Neither the migration-off condition nor the full model without it is the strictly chemical two-compartment system of Proposition 2: extracellular migration, membrane-current pathways, local kinetics and capacitive constraints are retained. Therefore a fourth-order onset is not required in this diagnostic. The raw trajectories, exact input and analysis driver are identified by GitHub Actions run [45885207597](https://github.com/ipsissima/SMM/actions/runs/45885207597), commit `b605b58aea96e0541e2f6fb55e7e8d32b4dfc6b2`; the complete fit windows and quality diagnostics are in reproducibility/neutral_onset_results.json.
+
 # References {.unnumbered}
 
 1. Ballús, A. (2024). *The Brain-Mesh Model: A Unified Framework for Neural Synchrony, Plasticity, and Coherence*. bioRxiv, version 1, posted 25 November 2024. <https://doi.org/10.1101/2024.11.22.624908>; arXiv:2412.12106v1. <https://arxiv.org/abs/2412.12106v1>.

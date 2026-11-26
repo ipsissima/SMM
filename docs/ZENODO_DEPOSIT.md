@@ -31,3 +31,7 @@ Rights: the existing SMM software repository is MIT-licensed. Preserve that lice
 5. Publish the verified record and confirm that its DOI resolves to the expected public version with all files. Cite the version DOI and source commit in the manuscript's Data Availability section. Final eLife submission follows this verification.
 
 Do not claim the DOI exists or that the record is published before the service confirms it. The existing draft GitHub release is staging only.
+
+## Verified staging update
+
+The append run 45885475027 succeeded: release 459804133 contains 23 assets totaling 1,313,201,549 bytes. Zenodo's current ordinary upload allowance is 100 files and 50 GB, so this archive is within quota. A DOI can be reserved before uploading final source files: https://help.zenodo.org/docs/deposit/describe-records/reserve-doi/ . The final dataset is not yet published; the remaining simulations and refined manuscript still need to be added.
