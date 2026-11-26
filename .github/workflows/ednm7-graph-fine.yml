@@ -1,0 +1,59 @@
+name: Full EDNM seven-site graph fine-timestep validation
+on:
+  push:
+    branches: [research/graph-ednm-topologies-20261126]
+    paths: [.github/workflows/ednm7-graph-fine.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-multisite:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 23
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [path, shortcut]
+    env:
+      SMM_GRAPH_VARIANT: ${{ matrix.variant }}
+      SMM_GRAPH_OUTPUT: output/ednm7_${{ matrix.variant }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Fetch frozen original EDNM source and its compiled modules
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = "826c211c70d9027a4acb02202ca91a60de79a15d"
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual;from ednm.aot_jacobian import jacobian'
+      - name: Patch only original numerical timestep and add tested graph residual and Jacobian correction
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("external-ednm/src/ednm/solver.py")
+          s=p.read_text()
+          old="dt = 5e-5                # time step"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,"dt = 0.001                # time step for refined numerical benchmark"))
+          PY
+      - name: Execute full original seven-site EDNM
+        run: python validation/graph_extensions/run_full_source_graph.py
+      - name: Archive reproducibility records
+        if: always()
+        run: |
+          mkdir -p "$SMM_GRAPH_OUTPUT"
+          git -C external-ednm diff -- src/ednm/solver.py > "$SMM_GRAPH_OUTPUT/source_driver_changes.diff"
+          git -C external-ednm rev-parse HEAD > "$SMM_GRAPH_OUTPUT/pinned_source_commit.txt"
+          python -m pip freeze > "$SMM_GRAPH_OUTPUT/versions.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM7_GRAPH_FINE_${{ matrix.variant }}
+          path: output/ednm7_${{ matrix.variant }}
+          retention-days: 30
