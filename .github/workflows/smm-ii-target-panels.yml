@@ -1,0 +1,72 @@
+name: SMM-II targeted numerical extraction
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-target-panels.yml']
+permissions:
+  actions: read
+  contents: read
+jobs:
+  panels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45895727236
+          pattern: SMM-II-*
+          path: raw
+      - name: Export selected panels as complete cell arrays
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import zipfile,json,re,hashlib,xml.etree.ElementTree as ET
+          from collections import defaultdict
+          from pathlib import Path
+          ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+          selected={'Maul':[1,2,3],'FalconMoya':[1,2,5,6,11,12],'Jiang':[3,12,13,19,22,23],'Farhy5':[1],'Farhy6':[4,6]}
+          def read(z,k):
+            ss=[]
+            if 'xl/sharedStrings.xml' in z.namelist():ss=[''.join(t.text or '' for t in a.findall('.//x:t',ns)) for a in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('x:si',ns)]
+            cells={}
+            for c in ET.fromstring(z.read(f'xl/worksheets/sheet{k}.xml')).findall('.//x:c',ns):
+              v=c.find('x:v',ns)
+              if c.get('t')=='inlineStr': val=''.join(t.text or '' for t in c.findall('.//x:t',ns))
+              elif v is None: continue
+              elif c.get('t')=='s': val=ss[int(v.text)]
+              else:
+                try: val=float(v.text)
+                except (ValueError,TypeError):val=v.text
+              if val not in ('',None):cells[c.get('r')]=val
+            return cells
+          for f in sorted(Path('raw').rglob('*.xlsx')):
+            i=f.stem
+            with zipfile.ZipFile(f) as z:
+              names=[a.get('name') for a in ET.fromstring(z.read('xl/workbook.xml')).findall('.//x:sheet',ns)]
+              print('SOURCE '+json.dumps([i,hashlib.sha256(f.read_bytes()).hexdigest(),names]))
+              for k in selected.get(i,[]):
+                cells=read(z,k)
+                Path(f'output/{i}_{k}.json').write_text(json.dumps({'id':i,'sheet':k,'name':names[k-1],'cells':cells},ensure_ascii=False))
+                rows=defaultdict(dict);cols=defaultdict(list)
+                for a,v in cells.items():
+                  c,r=re.fullmatch(r'([A-Z]+)(\d+)',a).groups();r=int(r);rows[r][c]=v;cols[c].append([r,v])
+                # Compact lossless columns or rows for targeted endpoints. Other panels in artifact.
+                if i in ['Maul','FalconMoya'] or (i=='Jiang' and k in [3,12,13,19,22,23]):
+                  for c,v in cols.items():
+                    # Huge trace columns are not logged.
+                    if len(v)<=200:print('COLUMN '+json.dumps([i,k,c,v],ensure_ascii=False,separators=(',',':')))
+                if i=='Farhy5':
+                  for r,d in sorted(rows.items()):print('PANELROW '+json.dumps([i,k,r,d],ensure_ascii=False,separators=(',',':')))
+                if i=='Farhy6':
+                  genes={'Gja1','Gjb6','Kcnj10','Slc1a2','Slc1a3','Aqp4','Chrdl1','Gpc4','Gpc6','Thbs1','Thbs2','Sparcl1','Sema6a','Plxna2','Plxna4','Sltm'}
+                  for r,d in sorted(rows.items()):
+                    if r<=3 or any(isinstance(v,str) and v in genes for v in d.values()):print('PANELROW '+json.dumps([i,k,r,d],ensure_ascii=False,separators=(',',':')))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-target-panels-90d
+          path: |
+            raw/
+            output/
+          retention-days: 90
