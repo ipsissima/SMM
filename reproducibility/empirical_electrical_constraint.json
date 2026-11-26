@@ -1,0 +1,63 @@
+{
+  "source": {
+    "Ma": {
+      "doi": "10.1002/glia.22924",
+      "resistance_MOhm": [
+        4.2,
+        1.5
+      ],
+      "pair_distance_um": [
+        30.5,
+        3.1
+      ],
+      "coupling_percent": [
+        94.3,
+        3.2
+      ],
+      "n": 3,
+      "condition": "Na-based pipettes in isolated doublets, reduced membrane shunting"
+    },
+    "Kiyoshi": {
+      "doi": "10.1002/glia.23525",
+      "CA1_density_mm3": [
+        11238,
+        331
+      ],
+      "nearest_neighbor_distance_um": [
+        39.45,
+        1.14
+      ],
+      "number_neighbors": [
+        8.4,
+        0.16
+      ],
+      "species": "mouse",
+      "fig": "2F-H"
+    }
+  },
+  "assumptions": "Uniform edge resistance extrapolated from Ma doublets to Kiyoshi CA1 nearest neighbors, isotropic edge orientations, uncorrelated affine potential gradients; effective-medium approximation, not measured conductivity. Native EDNM rest slopes fixed. Endpoint variation is a sensitivity box, not confidence interval.",
+  "native": {
+    "sigma_g_S_cm": 0.00032409687363635874,
+    "sigma_e_S_cm": 0.0013213001590431878,
+    "gmem_S_cm3": 3.335314392764809,
+    "cable_um": 88.33532695085219
+  },
+  "derived": {
+    "edge_conductance_uS": 0.23809523809523808,
+    "sigma_g_S_cm": 0.00005829909165000002,
+    "ratio_native": 0.17988168474408803,
+    "cable_um": 40.915397427495925,
+    "endpoint_sigma_S_cm": [
+      0.00003856832008229474,
+      0.0001007146560332
+    ],
+    "endpoint_ratio_native": [
+      0.11900244408271873,
+      0.3107547903908609
+    ],
+    "endpoint_cable_um": [
+      33.51963358882962,
+      52.96959242215035
+    ]
+  }
+}
