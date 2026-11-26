@@ -38,3 +38,7 @@ The complementary [matched-dose and glial-off experiment](https://github.com/ips
 ## 4. Pending validation and archiving
 
 An unrestricted shared-support fit under high load, independently documented fixed-tissue design/discretization checks, calibration against CA1 data, complete paper/supplement update and a persistent raw-state archive are outstanding. Workflow artifacts are temporary; the JSON records in Git preserve exact reported numerical summaries, not full raw state. No DOI deposit is claimed.
+
+## Update
+
+The subsequent extended migration, matched-dose and distal-current results are documented in [the new addendum](MIGRATION_AND_DOSE_RESULTS.md). These supersede the earlier pending-status descriptions in this historical record.

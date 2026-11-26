@@ -17,3 +17,7 @@ A prespecified full-model geometric-scaling comparison at 5, 15 and 37 micrometr
 ## Empirical scope
 
 Anatomical and physiological studies support the motivation for SMM, but the topology-specific prediction has not been demonstrated in a biological preparation. The full-source CA1 large-load experimental calibration remains open. Seven-site neutral KCl simulations have established a high-dose topology contrast, including a total-edge-weight-matched path control; the identical low-dose and uncoupled comparisons and the flexible shared-support fit remain distinct tests. GitHub Actions artifacts are time-limited; a persistent external data deposit with a DOI has not been made.
+
+## Extended and matched-dose results
+
+The completed follow-up establishes a migration-sensitive shift in the sampled scale maximum, matched-dose nonlinear contrast amplification, and distal current/volume accounting. See [the results addendum](MIGRATION_AND_DOSE_RESULTS.md) and its machine-readable records for the exact scope and outstanding checks.
