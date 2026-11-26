@@ -25,3 +25,5 @@ jobs:
           name: embryonic-visium-source-and-results
           path: output/
           retention-days: 90
+
+# Rerun with count-conserving duplicate-symbol handling.
