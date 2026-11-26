@@ -1,0 +1,102 @@
+name: Append completed CA1 and peak-refinement archive
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/append-foundational-archive.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: smm-reproducibility-archive
+  cancel-in-progress: false
+jobs:
+  archive:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 65
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_ID: '459804133'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify existing draft and collect new completed runs
+        run: |
+          set -euo pipefail
+          mkdir -p raw archive records
+          gh api "repos/$GH_REPO/releases/$RELEASE_ID" > records/release_before.json
+          python - <<'PY'
+          import json
+          d=json.load(open("records/release_before.json"))
+          assert d["draft"] is True and d["tag_name"]=="smm-data-staging-45880525262"
+          PY
+          for run in 45872886590 45881475451; do
+            mkdir -p "raw/$run"
+            gh api "repos/$GH_REPO/actions/runs/$run" > "raw/$run/workflow_run.json"
+            gh api "repos/$GH_REPO/actions/runs/$run/artifacts?per_page=100" > "raw/$run/artifact_manifest.json"
+            python - "$run" <<'PY'
+          import json,sys,pathlib
+          p=pathlib.Path("raw")/sys.argv[1]
+          r=json.loads((p/"workflow_run.json").read_text())
+          a=json.loads((p/"artifact_manifest.json").read_text())
+          expected={45872886590:4,45881475451:43}[int(sys.argv[1])]
+          assert r["conclusion"]=="success"
+          assert a["total_count"]==len(a["artifacts"])==expected
+          assert all(not j["expired"] for j in a["artifacts"])
+          PY
+            gh run download "$run" --repo "$GH_REPO" --dir "raw/$run"
+            python - "raw/$run" <<'PY'
+          import json,sys,pathlib,hashlib
+          p=pathlib.Path(sys.argv[1]); a=json.loads((p/"artifact_manifest.json").read_text())
+          assert all((p/j["name"]).is_dir() for j in a["artifacts"])
+          assert all(any(f.is_file() for f in (p/j["name"]).rglob("*")) for j in a["artifacts"])
+          files=[f for f in sorted(p.rglob("*")) if f.is_file()]
+          (p/"SHA256SUMS").write_text("".join(f"{hashlib.file_digest(f.open('rb'),'sha256').hexdigest()}  {f.relative_to(p)}\n" for f in files))
+          PY
+            tar -czf "archive/SMM_run_${run}.tar.gz" -C raw "$run"
+          done
+      - name: Preserve exact driver snapshots for all completed core runs
+        run: |
+          set -euo pipefail
+          mkdir -p drivers
+          for run in 45839123584 45840811721 45847600616 45859252351 45863596046 45867493269 45869133888 45869212368 45870243172 45870291419 45870371151 45874526639 45874607462 45872886590 45881475451; do
+            gh api "repos/$GH_REPO/actions/runs/$run" > "drivers/run_$run.json"
+            sha="$(python -c 'import json,sys;print(json.load(open(sys.argv[1]))["head_sha"])' "drivers/run_$run.json")"
+            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then git fetch --no-tags origin "$sha"; fi
+            git cat-file -e "$sha^{commit}"
+            dirs=()
+            for path in .github/workflows validation/graph_extensions LICENSE; do
+              if git cat-file -e "$sha:$path" 2>/dev/null; then dirs+=("$path"); fi
+            done
+            test "${#dirs[@]}" -gt 0
+            git archive --format=tar.gz --prefix="SMM-$sha/" -o "drivers/driver_$run.tar.gz" "$sha" -- "${dirs[@]}"
+          done
+          tar -czf archive/SMM_exact_driver_snapshots.tar.gz drivers
+          cp reproducibility/peak_refinement_results.json reproducibility/ca1_aggregate_results.json archive/
+          (cd archive && sha256sum * > SHA256SUMS_supplemental)
+      - name: Append to the existing draft, without publishing it
+        run: |
+          set -euo pipefail
+          tag="smm-data-staging-45880525262"
+          gh release upload "$tag" archive/* --repo "$GH_REPO"
+          gh api "repos/$GH_REPO/releases/$RELEASE_ID" > records/release_after.json
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path("records/release_after.json").read_text())
+          assert r["draft"]
+          names={x["name"] for x in r["assets"]}
+          expected={f.name for f in pathlib.Path("archive").iterdir()}
+          assert expected<=names,(expected-names)
+          print("APPEND_ARCHIVE_RESULT",json.dumps({"release_id":r["id"],"url":r["html_url"],"assets":len(names),"bytes":sum(a["size"] for a in r["assets"])}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_ARCHIVE_APPEND_RECORDS
+          path: records/
+          retention-days: 90
