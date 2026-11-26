@@ -1,0 +1,151 @@
+name: EDNM electrical length-scale sensitivity
+on:
+  push:
+    branches: [research/ednm-geometry-scale-20261126]
+    paths: [.github/workflows/ednm-electrical-length.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        spacing_um: [5, 15, 37, 60, 100, 150]
+        dt: ['0.001']
+        migration: ['0.25', '4']
+    env:
+      DX_UM: ${{ matrix.spacing_um }}
+      GLIAL_MIGRATION: ${{ matrix.migration }}
+      DT: ${{ matrix.dt }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Retrieve exact published model
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Apply tested graph adapter and timestep
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          p.write_text(s.replace(old,'dt = '+os.environ['DT']+'                # geometric-scale audit'))
+          p=Path('validation/graph_extensions/ednm_graph_adapter.py')
+          s=p.read_text()
+          s=s.replace('import numpy as np','import numpy as np\nimport os')
+          old='        if new_edges == original_edges:'
+          assert s.count(old)==1
+          s=s.replace(old,'        migration=float(os.environ.get("GLIAL_MIGRATION","1")) if r==1 else 1.0\n        if new_edges == original_edges and migration==1.0:')
+          old='                    f2 = f1 * model.z[ion] / (2 * model.psi)'
+          assert s.count(old)==1
+          # Native AOT contribution is subtracted unchanged; only the replacement
+          # graph's glial electrical drift is scaled. Chemical diffusion and all
+          # local, ECS, interlayer and charge equations are unaltered.
+          s=s.replace(old,old+' * (migration if sign>0 else 1.0)')
+          p.write_text(s)
+          p=Path('validation/graph_extensions/run_full_source_graph.py')
+          s=p.read_text()
+          old='model.Model(N,5e-4,0,0)'
+          assert s.count(old)==1
+          s=s.replace(old,'model.Model(N,float(os.environ["DX_UM"])*1e-4,0,0)')
+          # The original source amplitude per membrane area, duration and
+          # normalized graph weights are held fixed. This scales the tissue
+          # model, not the electrode layout in a fixed tissue.
+          p.write_text(s)
+          PY
+      - name: Compute paired path and shortcut responses
+        run: |
+          for variant in path shortcut; do
+            SMM_GRAPH_VARIANT="$variant" SMM_GRAPH_OUTPUT="output/$variant" python validation/graph_extensions/run_full_source_graph.py
+          done
+      - name: Calculate matched contrast and quality controls
+        run: |
+          python - <<'PY'
+          import json, re, os
+          from pathlib import Path
+          import numpy as np
+          out=Path('output')
+          # A frozen-concentration two-conductor cable reduction is an
+          # independent diagnostic, not an exact reduction of nonlinear EDNM.
+          # Native ion concentrations and membrane slope are not changed by
+          # the axial migration-only intervention.
+          from ednm import model
+          m=model.Model(7,float(os.environ['DX_UM'])*1e-4,0,0)
+          alpha=np.array([m.alpha_sn_init,m.alpha_sg_init,m.alpha_se_init])
+          c=np.array([[getattr(m,f'{i}_s{r}_init') for r in 'nge'] for i in ['Na','K','Cl','Ca']])
+          phi=np.array([m.phi_sn_init,m.phi_sg_init,m.phi_se_init])
+          ss=np.array([m.h_init,m.n_init,m.s_init,m.c_init,m.q_init,m.z_init])
+          j,di,de,dpi,dpe=m.set_membrane_fluxes_s(alpha,c,phi,alpha,c,phi,ss)
+          gm=float(m.F*np.dot(m.z[:4],dpi[:,1,0]))*m.gamma_m
+          sg=float(m.F*alpha[1,0]*np.sum(m.D*m.upsilon[:,1]*c[:,1,0]*m.z[:4]**2)/(m.lambdas[1]**2*m.psi))
+          se=float(m.F*alpha[2,0]*np.sum(m.D*m.upsilon[:,2]*c[:,2,0]*m.z[:4]**2)/(m.lambdas[2]**2*m.psi))
+          mu=float(os.environ['GLIAL_MIGRATION'])
+          assert min(gm,sg,se)>0
+          ell=float(1e4/np.sqrt(gm*(1/(mu*sg)+1/se)))
+          ell0=float(1e4/np.sqrt(gm*(1/sg+1/se)))
+          cable=dict(glial_axial_sigma_native_S_cm=sg,ecs_axial_sigma_S_cm=se,
+                     glial_membrane_slope_S_cm3=gm,frozen_two_conductor_length_um=ell,
+                     native_reference_length_um=ell0,relative_length=ell/ell0,
+                     limitation='Frozen rest two-conductor approximation; omits full multilayer dynamics. Migration multiplier changes only axial electrical flux; non-native constitutive diagnostic, not physiological conductivity manipulation.')
+          a=np.loadtxt(out/'path'/'response.csv',delimiter=',',skiprows=1)
+          b=np.loadtxt(out/'shortcut'/'response.csv',delimiter=',',skiprows=1)
+          assert np.allclose(a[:,0],b[:,0],rtol=0,atol=1e-12)
+          k=a[:,1:8]; dk=b[:,1:8]-k
+          v=a[:,8:15]; dv=b[:,8:15]-v
+          def audit(p):
+              d=np.load(p/'data.npz')
+              alpha=d['alpha']; c=d['c']
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,0:3,:,:])>0
+              assert np.all(np.isfinite(c)) and np.all(np.isfinite(d['phi']))
+              inv=np.einsum('tldu,tlidu->ti',fr,c)
+              drift=np.max(np.abs(inv-inv[0])/np.maximum(np.abs(inv[0]),1e-12),axis=0)
+              rows=[(int(i),float(e)) for i,e in re.findall(r'N_iter:\s*(\d+),\s*rsd:\s*([0-9.eE+-]+)',(p/'solver.log').read_text())]
+              assert rows
+              bad=sum(i>=10 and e>1e-12 for i,e in rows)
+              assert bad==0 and max(drift)<1e-7, (bad,drift)
+              return {'relative_ion_inventory_drift':drift.tolist(),'max_newton_iterations':max(i for i,e in rows),'unconverged_timesteps':bad}
+          # Whole-trajectory statistic identical to the matched short-pulse analysis.
+          res={'spacing_um':float(os.environ['DX_UM']),'dt_s':float(os.environ['DT']),'glial_axial_migration_multiplier':float(os.environ['GLIAL_MIGRATION']),'frozen_electrical_mode':cable,
+               'protocol':{'duration_s':.8,'pulse_s':[.08,.4],'j_stim':-1e-4,'nodes':7,
+                           'chords':[[0,4,.8],[1,5,.5],[2,6,.6]],'scale_changes_tissue_not_sensors':True},
+               'whole_field_relative_K_contrast':float(np.linalg.norm(dk)/np.linalg.norm(k)),
+               'whole_field_relative_Vm_contrast':float(np.linalg.norm(dv)/np.linalg.norm(v)),
+               'max_abs_K_difference_uM_by_node':(np.max(abs(dk),axis=0)*1000).tolist(),
+               'max_abs_Vm_difference_uV_by_node':(np.max(abs(dv),axis=0)*1000).tolist(),
+               'path_peak_K_mM_by_node':np.max(abs(k),axis=0).tolist(),
+               'solver_audits':{f'{variant}/{case}':audit(out/variant/case) for variant in ['path','shortcut'] for case in ['baseline','stimulated']}}
+          (out/'scale_summary.json').write_text(json.dumps(res,indent=2)+'\n')
+          print('SCALE_RESULT',json.dumps(res),flush=True)
+          PY
+      - name: Record exact source and environment
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source_changes.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          git diff -- validation/graph_extensions > output/adapter_changes.diff
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_ELECTRICAL_LENGTH_${{ matrix.spacing_um }}um_m${{ matrix.migration }}_${{ matrix.dt }}s
+          path: output/
+          retention-days: 90
