@@ -1,0 +1,29 @@
+{
+  "source_commit": "826c211c70d9027a4acb02202ca91a60de79a15d",
+  "workflow": "https://github.com/ipsissima/SMM/actions/runs/45839123584",
+  "experimental_scope": "Full original EDNM electrodiffusive dynamics, 2 units, sealed boundaries, 2 second horizon, 0.5 sec localized neuron-to-ECS K transfer; baseline-subtracted. Glial spatial Nernst-Planck mobility includes Na,K,Cl and is NOT potassium-specific",
+  "time_step_s": 0.002,
+  "independent_native_convergence_dt_s": 0.001,
+  "results": {
+    "native_neighbor_K_peak_mM": 0.13611178949628044,
+    "native_neighbor_voltage_peak_abs_mV": 0.14985664219256023,
+    "native_neighbor_K_RMS_dt_error_percent": 0.17575592712020052,
+    "native_neighbor_voltage_RMS_dt_error_percent": 0.1348094777836498,
+    "glial_off_neighbor_K_max_abs_difference_mM": 0.00004112603133066273,
+    "glial_off_neighbor_K_RMS_relative_to_native_percent": 0.024496007292933004,
+    "glial_off_neighbor_voltage_max_abs_difference_mV": 0.00006831095538473164,
+    "glial_off_neighbor_voltage_RMS_relative_to_native_percent": 0.03393130887559286,
+    "glial_off_intracellular_K_max_abs_difference_mM": 0.0002942344166285693,
+    "glial_x2000_neighbor_K_max_abs_difference_mM": 1.604105133168332e-7,
+    "native_peak_center_voltage_excursion_mV": 31.94280260785517
+  },
+  "limitations": [
+    "Glial-off fine-timestep intervention is outstanding, so source-intervention numerical difference is not independently demonstrated converged",
+    "No experimental noise distribution, so physical detectability not established",
+    "Original model shares two-unit chain topology across compartments; cannot assess distinct glial vs neuronal network geometry",
+    "The perturbed source glial spatial mobility affects Na/K/Cl, not K alone",
+    "Extreme factor x2000 is numerical sensitivity stress, not physiological parameter range",
+    "No neuronal firing-rate observable, only membrane potential",
+    "Not experimentally calibrated to a specific preparation"
+  ]
+}
