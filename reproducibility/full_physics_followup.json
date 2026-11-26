@@ -1,0 +1,901 @@
+{
+  "source_commit": "826c211c70d9027a4acb02202ca91a60de79a15d",
+  "scale_run": 45863596046,
+  "high_load_run": 45867493269,
+  "scale": [
+    {
+      "spacing_um": 5,
+      "dt_s": 0.001,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.0004380337228335594,
+      "whole_field_relative_Vm_contrast": 0.0000013922103686425333,
+      "max_abs_K_difference_uM_by_node": [
+        0.021867768818406574,
+        0.017315321547251017,
+        0.009330989951816804,
+        0.0006093293416498113,
+        0.01004055463660336,
+        0.01694070224012023,
+        0.020529773077981872
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.02510861131099773,
+        0.01789228771542639,
+        0.00965009077447121,
+        0.00057616664150828,
+        0.010325210695327769,
+        0.017527119766214128,
+        0.021298617156162436
+      ],
+      "path_peak_K_mM_by_node": [
+        0.06449125170877279,
+        0.04567770780770841,
+        0.03282340526642624,
+        0.024610251289778784,
+        0.020153974411281972,
+        0.018371455646418955,
+        0.017749851601153832
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.8528220945412912e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "spacing_um": 5,
+      "dt_s": 0.0005,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.00043824776952924605,
+      "whole_field_relative_Vm_contrast": 0.0000013930879694117312,
+      "max_abs_K_difference_uM_by_node": [
+        0.02189377738304188,
+        0.017336340895734992,
+        0.00934275448871702,
+        0.0006096811020483983,
+        0.010052337241717169,
+        0.01696130469319712,
+        0.020555151538648175
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.02514986459800639,
+        0.017920976205232364,
+        0.009666401084018617,
+        0.000579095356556536,
+        0.01034225256546506,
+        0.017554951824649834,
+        0.021333002209189544
+      ],
+      "path_peak_K_mM_by_node": [
+        0.06450617891269372,
+        0.04570639476789262,
+        0.03284979519558329,
+        0.024627078532111657,
+        0.02016404072713529,
+        0.018381399474110882,
+        0.017760191239510448
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.390027911392848e-15,
+            5.861084964478843e-13,
+            6.879411460157315e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            4.1679624293977684e-11,
+            4.5192015269584406e-13,
+            5.121353396540616e-11,
+            6.005621413352977e-11
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.390027911392848e-15,
+            5.864951965774958e-13,
+            6.879411460157315e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            4.146677859230652e-11,
+            4.492251387401476e-13,
+            5.0951866877702356e-11,
+            5.974962858780643e-11
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "spacing_um": 15,
+      "dt_s": 0.001,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.007280256858432261,
+      "whole_field_relative_Vm_contrast": 0.00004671517353639782,
+      "max_abs_K_difference_uM_by_node": [
+        0.5354209990806602,
+        0.4071663896954014,
+        0.201692158144251,
+        0.05095869375271178,
+        0.26173344617097527,
+        0.38856645702711745,
+        0.4460192426649634
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.7835903346204987,
+        0.5832557010876371,
+        0.29317728611033544,
+        0.06283280168872807,
+        0.3653378850003719,
+        0.5599185401763407,
+        0.6515781732190362
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1347500514841209,
+        0.04795299434903555,
+        0.02184969358814559,
+        0.012296966262605125,
+        0.007496316122864943,
+        0.005395951677781952,
+        0.004671512573015679
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            1.8528220945412912e-15,
+            1.501685503324797e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            1.8528220945412912e-15,
+            1.501685503324797e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            2.0212604667723176e-15,
+            1.501685503324797e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            1.8528220945412912e-15,
+            1.501685503324797e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "spacing_um": 15,
+      "dt_s": 0.0005,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.007280790707520939,
+      "whole_field_relative_Vm_contrast": 0.000046775444565690005,
+      "max_abs_K_difference_uM_by_node": [
+        0.5356715558613168,
+        0.40736364447724327,
+        0.201792681900681,
+        0.05100288506554307,
+        0.2618587555756058,
+        0.3887516633427346,
+        0.4462365146045144
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.7839927272215164,
+        0.5835757667398411,
+        0.2933560638922472,
+        0.06289647716073432,
+        0.3655383275713575,
+        0.5602195104188468,
+        0.6519517749694614
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1347975175811018,
+        0.047986229842449823,
+        0.021862065057600688,
+        0.012305391598753435,
+        0.007501724043080138,
+        0.00539857475761929,
+        0.004673017434523974
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.390027911392848e-15,
+            5.858506963614766e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.595542138786406e-13,
+            9.937863961630562e-15,
+            1.0564647540987155e-12,
+            1.2388038586549236e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.558466283623874e-15,
+            5.859795964046804e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.799827318635336e-13,
+            1.0274740706092616e-14,
+            1.0816002625234655e-12,
+            1.2682587286366593e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "spacing_um": 37,
+      "dt_s": 0.001,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.020197282347479972,
+      "whole_field_relative_Vm_contrast": 0.0001929257208954262,
+      "max_abs_K_difference_uM_by_node": [
+        2.497964258269203,
+        1.6409924426858957,
+        0.6470910657174755,
+        0.3877019845313079,
+        1.376028742900992,
+        1.5149817971136237,
+        1.4702325017186268
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        4.1758017495965305,
+        2.6930468424666287,
+        1.0740435153451244,
+        0.6183706579463433,
+        2.1996396382775174,
+        2.487029221427406,
+        2.4459743183911087
+      ],
+      "path_peak_K_mM_by_node": [
+        0.17738419785277992,
+        0.026098739408466187,
+        0.008209523561438115,
+        0.004256241458770127,
+        0.003000560596005286,
+        0.0023812981825099833,
+        0.0020997430504370307
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.221819932810743e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.8528220945412912e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            1.2237655059521613e-13,
+            1.6843837223102648e-15,
+            1.5029745037568355e-13,
+            1.7616278008307327e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "spacing_um": 37,
+      "dt_s": 0.0005,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.020193214822091205,
+      "whole_field_relative_Vm_contrast": 0.00019319984016458416,
+      "max_abs_K_difference_uM_by_node": [
+        2.4989501342704834,
+        1.6416742122653538,
+        0.6473419707946348,
+        0.38788446202353555,
+        1.376583116058594,
+        1.5155966762518958,
+        1.4708017549707186
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        4.1794954569951415,
+        2.6960359820122903,
+        1.0753713858946412,
+        0.6188696479938471,
+        2.2015765120215747,
+        2.489800255190744,
+        2.4489241726683986
+      ],
+      "path_peak_K_mM_by_node": [
+        0.17743911609951013,
+        0.026107422866964658,
+        0.008213879620177611,
+        0.004257635468701171,
+        0.003001307622997995,
+        0.0023818137578270893,
+        0.0021001573051098177
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.857217963182728e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.393153342700799e-13,
+            7.579726750396192e-15,
+            7.87063663802679e-13,
+            9.21880786447594e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.221589539161821e-15,
+            5.862373964910882e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.398990062125054e-13,
+            8.253480239320298e-15,
+            7.865480636298637e-13,
+            9.227304461586057e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    }
+  ],
+  "high_load": [
+    {
+      "source": 0,
+      "dt": 0.0005,
+      "rival": "path",
+      "relative_K_contrast": 0.040235596835387334,
+      "relative_Vm_contrast": 0.20725756366112916,
+      "max_abs_K_difference_mM_by_node": [
+        0.7969251795017307,
+        0.3080898694608223,
+        0.05092118159026304,
+        0.1073489120328408,
+        0.24429443333463174,
+        0.258749576726351,
+        0.24896712738006777
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.24674960538918356,
+        0.08334156612261268,
+        0.05620382432728377,
+        0.16824744562158855,
+        0.38859976135270813,
+        0.4264683277108219,
+        0.41764597638265855
+      ],
+      "peak_source_K_mM": {
+        "path": 24.74504949705551,
+        "shortcut": 24.45487753326148,
+        "weight_matched_path": 24.662431057185554
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 0,
+      "dt": 0.0005,
+      "rival": "weight_matched_path",
+      "relative_K_contrast": 0.030160166240751997,
+      "relative_Vm_contrast": 0.1610419586345169,
+      "max_abs_K_difference_mM_by_node": [
+        0.5747193276481006,
+        0.253119518273925,
+        0.06303335353839801,
+        0.07143253991696108,
+        0.19786598388927823,
+        0.20756303595133963,
+        0.19598345812053397
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.17794664938915616,
+        0.07142903727553573,
+        0.07135488905066723,
+        0.11099810030077606,
+        0.3105932867770491,
+        0.3390393073955522,
+        0.32670442864038307
+      ],
+      "peak_source_K_mM": {
+        "path": 24.74504949705551,
+        "shortcut": 24.45487753326148,
+        "weight_matched_path": 24.662431057185554
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 0,
+      "dt": 0.00025,
+      "rival": "path",
+      "relative_K_contrast": 0.04021775187300063,
+      "relative_Vm_contrast": 0.20722239370673523,
+      "max_abs_K_difference_mM_by_node": [
+        0.7969410484225214,
+        0.30803933837032416,
+        0.050886620450934394,
+        0.10735056682825084,
+        0.24428094746715745,
+        0.2587103613127688,
+        0.24891597115688446
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.2466718755781443,
+        0.08341051130639698,
+        0.056221254958316536,
+        0.1682804097232662,
+        0.38866749413892876,
+        0.42653740494560566,
+        0.41770751291861075
+      ],
+      "peak_source_K_mM": {
+        "path": 24.748120995518814,
+        "shortcut": 24.45789979338732,
+        "weight_matched_path": 24.665488530911603
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 0,
+      "dt": 0.00025,
+      "rival": "weight_matched_path",
+      "relative_K_contrast": 0.030146270970088488,
+      "relative_Vm_contrast": 0.16102040894058015,
+      "max_abs_K_difference_mM_by_node": [
+        0.5747256431114671,
+        0.2530889024446972,
+        0.0630100458790217,
+        0.07143442911330133,
+        0.1978596696736794,
+        0.20753492950405095,
+        0.1959452209756667
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.17789007767126463,
+        0.07149437638268807,
+        0.07137561612300658,
+        0.11101942244998497,
+        0.31064862247723113,
+        0.33909641149351444,
+        0.32675437239718974
+      ],
+      "peak_source_K_mM": {
+        "path": 24.748120995518814,
+        "shortcut": 24.45789979338732,
+        "weight_matched_path": 24.665488530911603
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 2,
+      "dt": 0.0005,
+      "rival": "path",
+      "relative_K_contrast": 0.018637327952137062,
+      "relative_Vm_contrast": 0.08964360110435547,
+      "max_abs_K_difference_mM_by_node": [
+        0.08614805041496165,
+        0.14298602862192933,
+        0.2394919511016127,
+        0.051869890957967346,
+        0.05533031002065991,
+        0.1417431005409422,
+        0.2075947295854137
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.103831385504364,
+        0.04299555416710632,
+        0.06949974075928367,
+        0.01814423949845434,
+        0.07850878732678268,
+        0.2237066981003295,
+        0.32914866328010817
+      ],
+      "peak_source_K_mM": {
+        "path": 23.209799747545343,
+        "shortcut": 23.09869743236309,
+        "weight_matched_path": 23.152918263146212
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 2,
+      "dt": 0.0005,
+      "rival": "weight_matched_path",
+      "relative_K_contrast": 0.012841302068113833,
+      "relative_Vm_contrast": 0.06986841546148308,
+      "max_abs_K_difference_mM_by_node": [
+        0.09134024960145837,
+        0.11578203309578328,
+        0.12915354115080024,
+        0.031270009267780896,
+        0.034654948666954066,
+        0.10456429877438778,
+        0.16386164078888044
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.10925774798562315,
+        0.03836550805465322,
+        0.038386905266548865,
+        0.013480595129720996,
+        0.049717932342417726,
+        0.16332340984997984,
+        0.2561483080265674
+      ],
+      "peak_source_K_mM": {
+        "path": 23.209799747545343,
+        "shortcut": 23.09869743236309,
+        "weight_matched_path": 23.152918263146212
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 2,
+      "dt": 0.00025,
+      "rival": "path",
+      "relative_K_contrast": 0.018628897910279683,
+      "relative_Vm_contrast": 0.08964629339304861,
+      "max_abs_K_difference_mM_by_node": [
+        0.08611761838466458,
+        0.14297203640696976,
+        0.2395141049811489,
+        0.05187543544696327,
+        0.05532224741883551,
+        0.14173151496368686,
+        0.20758794546455128
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.10385418259224366,
+        0.04303051883880471,
+        0.06949206614744696,
+        0.01815549342649092,
+        0.07851766761071133,
+        0.22374453008434614,
+        0.32920383427936883
+      ],
+      "peak_source_K_mM": {
+        "path": 23.213530689001068,
+        "shortcut": 23.102390878967313,
+        "weight_matched_path": 23.15662477413438
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    },
+    {
+      "source": 2,
+      "dt": 0.00025,
+      "rival": "weight_matched_path",
+      "relative_K_contrast": 0.012834305126868634,
+      "relative_Vm_contrast": 0.06987197729172145,
+      "max_abs_K_difference_mM_by_node": [
+        0.09132220214186715,
+        0.11577442819589523,
+        0.1291578898257466,
+        0.031276033687571037,
+        0.03464449911122358,
+        0.10455503315915937,
+        0.16385975541020237
+      ],
+      "max_abs_Vm_difference_mV_by_node": [
+        0.10928154664566136,
+        0.03839878552119558,
+        0.03837817882747174,
+        0.013494487173232983,
+        0.04972370093805978,
+        0.1633518206230633,
+        0.25619270037499575
+      ],
+      "peak_source_K_mM": {
+        "path": 23.213530689001068,
+        "shortcut": 23.102390878967313,
+        "weight_matched_path": 23.15662477413438
+      },
+      "K_load_above_10mM": {
+        "path": true,
+        "shortcut": true,
+        "weight_matched_path": true
+      }
+    }
+  ]
+}
