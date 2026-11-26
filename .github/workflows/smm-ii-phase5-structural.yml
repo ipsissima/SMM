@@ -1,0 +1,21 @@
+name: SMM-II Phase V structural postprocessing
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase5-structural.yml']
+permissions:
+  contents: read
+jobs:
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy scipy
+      - run: python research/smm-ii/phase5/structural.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: structural-summary
+          path: research/smm-ii/phase5/structural_summary.json
