@@ -1,0 +1,1487 @@
+{
+  "run": 45881475451,
+  "rows": [
+    {
+      "job_id": 140121612155,
+      "spacing_um": 15,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.02733668237856927,
+      "whole_field_relative_Vm_contrast": 0.00021022987171541026,
+      "max_abs_K_difference_uM_by_node": [
+        2.182074267540468,
+        1.6639091230037373,
+        0.8130273349116202,
+        0.23352899232431668,
+        1.075361377635975,
+        1.5816122094793883,
+        1.7897171238083764
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        3.741997472459957,
+        2.7647612441086267,
+        1.3533099710372198,
+        0.38245936700320726,
+        1.779485359378441,
+        2.631211490054852,
+        2.9896503233857175
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1364429085692147,
+        0.04924563300207474,
+        0.02248322969460892,
+        0.011989616320266627,
+        0.00637558840214103,
+        0.003750381973270933,
+        0.0027748518653734067
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.390027911392848e-15,
+            5.864951965774958e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.813446330625264e-13,
+            9.600987217168509e-15,
+            1.0825025628258923e-12,
+            1.269674828155012e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.221589539161821e-15,
+            5.862373964910882e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.622780162766263e-13,
+            1.0780055822785695e-14,
+            1.0596872551788117e-12,
+            1.242627327354476e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612013,
+      "spacing_um": 20,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.033152453094597356,
+      "whole_field_relative_Vm_contrast": 0.00028579028718784795,
+      "max_abs_K_difference_uM_by_node": [
+        3.3264151022889266,
+        2.390951903635141,
+        1.033761636010766,
+        0.4720663253090507,
+        1.7508882209908982,
+        2.2123440780941195,
+        2.2775558454797284
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        5.741816562633062,
+        4.005015413540036,
+        1.7320575672528093,
+        0.7916707511128607,
+        2.914180731593774,
+        3.7050914482676944,
+        3.8254146374754328
+      ],
+      "path_peak_K_mM_by_node": [
+        0.15468294628573442,
+        0.04315041674578124,
+        0.0175822699812187,
+        0.007473952653134219,
+        0.0033927565192271025,
+        0.0018871774213637948,
+        0.0013795888682657242
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.766654196475033e-13,
+            5.390027911392848e-15,
+            5.861084964478843e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            7.319246158015948e-13,
+            8.927233728244403e-15,
+            8.983044010875974e-13,
+            1.0547109212690753e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.558466283623874e-15,
+            5.858506963614766e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            7.490456594460766e-13,
+            8.758795356013377e-15,
+            9.206041085618627e-13,
+            1.0790678329847415e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612215,
+      "spacing_um": 25,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03480166607848361,
+      "whole_field_relative_Vm_contrast": 0.00032330181878121217,
+      "max_abs_K_difference_uM_by_node": [
+        4.076858921629345,
+        2.7269276072416915,
+        1.0383828690359032,
+        0.7264972620464327,
+        2.2950492533619915,
+        2.475587631793452,
+        2.2841733667040565
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        7.058764269658013,
+        4.580774521315334,
+        1.7424008946562708,
+        1.2203517849229684,
+        3.8352667165781895,
+        4.155001891632537,
+        3.8392622665526233
+      ],
+      "path_peak_K_mM_by_node": [
+        0.16639200045620628,
+        0.0376292173934929,
+        0.013288993496138435,
+        0.004774269576439671,
+        0.0020077998296934574,
+        0.0010488702227995361,
+        0.0007144004727597242
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.877995360638962e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.924294810308017e-13,
+            7.748165122627218e-15,
+            8.513847853613978e-13,
+            9.973588907757918e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.390027911392848e-15,
+            5.864951965774958e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.918458090883762e-13,
+            7.916603494858244e-15,
+            8.495801847565439e-13,
+            9.975005007276272e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612248,
+      "spacing_um": 30,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.034226110124091214,
+      "whole_field_relative_Vm_contrast": 0.00033493424938270253,
+      "max_abs_K_difference_uM_by_node": [
+        4.48364973719606,
+        2.7656131300730635,
+        0.925345235991859,
+        0.9143493772332256,
+        2.684317263809799,
+        2.4795213841013464,
+        2.0299506584162685
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        7.774969364291451,
+        4.650253754647338,
+        1.552573702412019,
+        1.5394493359650596,
+        4.495597901993165,
+        4.164635698288066,
+        3.410060263320247
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1741586239258095,
+        0.033071518452933546,
+        0.010007051712333404,
+        0.003220341523706871,
+        0.0012704937446397224,
+        0.0006016362646774631,
+        0.00036745269611815345
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.766654196475033e-13,
+            5.221589539161821e-15,
+            5.862373964910882e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.402881208407891e-13,
+            7.748165122627218e-15,
+            7.865480636298637e-13,
+            9.21880786447594e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.7269046558549e-15,
+            5.862373964910882e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.603275241973984e-13,
+            7.579726750396192e-15,
+            8.096211713633519e-13,
+            9.49919556910977e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612212,
+      "spacing_um": 35,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03260660913432448,
+      "whole_field_relative_Vm_contrast": 0.0003313398020305951,
+      "max_abs_K_difference_uM_by_node": [
+        4.641334204213532,
+        2.623793553810927,
+        0.76895310131464,
+        1.011871489362992,
+        2.935107355996891,
+        2.3351771724411385,
+        1.6833811616683292
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        8.055419979598355,
+        4.412545628753151,
+        1.2892898823650967,
+        1.7044518546498466,
+        4.9219306513066385,
+        3.922743916888294,
+        2.825327047005999
+      ],
+      "path_peak_K_mM_by_node": [
+        0.17952167192691482,
+        0.029377927749020927,
+        0.0076505081383655416,
+        0.002261765589223863,
+        0.0008276298096427936,
+        0.0003489121986022248,
+        0.00018804545029471598
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.7269046558549e-15,
+            5.866240966206996e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.393153342700799e-13,
+            7.242850005934139e-15,
+            7.847434630250098e-13,
+            9.210311267365825e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.861084964478843e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.393153342700799e-13,
+            7.916603494858244e-15,
+            7.86290263543456e-13,
+            9.221640063512647e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612301,
+      "spacing_um": 40,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03056845477101823,
+      "whole_field_relative_Vm_contrast": 0.00031949643911800834,
+      "max_abs_K_difference_uM_by_node": [
+        4.632864193057529,
+        2.390276114867085,
+        0.6106153457721142,
+        1.0340382796303338,
+        3.0736141756193547,
+        2.120357981657328,
+        1.3374759157622762
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        8.045061592781622,
+        4.019037567729811,
+        1.0228451789942028,
+        1.7413995361437173,
+        5.158216857310549,
+        3.561431249821112,
+        2.2425899632025903
+      ],
+      "path_peak_K_mM_by_node": [
+        0.18336922506893272,
+        0.026223717362626076,
+        0.005953283861382275,
+        0.0016276782650535004,
+        0.0005459497099620236,
+        0.00020387702553525955,
+        0.00009640124965670793
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.558466283623874e-15,
+            5.862373964910882e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.221942906255981e-13,
+            6.905973261472085e-15,
+            7.648928563716177e-13,
+            8.972406548282575e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.558466283623874e-15,
+            5.857217963182728e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.229725198821655e-13,
+            7.411288378165165e-15,
+            7.656662566308407e-13,
+            8.98090314539269e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612444,
+      "spacing_um": 50,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.11900244408271873,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 33.51963358882962,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.37945898595563243,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "both",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.02632957204571172,
+      "whole_field_relative_Vm_contrast": 0.00028596662411427715,
+      "max_abs_K_difference_uM_by_node": [
+        4.344221058574238,
+        1.8533792934336546,
+        0.35103589918294986,
+        0.9396932626453136,
+        3.115651583430523,
+        1.647095520379338,
+        0.7822993493880048
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        7.548284822078699,
+        3.1137257409028507,
+        0.5866488877472875,
+        1.5808775679744258,
+        5.232745272863326,
+        2.7649551406767614,
+        1.3091594470324708
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1883999422917646,
+        0.020884087381460414,
+        0.0037652818568219004,
+        0.0008768489002504154,
+        0.00024260088384053802,
+        0.00007144115469426282,
+        0.000025999042807534067
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.766654196475033e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.883413179649183e-13,
+            7.074411633703112e-15,
+            7.233870424599794e-13,
+            8.479603915895843e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.221589539161821e-15,
+            5.857217963182728e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.062405908659674e-13,
+            6.905973261472085e-15,
+            7.446555495886139e-13,
+            8.738750127754383e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612158,
+      "spacing_um": 25,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 47.84268425985949,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300869,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.029670472533768068,
+      "whole_field_relative_Vm_contrast": 0.0002693587982894394,
+      "max_abs_K_difference_uM_by_node": [
+        3.2816544358214017,
+        2.2781223661394456,
+        0.9416245979698701,
+        0.4902391148555729,
+        1.7632702027650105,
+        2.1013063956067946,
+        2.0975694902181097
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        5.618999050710727,
+        3.7975753444356997,
+        1.575303479910417,
+        0.8076469834605859,
+        2.9046412132629484,
+        3.5024347320415927,
+        3.516821615619392
+      ],
+      "path_peak_K_mM_by_node": [
+        0.16514324353278242,
+        0.036866251390897276,
+        0.013398372430044603,
+        0.0054633807635044995,
+        0.0028766217114610804,
+        0.0019276479325958107,
+        0.001569847034370131
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.558466283623874e-15,
+            5.861084964478843e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.762812239570291e-13,
+            7.579726750396192e-15,
+            8.30374078319171e-13,
+            9.748429084339842e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.558466283623874e-15,
+            5.859795964046804e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.926240383449435e-13,
+            8.253480239320298e-15,
+            8.517714854910094e-13,
+            9.980669405349681e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121613174,
+      "spacing_um": 30,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 47.84268425985949,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300869,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03172117274456944,
+      "whole_field_relative_Vm_contrast": 0.0003040794910873738,
+      "max_abs_K_difference_uM_by_node": [
+        3.9071781484403267,
+        2.5626164963519216,
+        0.9689721730561374,
+        0.6791277993767331,
+        2.20019316401876,
+        2.3362630881620383,
+        2.165319350128314
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        6.722642373219401,
+        4.291003381425185,
+        1.6255842889592031,
+        1.1313514473130226,
+        3.646610662642047,
+        3.908963746880545,
+        3.637744230374551
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1727908527802624,
+        0.032413149578435,
+        0.010460171126145834,
+        0.004079119914898399,
+        0.002117618503594265,
+        0.0013341165470532879,
+        0.001019822281218552
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.221589539161821e-15,
+            5.858506963614766e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.577982791135545e-13,
+            7.579726750396192e-15,
+            8.088477711041289e-13,
+            9.479370175852834e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.558466283623874e-15,
+            5.862373964910882e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.570200498569871e-13,
+            7.916603494858244e-15,
+            8.075587706720904e-13,
+            9.468041379706013e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612035,
+      "spacing_um": 35,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 47.84268425985949,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300869,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03232769906782813,
+      "whole_field_relative_Vm_contrast": 0.0003222402109619607,
+      "max_abs_K_difference_uM_by_node": [
+        4.32517783730102,
+        2.670879429956141,
+        0.9207361386889268,
+        0.8316424545142809,
+        2.5453143271936263,
+        2.4115243337972103,
+        2.0645514351400607
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        7.463021017741767,
+        4.482208108228747,
+        1.5459193006819305,
+        1.3931434956191424,
+        4.234676588694697,
+        4.042516913699501,
+        3.4697032007215967
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1780848123029939,
+        0.028908856863304244,
+        0.008402689333285362,
+        0.003199974528552918,
+        0.0015928889256162648,
+        0.00092014861321843,
+        0.0006505642872993711
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.221589539161821e-15,
+            5.86366296534292e-13,
+            6.868082664010494e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.385371050135126e-13,
+            7.411288378165165e-15,
+            7.843567628953982e-13,
+            9.20747906832912e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.241398637670166e-13,
+            7.411288378165165e-15,
+            7.672130571492869e-13,
+            8.983735344429396e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121612203,
+      "spacing_um": 40,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 47.84268425985949,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300869,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.03201216839706434,
+      "whole_field_relative_Vm_contrast": 0.0003285340936890936,
+      "max_abs_K_difference_uM_by_node": [
+        4.5713328359826555,
+        2.650148570927602,
+        0.8283876590557959,
+        0.9399214111431853,
+        2.8023029759705054,
+        2.373998087902507,
+        1.8664265998782348
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        7.90201772579735,
+        4.452237836090944,
+        1.3907803047175094,
+        1.5786800120451971,
+        4.673935908058979,
+        3.983360812128467,
+        3.135834116463343
+      ],
+      "path_peak_K_mM_by_node": [
+        0.18190054864794636,
+        0.026078860969769302,
+        0.006928626827518158,
+        0.0025714345498450975,
+        0.0012039028489700954,
+        0.0006321037726442214,
+        0.0004102082595478507
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.857217963182728e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.225834052538818e-13,
+            7.748165122627218e-15,
+            7.661818568036561e-13,
+            8.978070946355986e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.86366296534292e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.219997333114563e-13,
+            7.579726750396192e-15,
+            7.641194561123946e-13,
+            8.958245553099048e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121611958,
+      "spacing_um": 45,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.33531439276481,
+        "frozen_two_conductor_length_um": 47.84268425985948,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300868,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.031143013730765782,
+      "whole_field_relative_Vm_contrast": 0.0003268639227862208,
+      "max_abs_K_difference_uM_by_node": [
+        4.6851915347447814,
+        2.543616868193155,
+        0.7158947934211568,
+        1.0046554446123679,
+        2.981653846106269,
+        2.2646033486219963,
+        1.6249913664014848
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        8.108732795335527,
+        4.275311786443581,
+        1.2013237933388154,
+        1.6894178604331955,
+        4.981639910155877,
+        3.801478514404266,
+        2.728687196508872
+      ],
+      "path_peak_K_mM_by_node": [
+        0.18475045466477802,
+        0.023584864864533817,
+        0.005824848997697085,
+        0.002087254601939925,
+        0.0009096569239477326,
+        0.0004334008570303638,
+        0.00025703289414291675
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.390027911392848e-15,
+            5.862373964910882e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.221942906255981e-13,
+            7.579726750396192e-15,
+            7.638616560259869e-13,
+            8.963909951172459e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.225834052538818e-13,
+            7.242850005934139e-15,
+            7.645061562420061e-13,
+            8.968158249727516e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140121611727,
+      "spacing_um": 50,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0.25,
+      "frozen_electrical_mode": {
+        "glial_axial_sigma_native_S_cm": 0.00032409687363635874,
+        "ecs_axial_sigma_S_cm": 0.0013213001590431878,
+        "glial_membrane_slope_S_cm3": 3.335314392764809,
+        "frozen_two_conductor_length_um": 47.84268425985949,
+        "native_reference_length_um": 88.33532695085219,
+        "relative_length": 0.5416030699300869,
+        "limitation": "Frozen rest two-conductor approximation; omits full multilayer dynamics. In migration_only mode only axial electrical flux changes; in both mode chemical and electrical axial glial fluxes scale together. Both are synthetic graph interventions."
+      },
+      "mode": "migration_only",
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.029963453424282856,
+      "whole_field_relative_Vm_contrast": 0.0003200972831265977,
+      "max_abs_K_difference_uM_by_node": [
+        4.70164281937846,
+        2.3852461842057693,
+        0.5992561847842914,
+        1.0312688486115995,
+        3.0958420143627485,
+        2.114162587469437,
+        1.3758801192316206
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        8.14424495334265,
+        4.009682066751452,
+        1.0048506993314277,
+        1.7349651021163481,
+        5.178701565014876,
+        3.5495115084387407,
+        2.3088380194309366
+      ],
+      "path_peak_K_mM_by_node": [
+        0.1869443731996614,
+        0.02140348028842398,
+        0.004962116776633163,
+        0.001700446444062198,
+        0.0006864958507093455,
+        0.00029719274749817615,
+        0.00016068293718340954
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.861084964478843e-13,
+            6.875163161602257e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.058514762376838e-13,
+            7.579726750396192e-15,
+            7.446555495886139e-13,
+            8.73733402823603e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.766654196475033e-13,
+            5.221589539161821e-15,
+            5.857217963182728e-13,
+            6.868082664010494e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.062405908659674e-13,
+            7.242850005934139e-15,
+            7.45428949847837e-13,
+            8.731669630162619e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    }
+  ]
+}
