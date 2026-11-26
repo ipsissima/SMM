@@ -1,0 +1,942 @@
+{
+  "run": 45869133888,
+  "commit": "2ca3ae20a2efe4eec80dc80d5a90c1b9a98c2e30",
+  "rows": [
+    {
+      "job_id": 140079645016,
+      "spacing_um": 5,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.003979401473487839,
+      "whole_field_relative_Vm_contrast": 0.000019953891187321683,
+      "max_abs_K_difference_uM_by_node": [
+        0.19322584402781118,
+        0.1473260371271934,
+        0.0782448010201442,
+        0.012759884390867171,
+        0.09803078589465386,
+        0.14323076577804628,
+        0.16513598515288663
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.3310168516605927,
+        0.2435171854813234,
+        0.12933301090356508,
+        0.02156151380461324,
+        0.16239900929804207,
+        0.2376788496434301,
+        0.27437439112532047
+      ],
+      "path_peak_K_mM_by_node": [
+        0.06576750642079077,
+        0.04662263780429843,
+        0.03328749786683538,
+        0.024577539821738714,
+        0.01976891819615556,
+        0.017884501116707252,
+        0.017240351406088372
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.558466283623874e-15,
+            5.867529966639036e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            3.9890086118501056e-11,
+            4.330550550059691e-13,
+            4.901759282938545e-11,
+            5.748047071959809e-11
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.558466283623874e-15,
+            5.862373964910882e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            4.0053514262380203e-11,
+            4.338972468671242e-13,
+            4.921596999587617e-11,
+            5.771511840978913e-11
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079644934,
+      "spacing_um": 15,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.002266759390432384,
+      "whole_field_relative_Vm_contrast": 0.000017540250867162643,
+      "max_abs_K_difference_uM_by_node": [
+        0.3226254892556568,
+        0.1828819753053601,
+        0.05740897326811378,
+        0.06960422718105264,
+        0.21844530863202039,
+        0.16291906965371084,
+        0.10774675894209551
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.5358969279569692,
+        0.2940502542401191,
+        0.0912118295275377,
+        0.11292622438929811,
+        0.35277419094370543,
+        0.26160552997112063,
+        0.17161185859038142
+      ],
+      "path_peak_K_mM_by_node": [
+        0.14071771861028326,
+        0.050607361068870205,
+        0.022313275917294373,
+        0.010375434527807315,
+        0.004080636314593544,
+        0.0014010757418203568,
+        0.0005140725146932645
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.22977438819975e-13,
+            1.0948494195016721e-14,
+            1.011865339150185e-12,
+            1.1864081764758745e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            8.424331702341588e-13,
+            9.937863961630562e-15,
+            1.0350673469268772e-12,
+            1.2133140673245755e-12
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079644843,
+      "spacing_um": 37,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.0005125820455237103,
+      "whole_field_relative_Vm_contrast": 0.000005172171216335378,
+      "max_abs_K_difference_uM_by_node": [
+        0.11124427758124611,
+        0.019242325210999667,
+        0.0014193330057921116,
+        0.010941638222572436,
+        0.09877928372103995,
+        0.018232148809360638,
+        0.002399100845540403
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.1838913428144906,
+        0.030564066264560097,
+        0.0022256074174720197,
+        0.01744372160317198,
+        0.15831750323513916,
+        0.028977738736557512,
+        0.003805315486715699
+      ],
+      "path_peak_K_mM_by_node": [
+        0.18528007387354295,
+        0.025517353999792824,
+        0.0037817804028787982,
+        0.00039131172316908547,
+        0.000030637540125333373,
+        0.0000017211149101470369,
+        3.412430320537396e-7
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.86366296534292e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.046841323528328e-13,
+            7.242850005934139e-15,
+            7.431087490701678e-13,
+            8.717508634979092e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.390027911392848e-15,
+            5.862373964910882e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.052678042952583e-13,
+            7.916603494858244e-15,
+            7.442688494590024e-13,
+            8.723173033052503e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079645169,
+      "spacing_um": 60,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.00020854493628852405,
+      "whole_field_relative_Vm_contrast": 0.0000022436553001760552,
+      "max_abs_K_difference_uM_by_node": [
+        0.04873777312885963,
+        0.0035051474842617836,
+        0.00010293647312309417,
+        0.0020617863847327556,
+        0.04600865251269681,
+        0.0034017616719062005,
+        0.0001697086133845005
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.0805010991200561,
+        0.005559958324852232,
+        0.0001624629675234246,
+        0.003292199139082186,
+        0.07360621704322057,
+        0.005404897478911153,
+        0.00027249120648775715
+      ],
+      "path_peak_K_mM_by_node": [
+        0.19409756171155523,
+        0.012621515647413428,
+        0.0007435272954587901,
+        0.00002969480968406657,
+        8.296921216732756e-7,
+        4.555640309433784e-8,
+        6.8015206799998396e-9
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.861084964478843e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.88730432593202e-13,
+            7.242850005934139e-15,
+            7.236448425463872e-13,
+            8.482436114932547e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.858506963614766e-13,
+            6.875163161602257e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.885358752790601e-13,
+            6.905973261472085e-15,
+            7.23773742589591e-13,
+            8.481020015414195e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079644960,
+      "spacing_um": 100,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.00007735254484189514,
+      "whole_field_relative_Vm_contrast": 8.576716739915495e-7,
+      "max_abs_K_difference_uM_by_node": [
+        0.018652863866375213,
+        0.0005028351157676525,
+        0.000005493536736622673,
+        0.00029766526887797795,
+        0.01808970938155241,
+        0.0004906702297802212,
+        0.0000087746601096228
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.030802184028289048,
+        0.0007966300756834244,
+        0.000009956750091077993,
+        0.0004774664859041877,
+        0.028921256557623565,
+        0.0007799429653232437,
+        0.000015050062529553543
+      ],
+      "path_peak_K_mM_by_node": [
+        0.19787436708462725,
+        0.005076953064768741,
+        0.00010922175674243917,
+        0.000001560555178414802,
+        1.3848477919964353e-8,
+        6.901408333703785e-10,
+        4.064304448547773e-11
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.221589539161821e-15,
+            5.862373964910882e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.056569189235419e-13,
+            7.579726750396192e-15,
+            7.43753249286187e-13,
+            8.720340834015798e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.221589539161821e-15,
+            5.864951965774958e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.883413179649183e-13,
+            6.905973261472085e-15,
+            7.231292423735718e-13,
+            8.485268313969253e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079645268,
+      "spacing_um": 150,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 0,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.00003471552912202814,
+      "whole_field_relative_Vm_contrast": 3.8885359821560156e-7,
+      "max_abs_K_difference_uM_by_node": [
+        0.008456309197768519,
+        0.00010368497616042305,
+        5.236731048796628e-7,
+        0.00006084395520744579,
+        0.008273386034041152,
+        0.00010030084718337662,
+        7.952731806426527e-7
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        0.013963101267222555,
+        0.00016423277315880114,
+        0.000002165904788853368,
+        0.00009623271068903705,
+        0.013225657141902047,
+        0.00015933740371565364,
+        0.000002307189106431906
+      ],
+      "path_peak_K_mM_by_node": [
+        0.19909151960088467,
+        0.002338126906352045,
+        0.00002244062593925733,
+        1.4166253015091002e-7,
+        6.162279575505636e-10,
+        1.589439690974359e-11,
+        2.0516921495072893e-12
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.867529966639036e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.88730432593202e-13,
+            6.905973261472085e-15,
+            7.228714422871641e-13,
+            8.489516612524311e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.558466283623874e-15,
+            5.867529966639036e-13,
+            6.872330962565551e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.879522033366346e-13,
+            7.242850005934139e-15,
+            7.228714422871641e-13,
+            8.4838522144509e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079644900,
+      "spacing_um": 60,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 1,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.023648082369620457,
+      "whole_field_relative_Vm_contrast": 0.0002491925458036844,
+      "max_abs_K_difference_uM_by_node": [
+        3.563239266928697,
+        1.9892409072572725,
+        0.5985113032762612,
+        0.7145456795076832,
+        2.172664359685328,
+        1.7830708415167429,
+        1.428439310855456
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        6.091970562749793,
+        3.327576302780244,
+        1.0038056949923657,
+        1.191044095762095,
+        3.570684625941567,
+        2.978115940138082,
+        2.3980172576187897
+      ],
+      "path_peak_K_mM_by_node": [
+        0.18738857216170013,
+        0.01789509183746718,
+        0.005480352914164488,
+        0.002809751936791116,
+        0.0016099647180483068,
+        0.0009965116220493897,
+        0.000735620481634669
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.766654196475033e-13,
+            5.390027911392848e-15,
+            5.857217963182728e-13,
+            6.870914863047199e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.070188201225348e-13,
+            6.905973261472085e-15,
+            7.451711497614293e-13,
+            8.733085729680972e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.77054534275787e-13,
+            5.221589539161821e-15,
+            5.861084964478843e-13,
+            6.873747062083904e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.889249899073438e-13,
+            7.748165122627218e-15,
+            7.241604427192026e-13,
+            8.488100513005958e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079645041,
+      "spacing_um": 100,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 1,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.020121486974058134,
+      "whole_field_relative_Vm_contrast": 0.0002247239941155655,
+      "max_abs_K_difference_uM_by_node": [
+        3.5473075789962394,
+        1.3872042904665705,
+        0.13067838980251878,
+        0.8247067185718215,
+        2.485945139000023,
+        1.1896525777514988,
+        0.5128637494586918
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        6.12152950195366,
+        2.3285740636111996,
+        0.21662723220572389,
+        1.3859979724202276,
+        4.138244776072497,
+        1.993624378712866,
+        0.8575350926207648
+      ],
+      "path_peak_K_mM_by_node": [
+        0.19319512424990837,
+        0.012110311035354648,
+        0.0033464906425666463,
+        0.0012614123491272444,
+        0.00048750725903934367,
+        0.00019547950032405836,
+        0.00009769893706534916
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.221589539161821e-15,
+            5.86366296534292e-13,
+            6.879411460157315e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.048786896669746e-13,
+            7.242850005934139e-15,
+            7.429798490269639e-13,
+            8.711844236905682e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.768599769616451e-13,
+            5.221589539161821e-15,
+            5.859795964046804e-13,
+            6.87657926112061e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            6.04295017724549e-13,
+            7.242850005934139e-15,
+            7.425931488973525e-13,
+            8.709012037868976e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    },
+    {
+      "job_id": 140079645263,
+      "spacing_um": 150,
+      "dt_s": 0.0005,
+      "glial_axial_migration_multiplier": 1,
+      "protocol": {
+        "duration_s": 0.8,
+        "pulse_s": [
+          0.08,
+          0.4
+        ],
+        "j_stim": -0.0001,
+        "nodes": 7,
+        "chords": [
+          [
+            0,
+            4,
+            0.8
+          ],
+          [
+            1,
+            5,
+            0.5
+          ],
+          [
+            2,
+            6,
+            0.6
+          ]
+        ],
+        "scale_changes_tissue_not_sensors": true
+      },
+      "whole_field_relative_K_contrast": 0.014799526800494364,
+      "whole_field_relative_Vm_contrast": 0.00017005670705434636,
+      "max_abs_K_difference_uM_by_node": [
+        2.7821827352441098,
+        0.6202784022186769,
+        0.15108565096788595,
+        0.5713927510950789,
+        2.176114307830268,
+        0.517584933976245,
+        0.06354086295656813
+      ],
+      "max_abs_Vm_difference_uV_by_node": [
+        4.81647940405594,
+        1.0392735453308433,
+        0.2560656021159957,
+        0.9596814653036745,
+        3.6373803497582458,
+        0.8661922844339642,
+        0.11002108982438585
+      ],
+      "path_peak_K_mM_by_node": [
+        0.19606009784615575,
+        0.008425841938960232,
+        0.0017229272802490314,
+        0.00042992028109978264,
+        0.00010777072156953338,
+        0.00002724788272745471,
+        0.000008309069596368346
+      ],
+      "solver_audits": {
+        "path/baseline": {
+          "relative_ion_inventory_drift": [
+            4.774436489040706e-13,
+            5.221589539161821e-15,
+            5.870107967503112e-13,
+            6.877995360638962e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "path/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.869794167659255e-13,
+            6.905973261472085e-15,
+            7.22098042027941e-13,
+            8.471107318785726e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/baseline": {
+          "relative_ion_inventory_drift": [
+            4.772490915899288e-13,
+            5.390027911392848e-15,
+            5.864951965774958e-13,
+            6.88224365919402e-13
+          ],
+          "max_newton_iterations": 2,
+          "unconverged_timesteps": 0
+        },
+        "shortcut/stimulated": {
+          "relative_ion_inventory_drift": [
+            5.885358752790601e-13,
+            7.579726750396192e-15,
+            7.227425422439602e-13,
+            8.473939517822432e-13
+          ],
+          "max_newton_iterations": 3,
+          "unconverged_timesteps": 0
+        }
+      }
+    }
+  ]
+}
