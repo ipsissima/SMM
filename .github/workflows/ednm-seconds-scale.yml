@@ -2,7 +2,7 @@ name: EDNM seconds-scale charge-conserving glial transport test
 on:
   push:
     branches: [research/ednm-full-solver-validation-20261126]
-    paths: [.github/workflows/ednm-seconds-scale.yml]
+    paths: [.github/workflows/ednm-seconds-scale.yml, validation/ednm_seconds_benchmark.py]
   workflow_dispatch:
 permissions:
   contents: read
