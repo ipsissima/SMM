@@ -32,7 +32,7 @@
         0.16
       ],
       "species": "mouse",
-      "fig": "2F-H"
+      "fig": "5B-D"
     }
   },
   "assumptions": "Uniform edge resistance extrapolated from Ma doublets to Kiyoshi CA1 nearest neighbors, isotropic edge orientations, uncorrelated affine potential gradients; effective-medium approximation, not measured conductivity. Native EDNM rest slopes fixed. Endpoint variation is a sensitivity box, not confidence interval.",

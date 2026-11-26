@@ -1,0 +1,28 @@
+{
+  "run": 45874526639,
+  "archive_run": 45880525262,
+  "n_cases": 32,
+  "n_matched_pairs": 16,
+  "n_unique_pairs": 14,
+  "low_dose_max_K_difference_mM_range": [
+    0.009045687408335112,
+    0.06202709435256493
+  ],
+  "high_dose_max_K_difference_mM_range": [
+    0.10522413196601921,
+    0.8255005127418826
+  ],
+  "high_dose_max_Vm_difference_mV_range": [
+    0.14623979796839137,
+    0.6083813081431941
+  ],
+  "relative_K_high_over_low_range": [
+    0.7852898708032005,
+    1.4677264294084786
+  ],
+  "n_gain_positive": 9,
+  "n_gain_positive_excluding_timestep_repeats": 8,
+  "any_spikes": false,
+  "raw_archive": "https://github.com/ipsissima/SMM/releases/tag/untagged-499c601e145e7c249bbe",
+  "note": "All rows extracted from archived contrast.json records; aggregate ranges across finite designed configurations, not certified continuous bounds. Relative contrast may decrease with dose."
+}
