@@ -1,0 +1,948 @@
+{
+  "run": 45885207597,
+  "commit": "b605b58aea96e0541e2f6fb55e7e8d32b4dfc6b2",
+  "rows": [
+    {
+      "job_id": 140134093348,
+      "dt_s": 0.000025,
+      "migration": 0,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 7.509548538564559e-13,
+      "max_mass_error": 4.568634427104597e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 108,
+            "slope": 3.306565537890767,
+            "r_squared": 0.999831924024456
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.9535422602036125,
+            "r_squared": 0.9997661747597519
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.6678280111166925,
+            "r_squared": 0.9999019505472085
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.5587438182333853,
+            "r_squared": 0.9999974315293312
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 108,
+            "slope": 3.3065655284223356,
+            "r_squared": 0.9998319291482587
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.953549319726311,
+            "r_squared": 0.9997661912420356
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.6678604327875015,
+            "r_squared": 0.9999019963326862
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.5588738908802995,
+            "r_squared": 0.9999974569296959
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 117,
+            "slope": 3.3293301251616825,
+            "r_squared": 0.999803348670131
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.9608801925832586,
+            "r_squared": 0.9997717691601402
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.6807740616067597,
+            "r_squared": 0.999910170130593
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.582621743074862,
+            "r_squared": 0.9999990649117478
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    },
+    {
+      "job_id": 140134093349,
+      "dt_s": 0.000025,
+      "migration": 1,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 5.7426952082551e-11,
+      "max_mass_error": 4.568506978147945e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 61,
+            "slope": 3.044797802407709,
+            "r_squared": 0.9996411817125294
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 121,
+            "slope": 2.6227279182653844,
+            "r_squared": 0.999652296513508
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.3329164914146636,
+            "r_squared": 0.9998642023405726
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.170546253466485,
+            "r_squared": 0.9999479582919436
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.079345718161449,
+            "r_squared": 0.9999814513411076
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 61,
+            "slope": 3.088043895049935,
+            "r_squared": 0.9997568610548432
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 121,
+            "slope": 2.7242714095841682,
+            "r_squared": 0.9997145796770506
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.4199590246289735,
+            "r_squared": 0.999828035563193
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.2234574573419805,
+            "r_squared": 0.9999243299388725
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.112872350575412,
+            "r_squared": 0.9999757363872251
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 61,
+            "slope": 3.1465094290178532,
+            "r_squared": 0.999782418674683
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 121,
+            "slope": 2.7561431081725467,
+            "r_squared": 0.9996505925464171
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 201,
+            "slope": 2.4281998287453366,
+            "r_squared": 0.999819809638573
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 401,
+            "slope": 2.233473211253369,
+            "r_squared": 0.9999324836055468
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 801,
+            "slope": 2.134233552914926,
+            "r_squared": 0.9999840667896637
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    },
+    {
+      "job_id": 140134093394,
+      "dt_s": 0.00005,
+      "migration": 0,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 6.328271240363392e-13,
+      "max_mass_error": 4.5716365580835046e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 55,
+            "slope": 3.267523698246987,
+            "r_squared": 0.9998588002196361
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.9377926265907366,
+            "r_squared": 0.9997829848567499
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.6626047168397733,
+            "r_squared": 0.9999066496708039
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.5568426883840565,
+            "r_squared": 0.999997687252384
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 55,
+            "slope": 3.267524780381076,
+            "r_squared": 0.9998588029365686
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.937799855122478,
+            "r_squared": 0.9997830006433441
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.66263725793041,
+            "r_squared": 0.9999066942792492
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.556972955386629,
+            "r_squared": 0.9999977111860164
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 59,
+            "slope": 3.2852720761496945,
+            "r_squared": 0.9998418658906731
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.94507866384669,
+            "r_squared": 0.9997891124439778
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.6755619990629143,
+            "r_squared": 0.9999146779008217
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.580734717879491,
+            "r_squared": 0.9999991979154096
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    },
+    {
+      "job_id": 140134093193,
+      "dt_s": 0.00005,
+      "migration": 1,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 5.664757551926414e-11,
+      "max_mass_error": 4.571679041069055e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 30,
+            "slope": 2.9253195058841355,
+            "r_squared": 0.9998535581306823
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 61,
+            "slope": 2.594467647622827,
+            "r_squared": 0.9997041775493195
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.3238006615534497,
+            "r_squared": 0.9998734001030662
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.1669524636870467,
+            "r_squared": 0.9999502437895926
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.077784177066856,
+            "r_squared": 0.9999820473258418
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 30,
+            "slope": 2.970309828628924,
+            "r_squared": 0.9999204069002544
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 61,
+            "slope": 2.694009589061063,
+            "r_squared": 0.999759916966293
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.4098634329737414,
+            "r_squared": 0.9998391542593597
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.2196302583423755,
+            "r_squared": 0.9999272686464444
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.1112644892650496,
+            "r_squared": 0.9999764406708801
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 30,
+            "slope": 3.025228344562472,
+            "r_squared": 0.9999297789221578
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 61,
+            "slope": 2.724486583956431,
+            "r_squared": 0.9997038913181575
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 101,
+            "slope": 2.418056272793889,
+            "r_squared": 0.9998314708139348
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 201,
+            "slope": 2.2296687327870646,
+            "r_squared": 0.9999352678132487
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 401,
+            "slope": 2.132635881268084,
+            "r_squared": 0.9999846410978845
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    },
+    {
+      "job_id": 140134093361,
+      "dt_s": 0.0001,
+      "migration": 0,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 4.889422200449189e-13,
+      "max_mass_error": 4.5693566378589564e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 28,
+            "slope": 3.1882159239501147,
+            "r_squared": 0.999909882784905
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.906996243503383,
+            "r_squared": 0.9998146514433073
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.6521929538031705,
+            "r_squared": 0.9999156716214305
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.5530623309132614,
+            "r_squared": 0.9999981613800912
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 0,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 28,
+            "slope": 3.1882171771894696,
+            "r_squared": 0.9999098854965475
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.90700394161763,
+            "r_squared": 0.9998146660961033
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.6522257881622804,
+            "r_squared": 0.9999157144557033
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.55319315933095,
+            "r_squared": 0.9999981824105524
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 1,
+            "slope": null,
+            "r_squared": null
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 31,
+            "slope": 3.2074316496678406,
+            "r_squared": 0.9998993321220608
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.9143151109814514,
+            "r_squared": 0.9998204465347977
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.6651896300367772,
+            "r_squared": 0.9999232663735356
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.576960815366196,
+            "r_squared": 0.9999994232031516
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    },
+    {
+      "job_id": 140134093378,
+      "dt_s": 0.0001,
+      "migration": 1,
+      "mu": 0.17988168474408803,
+      "spacing_um": 30,
+      "rate": 3,
+      "onset_s": 0.08,
+      "elapsed_convention": "first injected inventory step at onset label; physical elapsed=t-onset+dt",
+      "numerical_floor_mM": 1e-10,
+      "baseline_graph_difference_mM": 5.609113173932201e-11,
+      "max_mass_error": 4.5692716718878556e-11,
+      "metrics": {
+        "chord_endpoint_4": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 11,
+            "slope": 2.7318172413850297,
+            "r_squared": 0.9999781201512055
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 31,
+            "slope": 2.541000014975654,
+            "r_squared": 0.9997907812011617
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.3059352683011167,
+            "r_squared": 0.999890606522896
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.1598258573983706,
+            "r_squared": 0.9999546451528013
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.074673147248546,
+            "r_squared": 0.999983208483863
+          }
+        ],
+        "distal_4_6_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 11,
+            "slope": 2.789492643227514,
+            "r_squared": 0.9999928972468551
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 31,
+            "slope": 2.6367701962967263,
+            "r_squared": 0.9998348959628265
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.3901023475627117,
+            "r_squared": 0.9998599717306814
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.212042887091721,
+            "r_squared": 0.9999329502608503
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.1080613459424393,
+            "r_squared": 0.9999778162456919
+          }
+        ],
+        "whole_field_norm": [
+          {
+            "window_s": [
+              0.0005,
+              0.002
+            ],
+            "n": 11,
+            "slope": 2.839154962402853,
+            "r_squared": 0.9999918540680044
+          },
+          {
+            "window_s": [
+              0.002,
+              0.005
+            ],
+            "n": 31,
+            "slope": 2.664745790801414,
+            "r_squared": 0.9997923834706005
+          },
+          {
+            "window_s": [
+              0.005,
+              0.01
+            ],
+            "n": 51,
+            "slope": 2.398203433958945,
+            "r_squared": 0.9998532968251418
+          },
+          {
+            "window_s": [
+              0.01,
+              0.02
+            ],
+            "n": 101,
+            "slope": 2.2221258526828453,
+            "r_squared": 0.999940640621404
+          },
+          {
+            "window_s": [
+              0.02,
+              0.04
+            ],
+            "n": 201,
+            "slope": 2.1294528978077416,
+            "r_squared": 0.9999857565660896
+          }
+        ]
+      },
+      "scope": "Conditional early-time slopes; no exact order imposed; convergence across dt and fit windows required"
+    }
+  ]
+}
