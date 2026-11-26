@@ -114,6 +114,69 @@ Table S1. Original-resolution high-load reproduction against the independently p
 
 The full trajectories are finite and satisfy positive volume fractions and nonnegative concentrations (glial calcium is zero in the source). Inventory checks were repeated directly on the archived arrays. The trajectories and reconstructed values are documented in the repository validation and provenance records. These are computational source-model reproduction results. They show that the source physiology can yield strong dependence of neuronal state on glial transport under a deliberately different regime. They do not demonstrate that the synthetic shortcut edges determine that transition, that 2000-fold mobility is physiological, or that an externally applied local KCl load and connexin manipulation reproduce it. The CA1 large-load experiment [15] requires its own calibrated source, counterion/charge-balancing representation, geometry and off-target controls; it remains an experimental validation target.
 
+## Supplement F. Matched small-load numerical benchmark
+
+At 5 µm spacing, the seven-site full source simulation transfers potassium from the neuronal soma of site 0 into extracellular space from 0.08 to 0.40 s using $j_{\mathrm{stim}}=-10^{-4}$ mM cm/s in the original source convention; synaptic connections are disabled. The 1 ms path run yields a stimulated-site peak extracellular elevation of 64.49 µM and a nearest-neighbor peak of 45.68 µM. Adding the three specified glial chords changes the path-distal site 6 extracellular signal by at most 0.02053 µM; the corresponding neuronal membrane contrast is about 0.021 µV. This is a very small graph-specific effect. Inventory drifts are below $3\times10^{-13}$ relative, and the graph contrast was previously checked at 2 and 1 ms, with relative RMS discrepancies of approximately 0.51–0.52% for K and 0.27% for voltage. The focal membrane voltage excursion is about 32 mV despite small extracellular loads, so the full protocol is not a globally small-signal neuronal experiment.
+
+The original passive and full model results appeared to differ by roughly two orders of magnitude when contrasts with different observation windows and normalizations were compared. Using the same 1 ms time labels, weighted graph, pulse duration, mass source and whole-field statistic removes much of that disparity. The contrast ratio between the source-reconciled passive and the complete model is now approximately 8.96. The difference remains scientifically significant. A passive model using the EDNM concentration-diffusion coefficients alone, $D_e=\phi_e D_K/\lambda_e^2=1.53125\times10^{-10}$ m$^2$/s and $D_g=\phi_a D_K/\lambda_g^2=7.65625\times10^{-11}$ m$^2$/s (after unit conversion), predicts an even larger contrast of 0.05219. Those coefficients omit electrical migration and are not effective fitted EDNM coefficients.
+
+Table S2. Matched relative extracellular graph contrast at 5 µm. All models use the same source-site pulse convention and full 0.8 s sampling labels; the passive model matches delivered potassium mass, not the electrical action of transmembrane injection.
+
+| Model | Relative contrast $\mathcal R$ | Peak path K (µM) | Peak graph difference, site 6 (µM) |
+|:--|--:|--:|--:|
+| Full EDNM | 0.0004380 | 64.49 | 0.02053 |
+| Source-reconciled passive | 0.0039262 | 23.17 | 0.08865 |
+| Passive, EDNM diffusion only | 0.0521922 | 45.80 | 1.31430 |
+
+![Comparison of source-reconciled passive and full EDNM trajectories under matched small-load conditions. Different total response magnitudes and distal graph contrasts demonstrate that matching mass, geometry and protocol is insufficient to make the passive model a quantitatively equivalent physiological surrogate.](matched_waveforms.png){width=100%}
+
+Even after fitting a single amplitude multiplier (2.057) to the passive path response, the relative whole-field RMS mismatch is 0.420. Because the graph statistic is invariant to common amplitude scaling, this mismatch is not simply a different source amplitude. The underlying glial flux also cannot be identified with a single chemical diffusion coefficient: on the three added somatic glial edges, the L2 norms of stimulus-induced electrical migration terms in the actual trajectories are about 1.97, 2.13 and 2.19 times those of their chemical-diffusion terms. The combined changes are 2.77–3.00 times the diffusion-only norms. Their correlations are positive but far from perfect. This is descriptive flux accounting, not a causal decomposition of the full passive/full-model discrepancy. In particular, migration is not a uniformly suppressive mechanism; membrane transport, electric fields, ionic feedback, and local dynamics all matter. An effective scalar mobility that would locate full EDNM on the passive sensitivity surface has not been established. The circle in the scale figure therefore marks the specified passive reference, not a pretend full-model fit.
+
+This benchmark provides a negative quantitative constraint on strong-effect interpretations at the tested small-load protocol. The following extended sweep tests the larger-scale prediction directly in the full physiology.
+
+## Supplement G. Mechanism of the neighboring voltage inversion
+
+The independent two-unit EDNM challenge uses 5 µm spacing, sealed boundaries, no synapses, a 0.5 s neuronal-to-extracellular K transfer of magnitude $10^{-4}$ mM cm/s (0.05–0.55 s), and a 2 s horizon. The original 2 ms run gives a neighboring extracellular K peak of 0.13611 mM and a peak absolute neuronal voltage response of 0.14986 mV. Turning off glial interunit transport changes those neighboring signals by at most 0.04113 µM and 0.06834 µV, respectively; relative RMS convergence of the intervention contrast from 2 to 1 ms is approximately 0.93% and 0.69%. Thus the overall ionic response should not be conflated with the specific contribution of interunit glial transport.
+
+At $t=0.4$ s in the native 2 ms run, neighboring extracellular K increases by 0.101726 mM and the K Nernst potential by 0.753641 mV, but the neighboring membrane potential decreases by 0.111094 mV. The changes in neuronal intracellular and extracellular potential are respectively $-0.08030$ and $+0.03080$ mV. This decomposition is a kinematic identity, not an explanation of the sign. There are two mechanistically distinguishable contributions in the original stimulus and response.
+
+First, the imposed flux transfers positively charged ions between compartments: it is globally potassium- and charge-conserving, not locally electrically neutral. Its outward transmembrane current has magnitude $F_{\!A}|j_{\mathrm{stim}}|=9.648$ µA/cm$^2$ in the source units. In the 1 ms trajectories, the first stimulated timestep at the neighboring soma produces an extracellular potential change of $+34.86$ µV while extracellular K changes by only $+0.0220$ µM. At the onset of stimulus removal the extracellular potential falls by approximately 34.86 µV within one step, whereas K remains continuous to that temporal resolution. The rapid response is consistent with the quasistatic electrical constraints responding to imposed membrane current. It should not be interpreted as exceptionally fast chemical transport or as a topology-specific glial signal.
+
+Second, the longer voltage response reflects a balance of electrogenic membrane processes. With outward current positive, multiplying the ionic balance by $F_{\!A}z_i$ and summing gives at the unstimulated neighboring soma the discrete identity
+
+$$C_m\frac{V_m^j-V_m^{j-1}}{\Delta t}=-I_{\mathrm{mem}}^{j}-I_{\mathrm{ax}}^{j}.$$
+
+The axial term includes soma–dendrite ionic flux at the source volume and area conventions. The neuronal Na/K pump exchanges three Na for two K and generates net outward current $F_{\!A}j_{\mathrm{pump}}$. KCC2, NKCC1 and the source two-Na/Ca exchanger are directly electroneutral by stoichiometry, although they affect the concentrations that determine other currents. Currents are reconstructed with the exact source semi-implicit convention (previous-step pump and gating factors, current-step voltage and reversal potentials). Integrating paired stimulated-minus-baseline currents over the time steps reconstructs the voltage change without fitting.
+
+Table S3. Current decomposition of the neighboring soma at 0.4 s (native 2 ms trajectory). Outward-positive current differences are in µA/cm$^2$; integrated voltage contributions use the actual discrete capacitive balance. Totals may differ in the last displayed digit owing to rounding.
+
+| Current component | Instantaneous difference | Integrated contribution (mV) |
+|:--|--:|--:|
+| Sodium leak | −0.002640 | +0.169354 |
+| Gated sodium | +0.001805 | −0.116674 |
+| Potassium leak | −0.021186 | +1.301747 |
+| Delayed-rectifier potassium | −0.006943 | +0.436137 |
+| Chloride leak | −0.009736 | +0.633226 |
+| Na/K ATPase | +0.049874 | −3.019603 |
+| Axial ionic current, summed | −0.010354 | +0.484720 |
+| **Net** | **+0.000819** | **−0.111094** |
+
+The maximum difference between reconstructed and actual paired voltage across the complete trajectory is $5.25\times10^{-9}$ mV at 2 ms and $8.75\times10^{-9}$ mV at 1 ms. At 1 ms the integrated pump contribution is −3.01203 mV, with the potassium channels contributing +1.72835 mV and the net voltage −0.111302 mV. The pump provides the dominant negative contribution; the residual is the difference of larger opposing processes. This is exact current accounting along the trajectory, not a counterfactual on its own.
+
+To test causality within the model, we independently modify only the extracellular K argument of the neuronal Na/K pump at the unstimulated soma, clamping it at the initial reference value 3.543992 mM while retaining sodium dependence and the pump's 3:2 stoichiometry. All other equations are unchanged; each intervention uses its own matched unstimulated baseline. The clamped neighboring response at 0.4 s becomes +0.045166 mV at 1 ms and +0.045317 mV at 2 ms, while extracellular K elevations are 0.102358 and 0.102571 mM, close to the native values of 0.101515 and 0.101726 mM. The sign reversal persists under timestep refinement. Both intervention runs finish with no flagged unconverged steps and relative ionic inventory drifts of order $10^{-12}$ or below.
+
+![Neighboring membrane-voltage response with native versus clamped pump K sensitivity (A), and integrated native current components at 0.4 s (B). Shading marks the stimulus interval. The clamped-pump intervention tests the causal role of K-sensitive pump activation in this model while preserving ionic stoichiometry.](pump.png){width=100%}
+
+The inversion is thus explained within the parent physiology by the competition between K-dependent reversal-potential shifts and electrogenic pump activation, together with other membrane and axial currents. It persists in the native glial-off control, so it is not itself evidence of distinct astroglial topology. Nor does the pump intervention prove that the identical current competition governs every biological preparation. It demonstrates why a K-only neuronal response map cannot be assumed to have the sign of the Nernst shift under all conditions.
+
+## Supplement H. Native-conductivity nonlinear shared-support stress tests
+
+A single-source nonlinear fit using six independently adjustable nonnegative glial path weights, fixed extracellular and local physiology and bounds 0–50 is a stronger comparison than equal-total-weight normalization. At 37 µm, high load and 1 ms timestep, we fit source 0 using K and voltage at seven sites and 15 time samples, with illustrative independent scale factors 1 µM and 10 µV. Two initializations converge to the same fitted weights (approximately 1.918, 4.708, 50, 50, 50, 1.262). Three weights reach the upper bound. The training K RMS discrepancy falls from 0.177 mM for the total-weight-matched path to 0.0109 mM, while the withheld source 2 K RMS discrepancy is 0.1021 mM (0.0667 mM for the total-weight-matched path). The fitted rival therefore reproduces the training source far better but generalizes worse in K; its held-out voltage RMS is 0.0492 mV versus 0.0796 mV for the total-weight-matched path. The comparison uses the independent graph as reference. These are synthetic model-discrimination and generalization results, not independent biological validation or a certified lower bound over all shared-support models. Broader fits allowing ECS weights, multiple training sources, wider conductance bounds and a third withheld source are required to assess sensitivity to the restriction.
+
+Allowing all six extracellular path weights to vary in addition to the six glial weights further reduces single-source training K RMS discrepancy to 0.00286 mM and voltage RMS discrepancy to 0.00512 mV. The better of two obtained fits has held-out source-2 K RMS discrepancy 0.2865 mM and voltage RMS discrepancy 0.1902 mV. Both twelve-parameter optimizations exhausted their prescribed iteration budget; the values describe obtained candidates, not converged minima. The additional flexibility illustrates a severe risk of fitting only one stimulation site.
+
+A broader joint-source glial-only optimization fits sources 0 and 2 together and withholds source 4, with bounds 0–500. It yields training potassium RMS discrepancies 0.0422 and 0.0482 mM, and held-out potassium RMS discrepancy 0.0662 mM (maximum 0.187 mM). The held-out neuronal voltage RMS discrepancy is 0.0539 mV (maximum 0.156 mV). The fitted path weights span 2.59–217.46; the large weights are not empirically constrained. These comparisons show finite predictive separation for the fitted alternatives, not a certificate of separation from the entire shared-support cone. The joint fit allowing independent ECS weights is a further stress test.
+
 # References {.unnumbered}
 
 1. Ballús, A. (2024). *The Brain-Mesh Model: A Unified Framework for Neural Synchrony, Plasticity, and Coherence*. bioRxiv, version 1, posted 25 November 2024. <https://doi.org/10.1101/2024.11.22.624908>; arXiv:2412.12106v1. <https://arxiv.org/abs/2412.12106v1>.
@@ -210,3 +273,4 @@ The full trajectories are finite and satisfy positive volume fractions and nonne
 
 47. Anders, S., Minge, D., Griemsmann, S., Herde, M. K., Steinhäuser, C., & Henneberger, C. (2014). Spatial properties of astrocyte gap junction coupling in the rat hippocampus. *Philosophical Transactions of the Royal Society B*, 369, 20130600. <https://doi.org/10.1098/rstb.2013.0600>.
 
+48. Rouach, N., Segal, M., Koulakoff, A., Giaume, C., & Avignone, E. (2003). Carbenoxolone blockade of neuronal network activity in culture is not mediated by an action on gap junctions. *Journal of Physiology*, 553, 729–745. <https://pubmed.ncbi.nlm.nih.gov/14514879/>.
