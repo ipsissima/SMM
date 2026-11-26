@@ -38,7 +38,7 @@ def total_ion_mass(d):
 def solver_log_checks(p):
     txt=p.read_text()
     rows=[(int(i),float(e)) for i,e in re.findall(
-        r"N_iter:\\s*(\\d+),\\s*rsd:\\s*([0-9.eE+-]+)",txt)]
+        r"N_iter:\s*(\d+),\s*rsd:\s*([0-9.eE+-]+)",txt)]
     if not rows:
         raise RuntimeError("Solver Newton iteration log is empty")
     nonconverged=[(i,e) for i,e in rows if i>=10 and e>1e-12]
