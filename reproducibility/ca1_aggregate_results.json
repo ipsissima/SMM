@@ -1,0 +1,1734 @@
+{
+  "run": 45872886590,
+  "commit": "e131bc9cb9bf7e5032b925305e19946b31fae19e",
+  "jobs": [
+    {
+      "job_id": 140092538502,
+      "mu": 1,
+      "dt_s": 0.002,
+      "CA1_FIT_EVAL": [
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 0.8912411287965849,
+          "target": 2.3,
+          "mass_error": 4.576229440854694e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 1.7854251688376008,
+          "target": 2.3,
+          "mass_error": 9.181271786576138e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5864725911034006,
+          "target": 2.3,
+          "mass_error": 1.854784491546045e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 2.3,
+          "mass_error": 1.1675834935452394e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5864725911034006,
+          "target": 2.3,
+          "mass_error": 1.854784491546045e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.651945654963342,
+          "predicted_peak_at_10um_mM": 2.292721524979102,
+          "target": 2.3,
+          "mass_error": 1.1805625176641145e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.73266594025105,
+          "predicted_peak_at_10um_mM": 2.2999765822216753,
+          "target": 2.3,
+          "mass_error": 1.184487945528988e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.74029460358075,
+          "predicted_peak_at_10um_mM": 2.300662253005963,
+          "target": 2.3,
+          "mass_error": 1.1849373211094786e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 1.6803672679632502,
+          "target": 8.28,
+          "mass_error": 1.0358635807461466e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 3.391027632190098,
+          "target": 8.28,
+          "mass_error": 2.0964692522769512e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 6.879327129058925,
+          "target": 8.28,
+          "mass_error": 4.2913121058948266e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.931009331202135,
+          "target": 8.28,
+          "mass_error": 5.902548249743813e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 8.28,
+          "mass_error": 1.1675834935452394e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.931009331202135,
+          "target": 8.28,
+          "mass_error": 5.902548249743813e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.5486006973222,
+          "predicted_peak_at_10um_mM": 8.203691697884498,
+          "target": 8.28,
+          "mass_error": 4.588653353962375e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.98096910092776,
+          "predicted_peak_at_10um_mM": 8.279572957586947,
+          "target": 8.28,
+          "mass_error": 4.589472803550328e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.988709005773266,
+          "predicted_peak_at_10um_mM": 8.280931400035717,
+          "target": 8.28,
+          "mass_error": 4.5902658192806056e-11,
+          "spikes": 0
+        }
+      ],
+      "CA1_AGGREGATE_RESULT": [
+        {
+          "protocol": "weak",
+          "duration_s": 0.2,
+          "rate_mM_tissue_s": 25.73266594025105,
+          "fit_target_mM": 2.3,
+          "coupled": {
+            "peak_mM": 2.2999765822216753,
+            "source_peak_mM": 5.213527301190627,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.449573899437619,
+              2.2999178972750727,
+              1.598289861826069,
+              1.1917172375477887,
+              1.0009859113375712,
+              0.9311864020539458,
+              0.9060438469885985
+            ],
+            "spatial_decay_um": 15.964195846379306,
+            "decay": {
+              "single_tau_s": 2.143688276428054,
+              "fast_tau_s": 0.2965039257623185,
+              "slow_tau_s": 3.984469170926877,
+              "fast_fraction": 0.6661674516516926
+            },
+            "mass_error": 5.525363534566158e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 2.3722312126376117,
+            "source_peak_mM": 5.363254356237665,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.56524218993945,
+              2.372168559753339,
+              1.6293787789458265,
+              1.1866683871089305,
+              0.9745029061006829,
+              0.8984045729348036,
+              0.8713361092400489
+            ],
+            "spatial_decay_um": 15.212483259113492,
+            "decay": {
+              "single_tau_s": 2.0340597006403094,
+              "fast_tau_s": 0.30469323939090026,
+              "slow_tau_s": 4.012673182048937,
+              "fast_fraction": 0.6810568168937207
+            },
+            "mass_error": 5.5286677667756476e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 3.1415376562722086
+        },
+        {
+          "protocol": "strong",
+          "duration_s": 0.5,
+          "rate_mM_tissue_s": 47.98096910092776,
+          "fit_target_mM": 8.28,
+          "coupled": {
+            "peak_mM": 8.279572957586947,
+            "source_peak_mM": 14.190222877067262,
+            "peak_time_s": 0.6120000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              10.798333563822219,
+              8.278753497732236,
+              6.491170220355792,
+              5.31835935250052,
+              4.6860741412063724,
+              4.423219373881118,
+              4.325933365590469
+            ],
+            "spatial_decay_um": 23.67288760608161,
+            "decay": {
+              "single_tau_s": 3.3606560939734953,
+              "fast_tau_s": 0.32184096445765753,
+              "slow_tau_s": 4.630569344793042,
+              "fast_fraction": 0.5357276084704224
+            },
+            "mass_error": 2.489805054494591e-10,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 8.626312054224151,
+            "source_peak_mM": 14.797998513757753,
+            "peak_time_s": 0.6120000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              11.313459244481098,
+              8.625412888581618,
+              6.655776618884775,
+              5.3258632460023145,
+              4.601265599525169,
+              4.3092197911890375,
+              4.202994354821109
+            ],
+            "spatial_decay_um": 21.915777013511352,
+            "decay": {
+              "single_tau_s": 3.260522472190034,
+              "fast_tau_s": 0.32489595588233505,
+              "slow_tau_s": 4.637544172387904,
+              "fast_fraction": 0.5568372199711917
+            },
+            "mass_error": 2.4818603585700943e-10,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 4.1878862401891315
+        }
+      ],
+      "CA1_RAMP_RESULT": [
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.1,
+          "rate": 47.98096910092776,
+          "duration": 0.1,
+          "coupled_peak_mM": 2.3891273679112097,
+          "uncoupled_peak_mM": 2.4525055518864054,
+          "uncoupling_peak_change_percent": 2.6527754370252232,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.7354884918546332e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.2,
+          "rate": 47.98096910092776,
+          "duration": 0.2,
+          "coupled_peak_mM": 4.309395351581757,
+          "uncoupled_peak_mM": 4.462202322939326,
+          "uncoupling_peak_change_percent": 3.545902821412805,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 3.444093750452859e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.3,
+          "rate": 47.98096910092776,
+          "duration": 0.3,
+          "coupled_peak_mM": 5.847561509950681,
+          "uncoupled_peak_mM": 6.084982160563248,
+          "uncoupling_peak_change_percent": 4.060165082634071,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 5.1160881161699404e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.4,
+          "rate": 47.98096910092776,
+          "duration": 0.4,
+          "coupled_peak_mM": 7.142033546456689,
+          "uncoupled_peak_mM": 7.44403328126425,
+          "uncoupling_peak_change_percent": 4.228483846276387,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 6.599133267219569e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.5,
+          "rate": 47.98096910092776,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.279572957586947,
+          "uncoupled_peak_mM": 8.626312054224151,
+          "uncoupling_peak_change_percent": 4.1878862401891315,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 7.721091922416176e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.6,
+          "rate": 47.98096910092776,
+          "duration": 0.6,
+          "coupled_peak_mM": 9.311418135462075,
+          "uncoupled_peak_mM": 9.685819698929441,
+          "uncoupling_peak_change_percent": 4.020886593433892,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.671521275153761e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 190,
+          "rate": 10.12931569908475,
+          "duration": 0.5,
+          "coupled_peak_mM": 1.7022934315727278,
+          "uncoupled_peak_mM": 1.7594151282414714,
+          "uncoupling_peak_change_percent": 3.355572876526325,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.696789324217091e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 380,
+          "rate": 20.2586313981695,
+          "duration": 0.5,
+          "coupled_peak_mM": 3.435639528206206,
+          "uncoupled_peak_mM": 3.567685766100185,
+          "uncoupling_peak_change_percent": 3.8434252723516193,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 3.429898768880892e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 570,
+          "rate": 30.387947097254248,
+          "duration": 0.5,
+          "coupled_peak_mM": 5.194800745441736,
+          "uncoupled_peak_mM": 5.407214965698728,
+          "uncoupling_peak_change_percent": 4.088977242166192,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 5.1981520273248236e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 760,
+          "rate": 40.517262796339,
+          "duration": 0.5,
+          "coupled_peak_mM": 6.970103543296238,
+          "uncoupled_peak_mM": 7.261313051948079,
+          "uncoupling_peak_change_percent": 4.177979664762987,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 6.992389767864182e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 950,
+          "rate": 50.646578495423746,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.747585324746293,
+          "uncoupled_peak_mM": 9.113811232681815,
+          "uncoupling_peak_change_percent": 4.186594292478585,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 7.987465906216389e-11
+        }
+      ]
+    },
+    {
+      "job_id": 140092538831,
+      "mu": 1,
+      "dt_s": 0.001,
+      "CA1_FIT_EVAL": [
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 0.8935761553498023,
+          "target": 2.3,
+          "mass_error": 1.3090046321113935e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 1.7900200482282878,
+          "target": 2.3,
+          "mass_error": 2.4633711968186748e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5954273352757418,
+          "target": 2.3,
+          "mass_error": 4.80289977042568e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 2.3,
+          "mass_error": 4.3325092730827423e-13,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5954273352757418,
+          "target": 2.3,
+          "mass_error": 4.80289977042568e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.588057112811683,
+          "predicted_peak_at_10um_mM": 2.292811362887955,
+          "target": 2.3,
+          "mass_error": 3.112586741339188e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.66759108881967,
+          "predicted_peak_at_10um_mM": 2.2999770672914637,
+          "target": 2.3,
+          "mass_error": 3.120781237218722e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.675219426775115,
+          "predicted_peak_at_10um_mM": 2.3006643650344336,
+          "target": 2.3,
+          "mass_error": 3.1235567922746935e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 1.6819536776711987,
+          "target": 8.28,
+          "mass_error": 2.758505217770284e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 3.3941707515967656,
+          "target": 8.28,
+          "mass_error": 5.409953311953106e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 6.885626770099127,
+          "target": 8.28,
+          "mass_error": 1.0905023645622664e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.943616390171673,
+          "target": 8.28,
+          "mass_error": 2.2269467737652758e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 8.28,
+          "mass_error": 4.3325092730827423e-13,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.943616390171673,
+          "target": 8.28,
+          "mass_error": 2.2269467737652758e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.505609840708225,
+          "predicted_peak_at_10um_mM": 8.203606888767116,
+          "target": 8.28,
+          "mass_error": 1.299647046494119e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.93807385688731,
+          "predicted_peak_at_10um_mM": 8.279570754049931,
+          "target": 8.28,
+          "mass_error": 1.311753753309689e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.94581354725659,
+          "predicted_peak_at_10um_mM": 8.280930336426469,
+          "target": 8.28,
+          "mass_error": 1.3120973934594759e-11,
+          "spikes": 0
+        }
+      ],
+      "CA1_AGGREGATE_RESULT": [
+        {
+          "protocol": "weak",
+          "duration_s": 0.2,
+          "rate_mM_tissue_s": 25.66759108881967,
+          "fit_target_mM": 2.3,
+          "coupled": {
+            "peak_mM": 2.2999770672914637,
+            "source_peak_mM": 5.2038995402951365,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.4477956191432537,
+              2.299917809976505,
+              1.5975716371941884,
+              1.1901620762165386,
+              0.9992169267905948,
+              0.9296108322667478,
+              0.9045519843418564
+            ],
+            "spatial_decay_um": 15.944788667543357,
+            "decay": {
+              "single_tau_s": 2.140756409800895,
+              "fast_tau_s": 0.2952065908563629,
+              "slow_tau_s": 3.9813261256434536,
+              "fast_fraction": 0.667104922780684
+            },
+            "mass_error": 1.3943066908315767e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 2.3722021703873657,
+            "source_peak_mM": 5.353545451201741,
+            "peak_time_s": 0.32400000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.563957615802653,
+              2.372139606258961,
+              1.6286769339241198,
+              1.1851031051078904,
+              0.9727116050391083,
+              0.8968068068441528,
+              0.8698181152418352
+            ],
+            "spatial_decay_um": 15.19276088549696,
+            "decay": {
+              "single_tau_s": 2.0407511686406727,
+              "fast_tau_s": 0.3034367863615986,
+              "slow_tau_s": 4.009604984781534,
+              "fast_fraction": 0.6806370071728354
+            },
+            "mass_error": 1.3947428494832292e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 3.140253184391839
+        },
+        {
+          "protocol": "strong",
+          "duration_s": 0.5,
+          "rate_mM_tissue_s": 47.93807385688731,
+          "fit_target_mM": 8.28,
+          "coupled": {
+            "peak_mM": 8.279570754049931,
+            "source_peak_mM": 14.179536212244054,
+            "peak_time_s": 0.6140000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              10.795282968537961,
+              8.278751832927792,
+              6.491616612979612,
+              5.317581168130507,
+              4.68451281848591,
+              4.421934718294594,
+              4.324835565757897
+            ],
+            "spatial_decay_um": 23.670113743726688,
+            "decay": {
+              "single_tau_s": 3.3653461210719375,
+              "fast_tau_s": 0.321045825636422,
+              "slow_tau_s": 4.628960513978995,
+              "fast_fraction": 0.5351476292037446
+            },
+            "mass_error": 6.383432988584089e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 8.62720459838389,
+            "source_peak_mM": 14.787810397273416,
+            "peak_time_s": 0.6140000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              11.311353001284676,
+              8.626305680820138,
+              6.656521446404147,
+              5.325229396159943,
+              4.599620397237873,
+              4.307843048135458,
+              4.201789069331673
+            ],
+            "spatial_decay_um": 21.9103472913705,
+            "decay": {
+              "single_tau_s": 3.265366632720599,
+              "fast_tau_s": 0.32395182460531613,
+              "slow_tau_s": 4.635648458701688,
+              "fast_fraction": 0.5563417196529339
+            },
+            "mass_error": 6.382150946486808e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 4.198694046595541
+        }
+      ],
+      "CA1_RAMP_RESULT": [
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.1,
+          "rate": 47.93807385688731,
+          "duration": 0.1,
+          "coupled_peak_mM": 2.3963491729250137,
+          "uncoupled_peak_mM": 2.4596995615427955,
+          "uncoupling_peak_change_percent": 2.643620943622982,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 4.4969278678269445e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.2,
+          "rate": 47.93807385688731,
+          "duration": 0.2,
+          "coupled_peak_mM": 4.316146497348195,
+          "uncoupled_peak_mM": 4.469650925438044,
+          "uncoupling_peak_change_percent": 3.5565157064098907,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.767581913948041e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.3,
+          "rate": 47.93807385688731,
+          "duration": 0.3,
+          "coupled_peak_mM": 5.852144207442944,
+          "uncoupled_peak_mM": 6.090100264758341,
+          "uncoupling_peak_change_percent": 4.066134546253264,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.2940827194533387e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.4,
+          "rate": 47.93807385688731,
+          "duration": 0.4,
+          "coupled_peak_mM": 7.1440286007714935,
+          "uncoupled_peak_mM": 7.4470391418347015,
+          "uncoupling_peak_change_percent": 4.241451959339648,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.6998556517074975e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.5,
+          "rate": 47.93807385688731,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.279570754049931,
+          "uncoupled_peak_mM": 8.62720459838389,
+          "uncoupling_peak_change_percent": 4.198694046595541,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.0929138984195405e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.6,
+          "rate": 47.93807385688731,
+          "duration": 0.6,
+          "coupled_peak_mM": 9.309802253839871,
+          "uncoupled_peak_mM": 9.684556329771866,
+          "uncoupling_peak_change_percent": 4.0253709554080475,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.4729402532973564e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 190,
+          "rate": 10.120260036453987,
+          "duration": 0.5,
+          "coupled_peak_mM": 1.702363041453674,
+          "uncoupled_peak_mM": 1.7595193101609277,
+          "uncoupling_peak_change_percent": 3.357466493072314,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 4.407184921017207e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 380,
+          "rate": 20.240520072907973,
+          "duration": 0.5,
+          "coupled_peak_mM": 3.43569530717128,
+          "uncoupled_peak_mM": 3.567959771482217,
+          "uncoupling_peak_change_percent": 3.8497146133670057,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.72660943455037e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 570,
+          "rate": 30.36078010936196,
+          "duration": 0.5,
+          "coupled_peak_mM": 5.194797339697436,
+          "uncoupled_peak_mM": 5.40774401439596,
+          "uncoupling_peak_change_percent": 4.099229686425598,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.3141328005005214e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 760,
+          "rate": 40.481040145815946,
+          "duration": 0.5,
+          "coupled_peak_mM": 6.970122000776462,
+          "uncoupled_peak_mM": 7.262085945144503,
+          "uncoupling_peak_change_percent": 4.188792453496748,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.762543545185934e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 950,
+          "rate": 50.60130018226993,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.74756856915226,
+          "uncoupled_peak_mM": 9.114737938300031,
+          "uncoupling_peak_change_percent": 4.197387722601786,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.2108485544406425e-11
+        }
+      ]
+    },
+    {
+      "job_id": 140092538836,
+      "mu": 0.17988168474408803,
+      "dt_s": 0.001,
+      "CA1_FIT_EVAL": [
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 0.8954690072475469,
+          "target": 2.3,
+          "mass_error": 1.306625584920561e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 1.7945290554356568,
+          "target": 2.3,
+          "mass_error": 2.459406118167287e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.6064911664029133,
+          "target": 2.3,
+          "mass_error": 4.8027676011373e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 2.3,
+          "mass_error": 4.335152658850334e-13,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.6064911664029133,
+          "target": 2.3,
+          "mass_error": 4.8027676011373e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.509559223947882,
+          "predicted_peak_at_10um_mM": 2.291912989073637,
+          "target": 2.3,
+          "mass_error": 3.098973304636091e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.598701395105643,
+          "predicted_peak_at_10um_mM": 2.299972067322611,
+          "target": 2.3,
+          "mass_error": 3.115758804260298e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.606329388612618,
+          "predicted_peak_at_10um_mM": 2.3006617084071905,
+          "target": 2.3,
+          "mass_error": 3.116683989278955e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 1.6864364133799197,
+          "target": 8.28,
+          "mass_error": 2.7591660642121823e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 3.405446723114394,
+          "target": 8.28,
+          "mass_error": 5.411539343413661e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 6.913870978912776,
+          "target": 8.28,
+          "mass_error": 1.0901851582701553e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 14.009347099202811,
+          "target": 8.28,
+          "mass_error": 2.2267881706192203e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 8.28,
+          "mass_error": 4.335152658850334e-13,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 14.009347099202811,
+          "target": 8.28,
+          "mass_error": 2.2267881706192203e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.28271741069883,
+          "predicted_peak_at_10um_mM": 8.199245994769116,
+          "target": 8.28,
+          "mass_error": 1.2939637670937969e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.73745159894567,
+          "predicted_peak_at_10um_mM": 8.279532590898707,
+          "target": 8.28,
+          "mass_error": 1.3068370557819684e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.745190286203666,
+          "predicted_peak_at_10um_mM": 8.280898995869116,
+          "target": 8.28,
+          "mass_error": 1.3066916695647508e-11,
+          "spikes": 0
+        }
+      ],
+      "CA1_AGGREGATE_RESULT": [
+        {
+          "protocol": "weak",
+          "duration_s": 0.2,
+          "rate_mM_tissue_s": 25.598701395105643,
+          "fit_target_mM": 2.3,
+          "coupled": {
+            "peak_mM": 2.299972067322611,
+            "source_peak_mM": 5.200501854495858,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.4474934133222384,
+              2.29991294116177,
+              1.5961435894409652,
+              1.1866343279459055,
+              0.9944928477128852,
+              0.9246562939905105,
+              0.8995432536476045
+            ],
+            "spatial_decay_um": 15.882647050675523,
+            "decay": {
+              "single_tau_s": 2.132669714727603,
+              "fast_tau_s": 0.2954936692614889,
+              "slow_tau_s": 3.982636073700773,
+              "fast_fraction": 0.6682874006797691
+            },
+            "mass_error": 1.3914782680602536e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 2.3657579102927206,
+            "source_peak_mM": 5.339068507689992,
+            "peak_time_s": 0.32400000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.5542980588633784,
+              2.3656956837659866,
+              1.6242407443536115,
+              1.1818627065021143,
+              0.9700364927613963,
+              0.894332027444098,
+              0.8674147639851475
+            ],
+            "spatial_decay_um": 15.1923100232713,
+            "decay": {
+              "single_tau_s": 2.0403110171598504,
+              "fast_tau_s": 0.30343924142808537,
+              "slow_tau_s": 4.009380706571042,
+              "fast_fraction": 0.6806694471277043
+            },
+            "mass_error": 1.39195407749842e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 2.8602887793629073
+        },
+        {
+          "protocol": "strong",
+          "duration_s": 0.5,
+          "rate_mM_tissue_s": 47.73745159894567,
+          "fit_target_mM": 8.28,
+          "coupled": {
+            "peak_mM": 8.279532590898707,
+            "source_peak_mM": 14.17818695635658,
+            "peak_time_s": 0.6140000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              10.800546739816799,
+              8.278713901018502,
+              6.480684783598894,
+              5.295350207970814,
+              4.6556152132430055,
+              4.3913010020047984,
+              4.293744007287979
+            ],
+            "spatial_decay_um": 23.475237541196226,
+            "decay": {
+              "single_tau_s": 3.351665577026608,
+              "fast_tau_s": 0.32114088545171693,
+              "slow_tau_s": 4.625095215375997,
+              "fast_fraction": 0.5374105267833449
+            },
+            "mass_error": 6.358862717874325e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 8.590479026265413,
+            "source_peak_mM": 14.725369898587218,
+            "peak_time_s": 0.6140000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              11.26347796220356,
+              8.589587506805499,
+              6.628027505593224,
+              5.302275282398413,
+              4.579578023989237,
+              4.288911035166318,
+              4.18325687654542
+            ],
+            "spatial_decay_um": 21.90741870827576,
+            "decay": {
+              "single_tau_s": 3.260930865770126,
+              "fast_tau_s": 0.3241075620593321,
+              "slow_tau_s": 4.631789537486198,
+              "fast_fraction": 0.5564969872906215
+            },
+            "mass_error": 6.355254496301562e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 3.7556037367195705
+        }
+      ],
+      "CA1_RAMP_RESULT": [
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.1,
+          "rate": 47.73745159894567,
+          "duration": 0.1,
+          "coupled_peak_mM": 2.3919749291898063,
+          "uncoupled_peak_mM": 2.4493036147455975,
+          "uncoupling_peak_change_percent": 2.3967092989226835,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 4.482653584681949e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.2,
+          "rate": 47.73745159894567,
+          "duration": 0.2,
+          "coupled_peak_mM": 4.311839787734131,
+          "uncoupled_peak_mM": 4.450659788909038,
+          "uncoupling_peak_change_percent": 3.2195074030766824,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.721851340168706e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.3,
+          "rate": 47.73745159894567,
+          "duration": 0.3,
+          "coupled_peak_mM": 5.849520027372895,
+          "uncoupled_peak_mM": 6.064176395513364,
+          "uncoupling_peak_change_percent": 3.6696407078868454,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.2880161491167157e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.4,
+          "rate": 47.73745159894567,
+          "duration": 0.4,
+          "coupled_peak_mM": 7.143039007835478,
+          "uncoupled_peak_mM": 7.415343274597777,
+          "uncoupling_peak_change_percent": 3.812162672828734,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.692401303842889e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.5,
+          "rate": 47.73745159894567,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.279532590898707,
+          "uncoupled_peak_mM": 8.590479026265413,
+          "uncoupling_peak_change_percent": 3.7556037367195705,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.0840189053115944e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.6,
+          "rate": 47.73745159894567,
+          "duration": 0.6,
+          "coupled_peak_mM": 9.30981135409664,
+          "uncoupled_peak_mM": 9.643367909103516,
+          "uncoupling_peak_change_percent": 3.5828497734285314,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.462591398017235e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 190,
+          "rate": 10.077906448666308,
+          "duration": 0.5,
+          "coupled_peak_mM": 1.699702946441819,
+          "uncoupled_peak_mM": 1.7520421109038833,
+          "uncoupling_peak_change_percent": 3.079312451133398,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 4.389077728509204e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 380,
+          "rate": 20.155812897332616,
+          "duration": 0.5,
+          "coupled_peak_mM": 3.432463789003306,
+          "uncoupled_peak_mM": 3.55267094121855,
+          "uncoupling_peak_change_percent": 3.5020661427035416,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.697135683241724e-12
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 570,
+          "rate": 30.233719345998924,
+          "duration": 0.5,
+          "coupled_peak_mM": 5.192211490631973,
+          "uncoupled_peak_mM": 5.3845121548231365,
+          "uncoupling_peak_change_percent": 3.7036369673716374,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.3089385474672037e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 760,
+          "rate": 40.31162579466523,
+          "duration": 0.5,
+          "coupled_peak_mM": 6.9688858112029735,
+          "uncoupled_peak_mM": 7.23105159707025,
+          "uncoupling_peak_change_percent": 3.7619469305383957,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.755234583538543e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 950,
+          "rate": 50.38953224333154,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.747973908894872,
+          "uncoupled_peak_mM": 9.075972601872209,
+          "uncoupling_peak_change_percent": 3.74942468271231,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 2.2017949581866412e-11
+        }
+      ]
+    },
+    {
+      "job_id": 140092539041,
+      "mu": 0.17988168474408803,
+      "dt_s": 0.002,
+      "CA1_FIT_EVAL": [
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 0.8931366368013518,
+          "target": 2.3,
+          "mass_error": 4.576361610143074e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 1.7899383930415502,
+          "target": 2.3,
+          "mass_error": 9.178496231520167e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5975372390245304,
+          "target": 2.3,
+          "mass_error": 1.855128131695832e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 2.3,
+          "mass_error": 1.1667904778149619e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 3.5975372390245304,
+          "target": 2.3,
+          "mass_error": 1.855128131695832e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.57305008604879,
+          "predicted_peak_at_10um_mM": 2.2918291553869543,
+          "target": 2.3,
+          "mass_error": 1.1771789838815971e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.66333088270181,
+          "predicted_peak_at_10um_mM": 2.2999715933248024,
+          "target": 2.3,
+          "mass_error": 1.1814348349674198e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.2,
+          "q_mM_tissue_s": 25.670959199356226,
+          "predicted_peak_at_10um_mM": 2.3006596095715524,
+          "target": 2.3,
+          "mass_error": 1.1817784751172067e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 10,
+          "predicted_peak_at_10um_mM": 1.6848413940906366,
+          "target": 8.28,
+          "mass_error": 1.0362072208959335e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 20,
+          "predicted_peak_at_10um_mM": 3.402278458756189,
+          "target": 8.28,
+          "mass_error": 2.0966278554230068e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 40,
+          "predicted_peak_at_10um_mM": 6.907469344700319,
+          "target": 8.28,
+          "mass_error": 4.291616095258099e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.996469836580902,
+          "target": 8.28,
+          "mass_error": 5.882987195063635e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 0,
+          "predicted_peak_at_10um_mM": 0,
+          "target": 8.28,
+          "mass_error": 1.1667904778149619e-12,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 80,
+          "predicted_peak_at_10um_mM": 13.996469836580902,
+          "target": 8.28,
+          "mass_error": 5.882987195063635e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.326219234850505,
+          "predicted_peak_at_10um_mM": 8.19936623705292,
+          "target": 8.28,
+          "mass_error": 4.5665546489453086e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.78068927278745,
+          "predicted_peak_at_10um_mM": 8.27953539116341,
+          "target": 8.28,
+          "mass_error": 4.5830493761350806e-11,
+          "spikes": 0
+        },
+        {
+          "duration_s": 0.5,
+          "q_mM_tissue_s": 47.788428176233815,
+          "predicted_peak_at_10um_mM": 8.280900629075092,
+          "target": 8.28,
+          "mass_error": 4.592737384973304e-11,
+          "spikes": 0
+        }
+      ],
+      "CA1_AGGREGATE_RESULT": [
+        {
+          "protocol": "weak",
+          "duration_s": 0.2,
+          "rate_mM_tissue_s": 25.66333088270181,
+          "fit_target_mM": 2.3,
+          "coupled": {
+            "peak_mM": 2.2999715933248024,
+            "source_peak_mM": 5.210052083266681,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.4491785185905526,
+              2.299913036315849,
+              1.596839448906955,
+              1.1881680881389562,
+              0.996246687147265,
+              0.9262194602583262,
+              0.9010216975807679
+            ],
+            "spatial_decay_um": 15.902035597004096,
+            "decay": {
+              "single_tau_s": 2.135615789353159,
+              "fast_tau_s": 0.29678368524301574,
+              "slow_tau_s": 3.9857589705268195,
+              "fast_fraction": 0.6673522932653009
+            },
+            "mass_error": 5.512225907301228e-11,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 2.365762049001096,
+            "source_peak_mM": 5.348694286499877,
+            "peak_time_s": 0.32200000000000023,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              3.5555403853878316,
+              2.3656997355000104,
+              1.624923198500638,
+              1.1834107136097018,
+              0.971812187686113,
+              0.895915579889502,
+              0.8689188323304886
+            ],
+            "spatial_decay_um": 15.21202816565204,
+            "decay": {
+              "single_tau_s": 2.0336162940294558,
+              "fast_tau_s": 0.30469559890333087,
+              "slow_tau_s": 4.012447564909504,
+              "fast_fraction": 0.681089579993148
+            },
+            "mass_error": 5.513679769473403e-11,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 2.8604899237554493
+        },
+        {
+          "protocol": "strong",
+          "duration_s": 0.5,
+          "rate_mM_tissue_s": 47.78068927278745,
+          "fit_target_mM": 8.28,
+          "coupled": {
+            "peak_mM": 8.27953539116341,
+            "source_peak_mM": 14.18892339516435,
+            "peak_time_s": 0.6120000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              10.803579352615866,
+              8.278716185112986,
+              6.480274148735286,
+              5.296159001002996,
+              4.657228281170901,
+              4.39262627674626,
+              4.294887650649674
+            ],
+            "spatial_decay_um": 23.478365893831057,
+            "decay": {
+              "single_tau_s": 3.34696446337468,
+              "fast_tau_s": 0.3219518544954142,
+              "slow_tau_s": 4.6267364014904855,
+              "fast_fraction": 0.5379815496387693
+            },
+            "mass_error": 2.4810303354390707e-10,
+            "spike_events": 0
+          },
+          "uncoupled": {
+            "peak_mM": 8.589684717749796,
+            "source_peak_mM": 14.735676117412611,
+            "peak_time_s": 0.6120000000000004,
+            "radial_distance_um": [
+              5,
+              10,
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            "radial_peak_mM": [
+              11.265698160069357,
+              8.588792934299889,
+              6.62735872288678,
+              5.302964678794529,
+              4.581268157965045,
+              4.290330097997857,
+              4.184505184111213
+            ],
+            "spatial_decay_um": 21.91285589587192,
+            "decay": {
+              "single_tau_s": 3.2560947423497875,
+              "fast_tau_s": 0.32505113700755545,
+              "slow_tau_s": 4.633690254284669,
+              "fast_fraction": 0.5569923720267621
+            },
+            "mass_error": 2.4722979105558315e-10,
+            "spike_events": 0
+          },
+          "uncoupling_peak_change_percent": 3.7459750086629384
+        }
+      ],
+      "CA1_RAMP_RESULT": [
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.1,
+          "rate": 47.78068927278745,
+          "duration": 0.1,
+          "coupled_peak_mM": 2.3847879306885824,
+          "uncoupled_peak_mM": 2.442166911929349,
+          "uncoupling_peak_change_percent": 2.4060412459484093,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.7281795302072423e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.2,
+          "rate": 47.78068927278745,
+          "duration": 0.2,
+          "coupled_peak_mM": 4.305117630760741,
+          "uncoupled_peak_mM": 4.443289965535977,
+          "uncoupling_peak_change_percent": 3.2094903467439373,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 3.4296079964464566e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.3,
+          "rate": 47.78068927278745,
+          "duration": 0.3,
+          "coupled_peak_mM": 5.844899263162866,
+          "uncoupled_peak_mM": 6.059146560221683,
+          "uncoupling_peak_change_percent": 3.665543021572648,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 5.0944387867333646e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.4,
+          "rate": 47.78068927278745,
+          "duration": 0.4,
+          "coupled_peak_mM": 7.141071360327256,
+          "uncoupled_peak_mM": 7.412432071905878,
+          "uncoupling_peak_change_percent": 3.7999999984062116,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 6.584356740778732e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.5,
+          "rate": 47.78068927278745,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.27953539116341,
+          "uncoupled_peak_mM": 8.589684717749796,
+          "uncoupling_peak_change_percent": 3.7459750086629384,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 7.701636603166701e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "duration",
+          "value": 0.6,
+          "rate": 47.78068927278745,
+          "duration": 0.6,
+          "coupled_peak_mM": 9.311481564462635,
+          "uncoupled_peak_mM": 9.644731327559983,
+          "uncoupling_peak_change_percent": 3.578912343758467,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 8.647307861522621e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 190,
+          "rate": 10.087034402032906,
+          "duration": 0.5,
+          "coupled_peak_mM": 1.6996487159248068,
+          "uncoupled_peak_mM": 1.7519577140138947,
+          "uncoupling_peak_change_percent": 3.077635843158655,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 1.6897447011464595e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 380,
+          "rate": 20.17406880406581,
+          "duration": 0.5,
+          "coupled_peak_mM": 3.4324341027194945,
+          "uncoupled_peak_mM": 3.5524386196091178,
+          "uncoupling_peak_change_percent": 3.496192885233973,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 3.4153469302302996e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 570,
+          "rate": 30.261103206098717,
+          "duration": 0.5,
+          "coupled_peak_mM": 5.19223946729036,
+          "uncoupled_peak_mM": 5.384046846934249,
+          "uncoupling_peak_change_percent": 3.6941165917369734,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 5.176079756165433e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 760,
+          "rate": 40.34813760813162,
+          "duration": 0.5,
+          "coupled_peak_mM": 6.968874063837841,
+          "uncoupled_peak_mM": 7.230362622644879,
+          "uncoupling_peak_change_percent": 3.7522353885533377,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 6.96249307483272e-11
+        },
+        {
+          "protocol": "ramp",
+          "axis": "current",
+          "value": 950,
+          "rate": 50.43517201016453,
+          "duration": 0.5,
+          "coupled_peak_mM": 8.747988876225461,
+          "uncoupled_peak_mM": 9.075149168751258,
+          "uncoupling_peak_change_percent": 3.7398343454108085,
+          "coupled_spikes": 0,
+          "uncoupled_spikes": 0,
+          "mass_error": 7.959432800151079e-11
+        }
+      ]
+    }
+  ]
+}
