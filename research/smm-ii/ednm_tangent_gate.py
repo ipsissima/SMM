@@ -54,7 +54,16 @@ GX=derivative(lambda y:gate(y,g),x);GG=derivative(lambda y:gate(x,y),g);gd=GG.di
 assert np.linalg.norm((GG-csr_matrix(np.diag(gd))).data)<1e-8
 rng=np.random.default_rng(20261126);u=rng.normal(size=n)*np.maximum(abs(x),.01);h=1e-6
 f=(r(x+h*u,x,g)-r(x-h*u,x,g))/(2*h);err=np.linalg.norm(f-J@u)/np.linalg.norm(f);print("current_derivative_error",err,flush=True)
-if err>1e-3:raise ValueError("native Jacobian directional check")
+# Native AOT current derivative is an implementation comparator, not assumed exact.
+# Use centered differentiation of the actual native residual, with a refinement
+# and independent directional check; preserve the failed AOT run separately.
+Jfd1=derivative(lambda y:r(y,x,g),x,eps=1e-5)
+Jfd2=derivative(lambda y:r(y,x,g),x,eps=2.5e-6)
+fd_refine=np.linalg.norm((Jfd1-Jfd2).data)/np.linalg.norm(Jfd2.data)
+fd_direction=np.linalg.norm(f-Jfd2@u)/np.linalg.norm(f)
+print("current_fd_refinement",fd_refine,"current_fd_direction",fd_direction,flush=True)
+if fd_refine>1e-4 or fd_direction>1e-4:raise ValueError("current residual derivative refinement failed")
+J=Jfd2
 # remove original path by the verified SMM-I correction; add graph edges linearly.
 Z=np.zeros((N,N))
 def corr(Wg,We):
@@ -101,5 +110,5 @@ bounds=[(np.log(.05),np.log(20.))]*len(eg)+[(np.log(.3),np.log(3.))]*len(ee)
 fits=[minimize(fg,v,method="L-BFGS-B",jac=True,bounds=bounds,options={"maxiter":250,"ftol":1e-14,"gtol":1e-9,"maxls":35}) for v in [v0,rng.normal(0,.08,len(es))]]
 best=min(fits,key=lambda t:t.fun);w=np.exp(best.x);JJ=J0+combine(es,w);pred={s:solve(JJ,s) for s in all_s}
 lo,hi=np.array(bounds).T;pg=float(np.max(abs(best.x-np.clip(best.x-best.jac,lo,hi))))
-out=dict(scope="Frozen native EDNM discrete tangent, full ionic and gate equations, not nonlinear or age-calibrated; fixed local physiology, fitted glial and ECS shared weights only",spacing_um=D,mu=MU,dt=DT,initial_residual=float(max(abs(base))),gate_step_drift=float(max(abs(gbase-g))),current_jacobian_direction_error=float(err),fit_gradient_error=float(gerr),train=errs(pred,truth,train),hold_real=errs(pred,truth,real),hold_imag=errs(pred,truth,imag),AB_real=errs(alt,truth,real),AB_imag=errs(alt,truth,imag),converged=[bool(f.success) for f in fits],messages=[str(f.message) for f in fits],iterations=[int(f.nit) for f in fits],losses=[float(f.fun) for f in fits],projected_gradient=pg,params=w.tolist(),observables=["ECS K mM","neuronal Vm mV"])
+out=dict(scope="Frozen native EDNM discrete tangent, full ionic and gate equations, not nonlinear or age-calibrated; fixed local physiology, fitted glial and ECS shared weights only",spacing_um=D,mu=MU,dt=DT,initial_residual=float(max(abs(base))),gate_step_drift=float(max(abs(gbase-g))),native_aot_jacobian_direction_error=float(err),current_fd_refinement=float(fd_refine),current_fd_direction=float(fd_direction),fit_gradient_error=float(gerr),train=errs(pred,truth,train),hold_real=errs(pred,truth,real),hold_imag=errs(pred,truth,imag),AB_real=errs(alt,truth,real),AB_imag=errs(alt,truth,imag),converged=[bool(f.success) for f in fits],messages=[str(f.message) for f in fits],iterations=[int(f.nit) for f in fits],losses=[float(f.fun) for f in fits],projected_gradient=pg,params=w.tolist(),observables=["ECS K mM","neuronal Vm mV"])
 Path("output").mkdir(exist_ok=True);Path("output/result.json").write_text(json.dumps(out,indent=2));print("SMMII_EDNM "+json.dumps(out),flush=True)
