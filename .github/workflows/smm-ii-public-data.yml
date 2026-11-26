@@ -1,0 +1,83 @@
+name: SMM-II public workbook retrieval
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-public-data.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [Zhong, FalconMoya, Maul, Farhy5, Farhy6, Jiang]
+    steps:
+      - name: Retrieve and verify workbook
+        env:
+          DATA_ID: ${{ matrix.id }}
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request,zipfile,io,xml.etree.ElementTree as ET,json,hashlib,os,traceback
+          i=os.environ['DATA_ID']
+          sources={
+            'Zhong':('PMC10777263','NIHMS1953831-supplement-Supplmentary_Table_1_-_5.xlsx',['https://pmc.ncbi.nlm.nih.gov/articles/instance/10777263/bin/NIHMS1953831-supplement-Supplmentary_Table_1_-_5.xlsx']),
+            'FalconMoya':('PMC7463247','41467_2020_18024_MOESM6_ESM.xlsx',['https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41467-020-18024-4/MediaObjects/41467_2020_18024_MOESM6_ESM.xlsx','https://pmc.ncbi.nlm.nih.gov/articles/instance/7463247/bin/41467_2020_18024_MOESM6_ESM.xlsx']),
+            'Maul':('PMC','elife-72251-fig5-data1-v2.xlsx',['https://cdn.elifesciences.org/articles/72251/elife-72251-fig5-data1-v2.xlsx']),
+            'Farhy5':('PMC8497060','elife-70514-fig5-data1-v2.xlsx',['https://cdn.elifesciences.org/articles/70514/elife-70514-fig5-data1-v2.xlsx']),
+            'Farhy6':('PMC8497060','elife-70514-fig6-data1-v2.xlsx',['https://cdn.elifesciences.org/articles/70514/elife-70514-fig6-data1-v2.xlsx']),
+            'Jiang':('PMC13494039','41467_2026_75697_MOESM11_ESM.xlsx',['https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41467-026-75697-z/MediaObjects/41467_2026_75697_MOESM11_ESM.xlsx','https://pmc.ncbi.nlm.nih.gov/articles/instance/13494039/bin/41467_2026_75697_MOESM11_ESM.xlsx'])
+          }
+          pmc,fn,urls=sources[i]
+          if pmc!='PMC': urls.append('https://www.ebi.ac.uk/europepmc/webservices/rest/'+pmc+'/supplementaryFiles')
+          attempts=[]
+          for url in urls:
+            try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (public scientific data retrieval)'}),timeout=35) as r:
+                b=r.read(60*1024*1024+1); final=r.geturl()
+              if len(b)>60*1024*1024: raise ValueError('60 MiB limit')
+              with zipfile.ZipFile(io.BytesIO(b)) as z:
+                if 'xl/workbook.xml' not in z.namelist():
+                  candidates=[x for x in z.namelist() if x.split('/')[-1].lower()==fn.lower()]
+                  if not candidates: raise ValueError('named workbook not present: '+str(z.namelist()[:20]))
+                  b=z.read(candidates[0])
+              with zipfile.ZipFile(io.BytesIO(b)) as z:
+                ns={'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+                root=ET.fromstring(z.read('xl/workbook.xml'))
+                names=[s.attrib['name'] for s in root.findall('.//s:sheet',ns)]
+                if not names: raise ValueError('empty workbook')
+                shared=[]
+                if 'xl/sharedStrings.xml' in z.namelist():
+                  for v in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('s:si',ns):
+                    shared.append(''.join(t.text or '' for t in v.findall('.//s:t',ns)))
+                sheets=[]
+                # Sheet previews for initial schema audit, not inferred biological units.
+                for name in sorted([n for n in z.namelist() if n.startswith('xl/worksheets/sheet') and n.endswith('.xml')],key=lambda x:int(x.rsplit('sheet',1)[-1].split('.')[0])):
+                  sh=ET.fromstring(z.read(name)); rows=[]
+                  for row in sh.findall('.//s:row',ns)[:10]:
+                    cells=[]
+                    for c in row.findall('s:c',ns)[:16]:
+                      v=c.find('s:v',ns); val=v.text if v is not None else ''
+                      if c.attrib.get('t')=='s' and val: val=shared[int(val)]
+                      if c.attrib.get('t')=='inlineStr': val=''.join(t.text or '' for t in c.findall('.//s:t',ns))
+                      if val: cells.append([c.attrib.get('r'),val[:180]])
+                    if cells: rows.append(cells)
+                  sheets.append({'xml':name,'row_count':len(sh.findall('.//s:row',ns)),'preview':rows})
+              open('output/'+i+'.xlsx','wb').write(b)
+              result={'id':i,'status':'verified xlsx','url':url,'resolved_url':final,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'sheet_names':names,'sheets':sheets,'prior_attempts':attempts}
+              break
+            except Exception as ex:
+              attempts.append({'url':url,'error':repr(ex)})
+          else: result={'id':i,'status':'not retrieved','attempts':attempts}
+          open('output/'+i+'.json','w').write(json.dumps(result,indent=2))
+          print('ACQUISITION '+json.dumps({k:v for k,v in result.items() if k!='sheets'}))
+          for sh in result.get('sheets',[])[:12]: print('SCHEMA '+json.dumps(sh))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-${{ matrix.id }}
+          path: output/
+          retention-days: 14
