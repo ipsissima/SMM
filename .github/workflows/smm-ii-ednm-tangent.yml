@@ -1,0 +1,47 @@
+name: SMM-II multionic tangent gate
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-ednm-tangent.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        d: [42, 60, 100]
+        mu: ['0.179881685', '1.0']
+    env:
+      D_UM: ${{ matrix.d }}
+      MU: ${{ matrix.mu }}
+      DT: '0.001'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      PYTHONPATH: ${{ github.workspace }}/research/smm-ii
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install pinned EDNM
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          pip install -e external-ednm
+      - name: Freeze and differentiate original residual with graph correction
+        run: |
+          mkdir -p output
+          python -u research/smm-ii/ednm_tangent_gate.py 2>&1 | tee output/run.log
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tangent-${{ matrix.d }}-${{ matrix.mu }}
+          path: output/
+          retention-days: 90
