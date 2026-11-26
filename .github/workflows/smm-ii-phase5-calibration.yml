@@ -1,0 +1,86 @@
+name: SMM-II phase V developmental calibration acquisition
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase5-calibration.yml']
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Acquire public sources and preserve file structure
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request,zipfile,io,xml.etree.ElementTree as ET,json,hashlib
+          from pathlib import Path
+          ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+          urls={
+          'Vargas':['https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-026-71914-x/MediaObjects/41467_2026_71914_MOESM4_ESM.xlsx','https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41467-026-71914-x/MediaObjects/41467_2026_71914_MOESM4_ESM.xlsx'],
+          'Dard2':['https://cdn.elifesciences.org/articles/78116/elife-78116-fig2-data1-v3.zip'],
+          'Dard1':['https://cdn.elifesciences.org/articles/78116/elife-78116-fig1-data1-v3.zip']}
+          def get(u,cap=65*1024*1024):
+            with urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}),timeout=35) as r:
+              b=r.read(cap+1)
+              if len(b)>cap:raise ValueError('size cap')
+              return b
+          def xlsx(b,name):
+            with zipfile.ZipFile(io.BytesIO(b)) as z:
+              names=[a.get('name') for a in ET.fromstring(z.read('xl/workbook.xml')).findall('.//x:sheet',ns)]
+              ss=[]
+              if 'xl/sharedStrings.xml' in z.namelist():ss=[''.join(t.text or '' for t in a.findall('.//x:t',ns)) for a in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('x:si',ns)]
+              sheets=[]
+              for k,n in enumerate(names,1):
+                d={}
+                for c in ET.fromstring(z.read(f'xl/worksheets/sheet{k}.xml')).findall('.//x:c',ns):
+                  v=c.find('x:v',ns)
+                  if c.get('t')=='inlineStr': val=''.join(t.text or '' for t in c.findall('.//x:t',ns))
+                  elif v is None:continue
+                  elif c.get('t')=='s':val=ss[int(v.text)]
+                  else:
+                    try:val=float(v.text)
+                    except (ValueError,TypeError):val=v.text
+                  if val not in ('',None):d[c.get('r')]=val
+                sheets.append({'name':n,'cells':d})
+                print('SHEET '+json.dumps([name,k,n,len(d),list(d.items())[:35]],ensure_ascii=False))
+                if len(d)<=1500:print('CELLS '+json.dumps([name,k,n,d],separators=(',',':'),ensure_ascii=False))
+              return sheets
+          status=[]
+          for i,us in urls.items():
+            for u in us:
+              try:
+                b=get(u)
+                with zipfile.ZipFile(io.BytesIO(b)) as z:
+                  if i=='Vargas':
+                    assert 'xl/workbook.xml' in z.namelist()
+                    s=xlsx(b,i);Path('output/Vargas.xlsx').write_bytes(b)
+                    Path('output/Vargas_cells.json').write_text(json.dumps(s,ensure_ascii=False))
+                  else:
+                    inv=[[x.filename,x.file_size] for x in z.infolist()]
+                    print('ZIP_INVENTORY '+json.dumps([i,inv]))
+                    Path('output/'+i+'.zip').write_bytes(b)
+                    for x in z.infolist():
+                      if x.file_size>10*1024*1024:continue
+                      if x.filename.lower().endswith('.xlsx'):
+                        xlsx(z.read(x),x.filename)
+                      elif x.filename.lower().endswith(('.csv','.tsv')):
+                        txt=z.read(x).decode('utf-8','replace')
+                        if len(txt)<50000:print('CSV '+json.dumps([i,x.filename,txt]))
+                        else:print('CSV_PREVIEW '+json.dumps([i,x.filename,txt[:1200]]))
+                status.append({'id':i,'url':u,'sha256':hashlib.sha256(b).hexdigest(),'size':len(b),'status':'verified zip'})
+                break
+              except Exception as e:status.append({'id':i,'url':u,'error':repr(e)})
+          try:
+            u='https://api.dandiarchive.org/api/dandisets/000219/versions/0.260826.1155/assets/?page_size=100'
+            a=json.loads(get(u));Path('output/DANDI_000219_assets.json').write_text(json.dumps(a,indent=2));print('DANDI '+json.dumps({'count':a.get('count'),'next':a.get('next'),'assets':[[x.get('path'),x.get('size'),x.get('asset_id')] for x in a.get('results',[])]}))
+          except Exception as e:print('DANDI_ERROR '+repr(e))
+          Path('output/acquisition.json').write_text(json.dumps(status,indent=2))
+          print('ACQUIRED '+json.dumps(status))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-phase5-calibration-sources
+          path: output/
+          retention-days: 90
