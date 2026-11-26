@@ -1,0 +1,27 @@
+name: SMM-II phase VI embryonic spatial prediction
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase6-visium.yml']
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy scipy pandas h5py scikit-learn
+      - run: python -u research/smm-ii/phase6/embryonic_visium.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embryonic-visium-source-and-results
+          path: output/
+          retention-days: 90
