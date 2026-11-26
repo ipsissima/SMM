@@ -1,0 +1,90 @@
+name: SMM reproducibility archive staging
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/stage-reproducibility-archive.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: smm-reproducibility-archive
+  cancel-in-progress: false
+jobs:
+  archive:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 75
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect complete retained numerical records and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p raw archive records
+          # Completed runs only. Original benchmark run failed in JSON serialization
+          # after saving the full state; preserve the artifacts and its actual status.
+          runs=(45839123584 45840811721 45847600616 45859252351 45863596046 45867493269 45869133888 45869212368 45870243172 45870291419 45870371151 45874526639 45874607462)
+          for run in "${runs[@]}"; do
+            mkdir -p "raw/$run"
+            gh api "repos/$GH_REPO/actions/runs/$run" > "raw/$run/workflow_run.json"
+            gh api "repos/$GH_REPO/actions/runs/$run/artifacts?per_page=100" > "raw/$run/artifact_manifest.json"
+            python - "raw/$run/artifact_manifest.json" <<'PY'
+          import json,sys
+          a=json.load(open(sys.argv[1]))
+          assert a["total_count"] == len(a["artifacts"]) and a["total_count"]>0
+          assert all(not j["expired"] for j in a["artifacts"])
+          PY
+            # gh run download extracts all retained artifacts into distinct subdirectories.
+            gh run download "$run" --repo "$GH_REPO" --dir "raw/$run"
+            python - "raw/$run" <<'PY'
+          import json,sys,pathlib,hashlib
+          p=pathlib.Path(sys.argv[1]); a=json.loads((p/"artifact_manifest.json").read_text())
+          # CLI extracts a single artifact directly; multiple artifacts by artifact name.
+          if len(a["artifacts"])>1:
+              assert all((p/j["name"]).is_dir() for j in a["artifacts"]),str(p)
+          files=[f for f in sorted(p.rglob("*")) if f.is_file()]
+          assert len(files)>2
+          (p/"SHA256SUMS").write_text("".join(f"{hashlib.file_digest(f.open('rb'),'sha256').hexdigest()}  {f.relative_to(p)}\n" for f in files))
+          PY
+            tar -czf "archive/SMM_run_${run}.tar.gz" -C raw "$run"
+          done
+      - name: Aggregate the 32-case empirical topology comparison
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("raw/45874526639")
+          rows=[]
+          for f in sorted(p.glob("EDNM_EMPIRICAL_TOPOLOGY_*/contrast.json")):
+              r=json.loads(f.read_text())
+              assert len(r)==2
+              rows.append({"case":f.parent.name,"rows":r})
+          assert len(rows)==32,len(rows)
+          Path("records/empirical_topology_results.json").write_text(json.dumps({"run":45874526639,"jobs":rows},indent=2)+"\n")
+          PY
+          git archive --format=tar.gz --prefix=SMM/ -o archive/SMM_manuscript_and_code.tar.gz HEAD paper reproducibility docs README.md CITATION.cff
+          cp records/empirical_topology_results.json archive/
+          git rev-parse HEAD > archive/SOURCE_COMMIT.txt
+          (cd archive && sha256sum * > SHA256SUMS)
+      - name: Stage durable draft release with checksum manifest
+        run: |
+          set -euo pipefail
+          tag="smm-data-staging-${GITHUB_RUN_ID}"
+          gh release create "$tag" --repo "$GH_REPO" --draft --target "$GITHUB_SHA" --title "SMM numerical archive (staging; not final publication)" --notes "Retained numerical trajectories and exact workflow manifests for completed core studies. Not a Zenodo deposit or final manuscript. Still-running CA1 and joint-source studies are intentionally excluded; append after checking outcomes. Source and per-run SHA-256 manifests included."
+          gh release upload "$tag" archive/* --repo "$GH_REPO"
+          gh release view "$tag" --repo "$GH_REPO" --json url,isDraft,assets > records/draft_release.json
+          python - <<'PY'
+          import json,pathlib
+          r=json.loads(pathlib.Path("records/draft_release.json").read_text())
+          assert r["isDraft"] and len(r["assets"])>=17
+          print("ARCHIVE_DRAFT",json.dumps({"url":r["url"],"asset_count":len(r["assets"]),"bytes":sum(x["size"] for x in r["assets"])}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_ARCHIVE_RECORDS
+          path: records/
+          retention-days: 90
