@@ -1,0 +1,32 @@
+name: EDNM full solver original three-dose response
+on:
+  push:
+    branches: [research/ednm-full-solver-validation-20261126]
+    paths: [.github/workflows/ednm-dose-response.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dose-response:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = "826c211c70d9027a4acb02202ca91a60de79a15d"
+          python -m pip install 'numpy<2' 'scipy<1.13' 'numba<0.60'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual;from ednm.aot_jacobian import jacobian'
+      - name: Execute original three-dose source comparison
+        run: python validation/ednm_dose_challenge.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EDNM_ORIGINAL_THREE_DOSE_RESPONSE
+          path: output/dose_response
+          retention-days: 30
