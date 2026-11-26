@@ -1,0 +1,130 @@
+name: SMM-II source data extraction and Zhong retry
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-extract-data.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45895727236
+          pattern: SMM-II-*
+          path: raw
+      - name: Extract complete selected panels and inventory all sheets
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import json,zipfile,xml.etree.ElementTree as E,re,hashlib
+          from pathlib import Path
+          N={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+          wanted={'FalconMoya':[1,2,5,6,11,12],'Maul':[1,2,3],'Jiang':[3,12,13,18,19,22,23],'Farhy5':[1],'Farhy6':[4,6]}
+          def parse(z,name):
+            ss=[]
+            if 'xl/sharedStrings.xml' in z.namelist():
+              ss=[''.join(t.text or '' for t in a.findall('.//x:t',N)) for a in E.fromstring(z.read('xl/sharedStrings.xml')).findall('x:si',N)]
+            out={}
+            for c in E.fromstring(z.read(name)).findall('.//x:c',N):
+              v=c.find('x:v',N)
+              if c.get('t')=='inlineStr': val=''.join(t.text or '' for t in c.findall('.//x:t',N))
+              elif v is None: continue
+              elif c.get('t')=='s': val=ss[int(v.text)]
+              else:
+                try: val=float(v.text)
+                except (ValueError,TypeError): val=v.text
+              if val not in ('',None):out[c.get('r')]=val
+            return out
+          for file in sorted(Path('raw').rglob('*.xlsx')):
+            i=file.stem
+            with zipfile.ZipFile(file) as z:
+              names=[a.get('name') for a in E.fromstring(z.read('xl/workbook.xml')).findall('.//x:sheet',N)]
+              inv=[]
+              for k,n in enumerate(names,1):
+                cells=parse(z,f'xl/worksheets/sheet{k}.xml')
+                inv.append({'name':n,'cells':len(cells)})
+                if k in wanted.get(i,[]):
+                  # All selected cells preserved; very large trace panels stored in artifact only.
+                  rec={'id':i,'sheet':k,'name':n,'cells':cells}
+                  Path(f'output/{i}_{k}.json').write_text(json.dumps(rec,ensure_ascii=False))
+                  # Compact column/row transfer for target analysis panels; no cell-level sampling.
+                  if i in ['Maul','FalconMoya'] or (i=='Jiang' and k in [3,12,13,18,19]) or (i=='Farhy5' and k==1):
+                    for row in range(1,max(int(re.search(r'\d+$',a).group()) for a in cells)+1):
+                      d={a:v for a,v in cells.items() if int(re.search(r'\d+$',a).group())==row}
+                      if d: print('ROW '+json.dumps([i,k,row,d],ensure_ascii=False,separators=(',',':')))
+                  if i=='Farhy6':
+                    # Full relevant selected-gene entries and header context, not raw counts.
+                    genes={'Gja1','Gjb6','Kcnj10','Slc1a2','Slc1a3','Aqp4','Chrdl1','Gpc4','Gpc6','Thbs1','Thbs2','Sparcl1','Sema6a','Plxna2','Plxna4','Sltm'}
+                    for row in sorted({int(re.search(r'\d+$',a).group()) for a,v in cells.items() if isinstance(v,str) and v in genes}|{1,2,3}):
+                      print('GENE '+json.dumps([i,k,row,{a:v for a,v in cells.items() if int(re.search(r'\d+$',a).group())==row}],ensure_ascii=False,separators=(',',':')))
+              print('INVENTORY '+json.dumps({'id':i,'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'sheets':inv}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-verified-source-and-extracts
+          path: |
+            raw/
+            output/
+          retention-days: 90
+  zhong:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Retry public Wiley supplement and NCBI cloud inventory
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request,urllib.parse,zipfile,io,json,hashlib,xml.etree.ElementTree as E
+          from pathlib import Path
+          name='glia24327-sup-0001-TableS1-4.xlsx'
+          urls=[
+          'https://onlinelibrary.wiley.com/doi/suppl/10.1002/glia.24327/supinfo/'+name,
+          'https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1002%2Fglia.24327&file='+name,
+          'https://onlinelibrary.wiley.com/doi/suppl/10.1002/glia.24327/supinfo/'+name+'?download=true',
+          'https://pmc.ncbi.nlm.nih.gov/articles/PMC10777263/bin/NIHMS1953831-supplement-Supplmentary_Table_1_-_5.xlsx']
+          def get(url):
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0','Referer':'https://onlinelibrary.wiley.com/doi/full/10.1002/glia.24327','Accept':'*/*'})
+            with urllib.request.urlopen(req,timeout=20) as r:return r.read(30*1024*1024),r.geturl()
+          try:
+            x,_=get('https://pmc-oa-opendata.s3.amazonaws.com/?list-type=2&prefix=PMC10777263')
+            root=E.fromstring(x); keys=[i.text for i in root.findall('.//{*}Key')]
+            print('S3_KEYS '+json.dumps(keys))
+            urls += ['https://pmc-oa-opendata.s3.amazonaws.com/'+urllib.parse.quote(k) for k in keys if k.lower().endswith('.xlsx')]
+          except Exception as e:print('S3_ERROR '+repr(e))
+          attempts=[]
+          for url in urls:
+            try:
+              b,final=get(url)
+              with zipfile.ZipFile(io.BytesIO(b)) as z:
+                ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+                names=[a.get('name') for a in E.fromstring(z.read('xl/workbook.xml')).findall('.//x:sheet',ns)]
+                ss=[]
+                if 'xl/sharedStrings.xml' in z.namelist():ss=[''.join(t.text or '' for t in a.findall('.//x:t',ns)) for a in E.fromstring(z.read('xl/sharedStrings.xml')).findall('x:si',ns)]
+                for k,n in enumerate(names,1):
+                  vals={}
+                  for c in E.fromstring(z.read(f'xl/worksheets/sheet{k}.xml')).findall('.//x:c',ns):
+                    v=c.find('x:v',ns)
+                    if v is None:continue
+                    value=ss[int(v.text)] if c.get('t')=='s' else v.text
+                    vals[c.get('r')]=value
+                  Path(f'output/Zhong_{k}.json').write_text(json.dumps({'name':n,'cells':vals}))
+                  print('ZHONG_SHEET '+json.dumps({'name':n,'cells':len(vals),'preview':list(vals.items())[:40]}))
+              Path('output/Zhong.xlsx').write_bytes(b)
+              out={'status':'verified xlsx','url':url,'final':final,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'sheets':names,'attempts':attempts}
+              break
+            except Exception as e:attempts.append({'url':url,'error':repr(e)})
+          else:out={'status':'not retrieved','attempts':attempts}
+          Path('output/Zhong_status.json').write_text(json.dumps(out,indent=2))
+          print('ZHONG_RESULT '+json.dumps(out))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SMM-II-Zhong-retry
+          path: output/
+          retention-days: 90
