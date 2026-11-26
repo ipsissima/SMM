@@ -1,0 +1,24 @@
+name: SMM-II Phase VI public-data feasibility
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase6-sources.yml']
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy scipy
+      - run: python -u research/smm-ii/phase6/source_audit.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase6-public-sources
+          path: output/
+          retention-days: 90
