@@ -1,0 +1,98 @@
+name: SMM-II phase V nonlinear frozen-rival gate
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase5-nonlinear.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  challenge:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {d: 42, mu: '0.179881685', source: 0, dt: '0.001'}
+          - {d: 42, mu: '0.179881685', source: 6, dt: '0.001'}
+          - {d: 42, mu: '1.0', source: 0, dt: '0.001'}
+          - {d: 42, mu: '1.0', source: 6, dt: '0.001'}
+          - {d: 30, mu: '0.179881685', source: 0, dt: '0.001'}
+          - {d: 30, mu: '0.179881685', source: 6, dt: '0.001'}
+          - {d: 42, mu: '0.179881685', source: 0, dt: '0.0005'}
+    env:
+      D_UM: ${{ matrix.d }}
+      MU: ${{ matrix.mu }}
+      SOURCE: ${{ matrix.source }}
+      DT: ${{ matrix.dt }}
+      RATES: '.03,3,30'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      PYTHONPATH: ${{ github.workspace }}/research/smm-ii
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install original pinned EDNM
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          pip install -e external-ednm
+      - name: Patch graph adapter and neutral KCl source
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          s='from ednm_graph_adapter import correction as graph_correction\ngraph_glial=None\ngraph_ecs=None\n'+s
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = '+os.environ['DT']+'                # phase V step')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          add=('        graph_res_s, _ = graph_correction(model, graph_glial, graph_ecs, dt, alpha_s_, c_s, phi_s, layer="soma")\n'
+               '        graph_res_d, _ = graph_correction(model, graph_glial, graph_ecs, dt, alpha_d_, c_d, phi_d, layer="dendrite")\n'
+               '        Res += graph_res_s + graph_res_d\n'
+               '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+               '            i = stimulus_protocol.get("kcl_site",0)\n'
+               '            for ion in (1,2):\n'
+               '                Res[int(jc_s[ion][2]+N_unknowns_unit*i)] += dt*stimulus_protocol.get("kcl_rate_tissue",0.)/model.gamma_m\n')
+          s=s.replace(old,add+old)
+          old='        # solve (J(x_) dx = -f(x_)'
+          assert s.count(old)==1
+          add=('        _, graph_J_s = graph_correction(model, graph_glial, graph_ecs, dt, alpha_s_, c_s, phi_s, layer="soma")\n'
+               '        _, graph_J_d = graph_correction(model, graph_glial, graph_ecs, dt, alpha_d_, c_d, phi_d, layer="dendrite")\n'
+               '        A = A + graph_J_s + graph_J_d\n')
+          p.write_text(s.replace(old,add+old))
+          p=Path('research/smm-ii/ednm_graph_adapter.py');s=p.read_text()
+          old='        if new_edges == original_edges:'
+          assert s.count(old)==1
+          s=s.replace(old,'        if False: # symmetric convention also applied to original support')
+          old='                    coeff = sign * dt * ap[r, u] / (model.dxu * model.gamma_m)'
+          assert s.count(old)==1
+          s=s.replace(old,'                    edge_alpha = (ap[r,u]+ap[r,v])/2 if sign>0 else ap[r,u]\n                    coeff = sign * dt * edge_alpha / (model.dxu * model.gamma_m)')
+          p.write_text(s)
+          PY
+      - name: Nonlinear forward and tangent comparison
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python -u research/smm-ii/phase5_nonlinear_gate.py 2>&1 | tee output/run.log
+      - name: Archive exact environment and patch
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff > output/native_solver.diff
+          git diff -- research/smm-ii/ednm_graph_adapter.py > output/adapter.diff
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase5-${{ matrix.d }}-${{ matrix.mu }}-${{ matrix.source }}-${{ matrix.dt }}
+          path: output/
+          retention-days: 90
