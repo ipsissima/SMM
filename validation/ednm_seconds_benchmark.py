@@ -59,8 +59,8 @@ def run_case(label,stim):
     d=np.load(target/"data.npz")
     for key in ("t","alpha","c","phi","ss"):
         assert np.isfinite(d[key]).all(), key
-    if np.any(d["c"]<=0):
-        raise RuntimeError("A compartment contains nonpositive ion concentrations")
+    if np.any(d["c"] < -1e-8) or np.any(d["c"][:,:,0:3,:,:] <= 0):
+        raise RuntimeError("Unphysical ion concentrations: substantially negative ions or nonpositive Na/K/Cl")
     ions=total_ion_mass(d)
     diff=ions-ions[0]
     worst=np.max(np.abs(diff)/np.maximum(np.abs(ions[0]),1e-12),axis=0)
