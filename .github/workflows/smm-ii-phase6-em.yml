@@ -1,0 +1,24 @@
+name: SMM-II Phase VI developmental EM annotation audit
+on:
+  push:
+    branches: [research/smm-ii-public-data]
+    paths: ['.github/workflows/smm-ii-phase6-em.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install webknossos
+      - run: python -u research/smm-ii/phase6/gour_annotation_audit.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase6-em-skeleton-audit
+          path: output/
+          retention-days: 90
