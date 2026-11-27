@@ -1,0 +1,12 @@
+{
+  "source_doi": "10.1002/glia.24327",
+  "sheet": "Table 3",
+  "cells": "B6:H21",
+  "workbook_bytes": 19582,
+  "sha256": "22d3384db0f754b50052469c51ef2b1fc0a2942055fdd58f923afef01a5b1671",
+  "archive_checksum_match": true,
+  "group_mean_matches": 16,
+  "n_recorded_astrocytes": 397,
+  "max_absolute_difference_mV": 4.419575816427823e-12,
+  "note": "All archived voltage means agree with original workbook to floating-point precision. Sample counts and SD are directly extracted; the archived voltage design did not contain per-age n for an independent count-by-count comparison. This does not verify other figure-derived inputs or graph-model assumptions."
+}
