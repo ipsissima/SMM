@@ -1,0 +1,1087 @@
+[
+  {
+    "n": 15,
+    "sites": 3375,
+    "graphs": 32,
+    "amplitude": 0.5,
+    "boundary": "clamped",
+    "weight_SD_mean": 0.1301068080571529,
+    "max_linear_residual": 9.975592639546872e-11,
+    "max_symmetry_error": 1.5210867687750953e-11,
+    "max_CG_iterations": 9,
+    "rows": [
+      {
+        "day": 7,
+        "R_target_MOhm": 13.18,
+        "R_test_MOhm": 13.180164972588674,
+        "R_fixed_anchor_MOhm": 20.016078780346128,
+        "g_age_fit_nS": 50.42271726270329,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 20.00913182274017,
+        "local_200pA_mean_mV": 2.6360329945177345,
+        "local_equalized_current_pA": 151.74506828528072,
+        "axial": {
+          "1": {
+            "relative": 0.007923758068260072,
+            "matched_2mV": 0.015847516136520145,
+            "calibrated_200pA": 0.020889728807560508,
+            "P11_anchor_fixed_shunt_200pA": 0.03172422032514768,
+            "Rin6mature_200pA": 0.020889728807560508
+          },
+          "2": {
+            "relative": 0.0006946864986491821,
+            "matched_2mV": 0.0013893729972983642,
+            "calibrated_200pA": 0.0018313887553811803,
+            "P11_anchor_fixed_shunt_200pA": 0.002781241485321866,
+            "Rin6mature_200pA": 0.0018313887553811803
+          },
+          "3": {
+            "relative": 6.144423308956228e-05,
+            "matched_2mV": 0.00012288846617912455,
+            "calibrated_200pA": 0.00016198420903404517,
+            "P11_anchor_fixed_shunt_200pA": 0.0002459975801471851,
+            "Rin6mature_200pA": 0.00016198420903404517
+          }
+        }
+      },
+      {
+        "day": 9,
+        "R_target_MOhm": 10.86,
+        "R_test_MOhm": 10.860366095894038,
+        "R_fixed_anchor_MOhm": 14.149215961085618,
+        "g_age_fit_nS": 43.256960557810764,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 14.136017082747898,
+        "local_200pA_mean_mV": 2.1720732191788077,
+        "local_equalized_current_pA": 184.1620626151013,
+        "axial": {
+          "1": {
+            "relative": 0.012754923767304768,
+            "matched_2mV": 0.025509847534609536,
+            "calibrated_200pA": 0.027712945377568864,
+            "P11_anchor_fixed_shunt_200pA": 0.03610526989631023,
+            "Rin6mature_200pA": 0.027712945377568864
+          },
+          "2": {
+            "relative": 0.001883917551238406,
+            "matched_2mV": 0.003767835102476812,
+            "calibrated_200pA": 0.004092978469734422,
+            "P11_anchor_fixed_shunt_200pA": 0.005332457099603755,
+            "Rin6mature_200pA": 0.004092978469734422
+          },
+          "3": {
+            "relative": 0.0002869255653978393,
+            "matched_2mV": 0.0005738511307956785,
+            "calibrated_200pA": 0.0006233549417179399,
+            "P11_anchor_fixed_shunt_200pA": 0.0008121258172053361,
+            "Rin6mature_200pA": 0.0006233549417179399
+          }
+        }
+      },
+      {
+        "day": 10,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.70028645634773,
+        "R_fixed_anchor_MOhm": 15.089860138540645,
+        "g_age_fit_nS": 51.64981205593148,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 15.077542948618403,
+        "local_200pA_mean_mV": 1.940057291269546,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.011976622877983126,
+            "matched_2mV": 0.023953245755966253,
+            "calibrated_200pA": 0.023241496980123906,
+            "P11_anchor_fixed_shunt_200pA": 0.036154699185288935,
+            "Rin6mature_200pA": 0.023241496980123906
+          },
+          "2": {
+            "relative": 0.0016454664413757395,
+            "matched_2mV": 0.003290932882751479,
+            "calibrated_200pA": 0.00319297120917471,
+            "P11_anchor_fixed_shunt_200pA": 0.00496701712775751,
+            "Rin6mature_200pA": 0.00319297120917471
+          },
+          "3": {
+            "relative": 0.00023205865114082327,
+            "matched_2mV": 0.00046411730228164655,
+            "calibrated_200pA": 0.00045029351517558404,
+            "P11_anchor_fixed_shunt_200pA": 0.0007004809802132111,
+            "Rin6mature_200pA": 0.00045029351517558404
+          }
+        }
+      },
+      {
+        "day": 11,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700553468033549,
+        "R_fixed_anchor_MOhm": 9.700553468033549,
+        "g_age_fit_nS": 33.20229397484076,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 9.684845106734125,
+        "local_200pA_mean_mV": 1.9401106936067098,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.016403079247473813,
+            "matched_2mV": 0.032806158494947626,
+            "calibrated_200pA": 0.031839343641048304,
+            "P11_anchor_fixed_shunt_200pA": 0.031839343641048304,
+            "Rin6mature_200pA": 0.031839343641048304
+          },
+          "2": {
+            "relative": 0.003304061011395079,
+            "matched_2mV": 0.006608122022790158,
+            "calibrated_200pA": 0.006412665239366119,
+            "P11_anchor_fixed_shunt_200pA": 0.006412665239366119,
+            "Rin6mature_200pA": 0.006412665239366119
+          },
+          "3": {
+            "relative": 0.0007058461086822258,
+            "matched_2mV": 0.0014116922173644515,
+            "calibrated_200pA": 0.0013698040193410746,
+            "P11_anchor_fixed_shunt_200pA": 0.0013698040193410746,
+            "Rin6mature_200pA": 0.0013698040193410746
+          }
+        }
+      },
+      {
+        "day": 12,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700705072944821,
+        "R_fixed_anchor_MOhm": 6.985268883942699,
+        "g_age_fit_nS": 23.908257104405273,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 6.97015371536391,
+        "local_200pA_mean_mV": 1.940141014588964,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.018541743844875377,
+            "matched_2mV": 0.037083487689750755,
+            "calibrated_200pA": 0.03599564075274987,
+            "P11_anchor_fixed_shunt_200pA": 0.02591968598334415,
+            "Rin6mature_200pA": 0.03599564075274987
+          },
+          "2": {
+            "relative": 0.004438289712784795,
+            "matched_2mV": 0.00887657942556959,
+            "calibrated_200pA": 0.008614892189238239,
+            "P11_anchor_fixed_shunt_200pA": 0.00620339840202347,
+            "Rin6mature_200pA": 0.008614892189238239
+          },
+          "3": {
+            "relative": 0.0011539502212032516,
+            "matched_2mV": 0.0023079004424065032,
+            "calibrated_200pA": 0.0022394614231976504,
+            "P11_anchor_fixed_shunt_200pA": 0.0016125879591867443,
+            "Rin6mature_200pA": 0.0022394614231976504
+          }
+        }
+      },
+      {
+        "day": 15,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700865325260128,
+        "R_fixed_anchor_MOhm": 3.054568806986934,
+        "g_age_fit_nS": 10.454602563327438,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 3.0448689169055814,
+        "local_200pA_mean_mV": 1.9401730650520255,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.02123566620874045,
+            "matched_2mV": 0.0424713324174809,
+            "calibrated_200pA": 0.04123202569537018,
+            "P11_anchor_fixed_shunt_200pA": 0.012982971654086357,
+            "Rin6mature_200pA": 0.04123202569537018
+          },
+          "2": {
+            "relative": 0.0064395360300672265,
+            "matched_2mV": 0.012879072060134453,
+            "calibrated_200pA": 0.01250041268542419,
+            "P11_anchor_fixed_shunt_200pA": 0.003936078832466073,
+            "Rin6mature_200pA": 0.01250041268542419
+          },
+          "3": {
+            "relative": 0.002248111850193381,
+            "matched_2mV": 0.004496223700386762,
+            "calibrated_200pA": 0.00436251932918883,
+            "P11_anchor_fixed_shunt_200pA": 0.0013736522481266834,
+            "Rin6mature_200pA": 0.00436251932918883
+          }
+        }
+      },
+      {
+        "day": 21,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700872146916465,
+        "R_fixed_anchor_MOhm": 2.686866321015753,
+        "g_age_fit_nS": 9.196093311034963,
+        "g_P11_anchor_nS": 33.20229397484076,
+        "R_homogeneous_anchor_MOhm": 2.6780288172037006,
+        "local_200pA_mean_mV": 1.9401744293832925,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.021432159907520506,
+            "matched_2mV": 0.04286431981504101,
+            "calibrated_200pA": 0.04161385549738407,
+            "P11_anchor_fixed_shunt_200pA": 0.011525857173478768,
+            "Rin6mature_200pA": 0.025740529173639632
+          },
+          "2": {
+            "relative": 0.00664253027164773,
+            "matched_2mV": 0.01328506054329546,
+            "calibrated_200pA": 0.012894427659983087,
+            "P11_anchor_fixed_shunt_200pA": 0.003571390580525796,
+            "Rin6mature_200pA": 0.007975934635041088
+          },
+          "3": {
+            "relative": 0.002391806504273852,
+            "matched_2mV": 0.004783613008547704,
+            "calibrated_200pA": 0.004641280608489801,
+            "P11_anchor_fixed_shunt_200pA": 0.0012855030315288346,
+            "Rin6mature_200pA": 0.002870895221746269
+          }
+        }
+      }
+    ]
+  },
+  {
+    "n": 15,
+    "sites": 3375,
+    "graphs": 32,
+    "amplitude": 1,
+    "boundary": "differential",
+    "weight_SD_mean": 0.2602136161143058,
+    "max_linear_residual": 9.99079502909092e-11,
+    "max_symmetry_error": 2.4664680020602958e-11,
+    "max_CG_iterations": 12,
+    "rows": [
+      {
+        "day": 7,
+        "R_target_MOhm": 13.18,
+        "R_test_MOhm": 13.180656562783128,
+        "R_fixed_anchor_MOhm": 19.79581062983175,
+        "g_age_fit_nS": 50.50139624558489,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 19.76825175105869,
+        "local_200pA_mean_mV": 2.6361313125566253,
+        "local_equalized_current_pA": 151.74506828528072,
+        "axial": {
+          "1": {
+            "relative": 0.015824133905507937,
+            "matched_2mV": 0.03164826781101587,
+            "calibrated_200pA": 0.041734218267551484,
+            "P11_anchor_fixed_shunt_200pA": 0.06267993386166099,
+            "Rin6mature_200pA": 0.041734218267551484
+          },
+          "2": {
+            "relative": 0.0014293183550254523,
+            "matched_2mV": 0.0028586367100509047,
+            "calibrated_200pA": 0.0037695388997149126,
+            "P11_anchor_fixed_shunt_200pA": 0.005661408281529819,
+            "Rin6mature_200pA": 0.0037695388997149126
+          },
+          "3": {
+            "relative": 0.00013566241635973712,
+            "matched_2mV": 0.00027132483271947425,
+            "calibrated_200pA": 0.00035780360809643114,
+            "P11_anchor_fixed_shunt_200pA": 0.0005373793357568442,
+            "Rin6mature_200pA": 0.00035780360809643114
+          }
+        }
+      },
+      {
+        "day": 9,
+        "R_target_MOhm": 10.86,
+        "R_test_MOhm": 10.861446256447556,
+        "R_fixed_anchor_MOhm": 14.049309395482918,
+        "g_age_fit_nS": 43.494511559215205,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 13.996735496494825,
+        "local_200pA_mean_mV": 2.1722892512895107,
+        "local_equalized_current_pA": 184.1620626151013,
+        "axial": {
+          "1": {
+            "relative": 0.025400351033326114,
+            "matched_2mV": 0.05080070206665223,
+            "calibrated_200pA": 0.05524504327774205,
+            "P11_anchor_fixed_shunt_200pA": 0.0714596092684344,
+            "Rin6mature_200pA": 0.05524504327774205
+          },
+          "2": {
+            "relative": 0.0038366024974329713,
+            "matched_2mV": 0.0076732049948659425,
+            "calibrated_200pA": 0.00834362303836262,
+            "P11_anchor_fixed_shunt_200pA": 0.010792498418491043,
+            "Rin6mature_200pA": 0.00834362303836262
+          },
+          "3": {
+            "relative": 0.000621104342183891,
+            "matched_2mV": 0.001242208684367782,
+            "calibrated_200pA": 0.0013508471059914605,
+            "P11_anchor_fixed_shunt_200pA": 0.001747324296412254,
+            "Rin6mature_200pA": 0.0013508471059914605
+          }
+        }
+      },
+      {
+        "day": 10,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.701132108372088,
+        "R_fixed_anchor_MOhm": 14.97363526180916,
+        "g_age_fit_nS": 51.90055121302685,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 14.924624554167405,
+        "local_200pA_mean_mV": 1.9402264216744174,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.023845008206368958,
+            "matched_2mV": 0.047690016412737915,
+            "calibrated_200pA": 0.04631499111476029,
+            "P11_anchor_fixed_shunt_200pA": 0.07148689208219916,
+            "Rin6mature_200pA": 0.04631499111476029
+          },
+          "2": {
+            "relative": 0.0033540507328691546,
+            "matched_2mV": 0.006708101465738309,
+            "calibrated_200pA": 0.006514117987507421,
+            "P11_anchor_fixed_shunt_200pA": 0.010054499382927616,
+            "Rin6mature_200pA": 0.006514117987507421
+          },
+          "3": {
+            "relative": 0.000503665418330445,
+            "matched_2mV": 0.00100733083666089,
+            "calibrated_200pA": 0.0009782823587297352,
+            "P11_anchor_fixed_shunt_200pA": 0.0015099725536197755,
+            "Rin6mature_200pA": 0.0009782823587297352
+          }
+        }
+      },
+      {
+        "day": 11,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.702184298248547,
+        "R_fixed_anchor_MOhm": 9.702184298248547,
+        "g_age_fit_nS": 33.62537520191145,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 9.639284986888482,
+        "local_200pA_mean_mV": 1.9404368596497097,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03248859924512805,
+            "matched_2mV": 0.0649771984902561,
+            "calibrated_200pA": 0.06317159034944789,
+            "P11_anchor_fixed_shunt_200pA": 0.06317159034944789,
+            "Rin6mature_200pA": 0.06317159034944789
+          },
+          "2": {
+            "relative": 0.0066449921250022114,
+            "matched_2mV": 0.013289984250004423,
+            "calibrated_200pA": 0.01291770618126421,
+            "P11_anchor_fixed_shunt_200pA": 0.01291770618126421,
+            "Rin6mature_200pA": 0.01291770618126421
+          },
+          "3": {
+            "relative": 0.0014948897094934162,
+            "matched_2mV": 0.0029897794189868323,
+            "calibrated_200pA": 0.0029058974649922294,
+            "P11_anchor_fixed_shunt_200pA": 0.0029058974649922294,
+            "Rin6mature_200pA": 0.0029058974649922294
+          }
+        }
+      },
+      {
+        "day": 12,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.702797854491639,
+        "R_fixed_anchor_MOhm": 7.051970663088848,
+        "g_age_fit_nS": 24.4388436217358,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 6.991162070565797,
+        "local_200pA_mean_mV": 1.9405595708983276,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03644053247127275,
+            "matched_2mV": 0.0728810649425455,
+            "calibrated_200pA": 0.07090073690658844,
+            "P11_anchor_fixed_shunt_200pA": 0.05153048885020169,
+            "Rin6mature_200pA": 0.07090073690658844
+          },
+          "2": {
+            "relative": 0.008835674245461155,
+            "matched_2mV": 0.01767134849092231,
+            "calibrated_200pA": 0.017185099549891333,
+            "P11_anchor_fixed_shunt_200pA": 0.012490089939572848,
+            "Rin6mature_200pA": 0.017185099549891333
+          },
+          "3": {
+            "relative": 0.002410251019500736,
+            "matched_2mV": 0.004820502039001472,
+            "calibrated_200pA": 0.004686639894463281,
+            "P11_anchor_fixed_shunt_200pA": 0.003406238853973163,
+            "Rin6mature_200pA": 0.004686639894463281
+          }
+        }
+      },
+      {
+        "day": 15,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.703448617320882,
+        "R_fixed_anchor_MOhm": 3.242190996619423,
+        "g_age_fit_nS": 11.23516937503892,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 3.20290558831665,
+        "local_200pA_mean_mV": 1.9406897234641765,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.039741370152518954,
+            "matched_2mV": 0.07948274030503791,
+            "calibrated_200pA": 0.0773822933036614,
+            "P11_anchor_fixed_shunt_200pA": 0.02585556790593534,
+            "Rin6mature_200pA": 0.0773822933036614
+          },
+          "2": {
+            "relative": 0.012300947754604394,
+            "matched_2mV": 0.02460189550920879,
+            "calibrated_200pA": 0.023937085993457657,
+            "P11_anchor_fixed_shunt_200pA": 0.007998043556881433,
+            "Rin6mature_200pA": 0.023937085993457657
+          },
+          "3": {
+            "relative": 0.004486588425619188,
+            "matched_2mV": 0.008973176851238376,
+            "calibrated_200pA": 0.008723048690404434,
+            "P11_anchor_fixed_shunt_200pA": 0.0029146122211250176,
+            "Rin6mature_200pA": 0.008723048690404434
+          }
+        }
+      },
+      {
+        "day": 21,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.703438968587225,
+        "R_fixed_anchor_MOhm": 2.901209540149364,
+        "g_age_fit_nS": 10.053575813966376,
+        "g_P11_anchor_nS": 33.62537520191145,
+        "R_homogeneous_anchor_MOhm": 2.865456760336496,
+        "local_200pA_mean_mV": 1.940687793717445,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03938546318925678,
+            "matched_2mV": 0.07877092637851356,
+            "calibrated_200pA": 0.07668983829145425,
+            "P11_anchor_fixed_shunt_200pA": 0.02292932342893614,
+            "Rin6mature_200pA": 0.047437013376157265
+          },
+          "2": {
+            "relative": 0.012470298410475663,
+            "matched_2mV": 0.024940596820951327,
+            "calibrated_200pA": 0.024266273114410694,
+            "P11_anchor_fixed_shunt_200pA": 0.0072553187886591555,
+            "Rin6mature_200pA": 0.015010065843965375
+          },
+          "3": {
+            "relative": 0.004678363220101855,
+            "matched_2mV": 0.00935672644020371,
+            "calibrated_200pA": 0.00909517603858668,
+            "P11_anchor_fixed_shunt_200pA": 0.0027193463655419275,
+            "Rin6mature_200pA": 0.00562588208572372
+          }
+        }
+      }
+    ]
+  },
+  {
+    "n": 31,
+    "sites": 29791,
+    "graphs": 32,
+    "amplitude": 0.5,
+    "boundary": "clamped",
+    "weight_SD_mean": 0.12980807736508465,
+    "max_linear_residual": 9.472732746253575e-11,
+    "max_symmetry_error": 4.515936236071383e-13,
+    "max_CG_iterations": 57,
+    "rows": [
+      {
+        "day": 7,
+        "R_target_MOhm": 13.18,
+        "R_test_MOhm": 13.180222763315385,
+        "R_fixed_anchor_MOhm": 20.014245197723742,
+        "g_age_fit_nS": 50.42410792191745,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 20.00665936746659,
+        "local_200pA_mean_mV": 2.636044552663077,
+        "local_equalized_current_pA": 151.74506828528072,
+        "axial": {
+          "1": {
+            "relative": 0.00812385644357836,
+            "matched_2mV": 0.01624771288715672,
+            "calibrated_200pA": 0.02141855111691608,
+            "P11_anchor_fixed_shunt_200pA": 0.03252419488895709,
+            "Rin6mature_200pA": 0.02141855111691608
+          },
+          "2": {
+            "relative": 0.0006618458941007141,
+            "matched_2mV": 0.0013236917882014283,
+            "calibrated_200pA": 0.001744795893507849,
+            "P11_anchor_fixed_shunt_200pA": 0.00264948274848911,
+            "Rin6mature_200pA": 0.001744795893507849
+          },
+          "3": {
+            "relative": 5.17369949614924e-05,
+            "matched_2mV": 0.0001034739899229848,
+            "calibrated_200pA": 0.00013638410377271427,
+            "P11_anchor_fixed_shunt_200pA": 0.00020710005763910827,
+            "Rin6mature_200pA": 0.00013638410377271427
+          }
+        }
+      },
+      {
+        "day": 9,
+        "R_target_MOhm": 10.86,
+        "R_test_MOhm": 10.860556131305927,
+        "R_fixed_anchor_MOhm": 14.148743967089535,
+        "g_age_fit_nS": 43.260106197002,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 14.13427034679047,
+        "local_200pA_mean_mV": 2.1721112262611855,
+        "local_equalized_current_pA": 184.1620626151013,
+        "axial": {
+          "1": {
+            "relative": 0.013106910621745885,
+            "matched_2mV": 0.02621382124349177,
+            "calibrated_200pA": 0.02848252758904368,
+            "P11_anchor_fixed_shunt_200pA": 0.037106017916642836,
+            "Rin6mature_200pA": 0.02848252758904368
+          },
+          "2": {
+            "relative": 0.0017761956947732673,
+            "matched_2mV": 0.0035523913895465346,
+            "calibrated_200pA": 0.0038589216410141614,
+            "P11_anchor_fixed_shunt_200pA": 0.005027265052328874,
+            "Rin6mature_200pA": 0.0038589216410141614
+          },
+          "3": {
+            "relative": 0.0002382679037354746,
+            "matched_2mV": 0.0004765358074709492,
+            "calibrated_200pA": 0.0005175817350467162,
+            "P11_anchor_fixed_shunt_200pA": 0.0006742869667704018,
+            "Rin6mature_200pA": 0.0005175817350467162
+          }
+        }
+      },
+      {
+        "day": 10,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700424503059672,
+        "R_fixed_anchor_MOhm": 15.08917398291753,
+        "g_age_fit_nS": 51.65311106281987,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 15.075679871753366,
+        "local_200pA_mean_mV": 1.940084900611934,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.012301196278376947,
+            "matched_2mV": 0.024602392556753894,
+            "calibrated_200pA": 0.02387485404970794,
+            "P11_anchor_fixed_shunt_200pA": 0.037137738297862835,
+            "Rin6mature_200pA": 0.02387485404970794
+          },
+          "2": {
+            "relative": 0.001554780796275356,
+            "matched_2mV": 0.003109561592550712,
+            "calibrated_200pA": 0.003016973820781101,
+            "P11_anchor_fixed_shunt_200pA": 0.004692953681492453,
+            "Rin6mature_200pA": 0.003016973820781101
+          },
+          "3": {
+            "relative": 0.00019325441562430542,
+            "matched_2mV": 0.00038650883124861083,
+            "calibrated_200pA": 0.0003749528951801148,
+            "P11_anchor_fixed_shunt_200pA": 0.0005832455547679229,
+            "Rin6mature_200pA": 0.0003749528951801148
+          }
+        }
+      },
+      {
+        "day": 11,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700989781946245,
+        "R_fixed_anchor_MOhm": 9.700989781946245,
+        "g_age_fit_nS": 33.20639716794887,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 9.683648384775875,
+        "local_200pA_mean_mV": 1.9401979563892493,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.016906978393692616,
+            "matched_2mV": 0.03381395678738523,
+            "calibrated_200pA": 0.03282765151801056,
+            "P11_anchor_fixed_shunt_200pA": 0.03282765151801056,
+            "Rin6mature_200pA": 0.03282765151801056
+          },
+          "2": {
+            "relative": 0.0030739661731199997,
+            "matched_2mV": 0.006147932346239999,
+            "calibrated_200pA": 0.005966287407682979,
+            "P11_anchor_fixed_shunt_200pA": 0.005966287407682979,
+            "Rin6mature_200pA": 0.005966287407682979
+          },
+          "3": {
+            "relative": 0.0005769993954618523,
+            "matched_2mV": 0.0011539987909237046,
+            "calibrated_200pA": 0.0011196585874255398,
+            "P11_anchor_fixed_shunt_200pA": 0.0011196585874255398,
+            "Rin6mature_200pA": 0.0011196585874255398
+          }
+        }
+      },
+      {
+        "day": 12,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.70147445966475,
+        "R_fixed_anchor_MOhm": 6.986096666745333,
+        "g_age_fit_nS": 23.91214877018249,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 6.969292398134157,
+        "local_200pA_mean_mV": 1.94029489193295,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.019159588126270142,
+            "matched_2mV": 0.038319176252540284,
+            "calibrated_200pA": 0.03721145794993568,
+            "P11_anchor_fixed_shunt_200pA": 0.02679621983540875,
+            "Rin6mature_200pA": 0.03721145794993568
+          },
+          "2": {
+            "relative": 0.0040909895903760325,
+            "matched_2mV": 0.008181979180752065,
+            "calibrated_200pA": 0.007941542479367202,
+            "P11_anchor_fixed_shunt_200pA": 0.0057187578727946175,
+            "Rin6mature_200pA": 0.007941542479367202
+          },
+          "3": {
+            "relative": 0.0009359268857291762,
+            "matched_2mV": 0.0018718537714583524,
+            "calibrated_200pA": 0.0018163698950857377,
+            "P11_anchor_fixed_shunt_200pA": 0.0013079801139912032,
+            "Rin6mature_200pA": 0.0018163698950857377
+          }
+        }
+      },
+      {
+        "day": 15,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.702632853809774,
+        "R_fixed_anchor_MOhm": 3.055457379050771,
+        "g_age_fit_nS": 10.457030868550394,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 3.044480363395448,
+        "local_200pA_mean_mV": 1.9405265707619546,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.022047279636650288,
+            "matched_2mV": 0.044094559273300575,
+            "calibrated_200pA": 0.04283914508274873,
+            "P11_anchor_fixed_shunt_200pA": 0.013490480772331346,
+            "Rin6mature_200pA": 0.04283914508274873
+          },
+          "2": {
+            "relative": 0.005910877968676971,
+            "matched_2mV": 0.011821755937353942,
+            "calibrated_200pA": 0.01147781790406901,
+            "P11_anchor_fixed_shunt_200pA": 0.0036144811350476225,
+            "Rin6mature_200pA": 0.01147781790406901
+          },
+          "3": {
+            "relative": 0.0018262491146324737,
+            "matched_2mV": 0.0036524982292649474,
+            "calibrated_200pA": 0.003545100773619222,
+            "P11_anchor_fixed_shunt_200pA": 0.0011163881475717452,
+            "Rin6mature_200pA": 0.003545100773619222
+          }
+        }
+      },
+      {
+        "day": 21,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.70278263358134,
+        "R_fixed_anchor_MOhm": 2.687699496428176,
+        "g_age_fit_nS": 9.198270260904327,
+        "g_P11_anchor_nS": 33.20639716794887,
+        "R_homogeneous_anchor_MOhm": 2.6776755003357557,
+        "local_200pA_mean_mV": 1.940556526716268,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.0222635528381764,
+            "matched_2mV": 0.0445271056763528,
+            "calibrated_200pA": 0.0432612474936381,
+            "P11_anchor_fixed_shunt_200pA": 0.011983493549683782,
+            "Rin6mature_200pA": 0.02675953453214728
+          },
+          "2": {
+            "relative": 0.00610399846938626,
+            "matched_2mV": 0.01220799693877252,
+            "calibrated_200pA": 0.011853194754878126,
+            "P11_anchor_fixed_shunt_200pA": 0.003283370016297291,
+            "Rin6mature_200pA": 0.007331873044254509
+          },
+          "3": {
+            "relative": 0.0019437322714436574,
+            "matched_2mV": 0.0038874645428873147,
+            "calibrated_200pA": 0.003773255046496029,
+            "P11_anchor_fixed_shunt_200pA": 0.001045202811538119,
+            "Rin6mature_200pA": 0.0023339721937088846
+          }
+        }
+      }
+    ]
+  },
+  {
+    "n": 31,
+    "sites": 29791,
+    "graphs": 32,
+    "amplitude": 1,
+    "boundary": "differential",
+    "weight_SD_mean": 0.2596161547301693,
+    "max_linear_residual": 9.995998367975244e-11,
+    "max_symmetry_error": 1.0711103011484813e-11,
+    "max_CG_iterations": 12,
+    "rows": [
+      {
+        "day": 11,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.703272372466351,
+        "R_fixed_anchor_MOhm": 9.703272372466351,
+        "g_age_fit_nS": 33.64151116665024,
+        "g_P11_anchor_nS": 33.64151116665024,
+        "R_homogeneous_anchor_MOhm": 9.634661556228703,
+        "local_200pA_mean_mV": 1.9406544744932699,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03340131421286254,
+            "matched_2mV": 0.06680262842572508,
+            "calibrated_200pA": 0.06501719274431533,
+            "P11_anchor_fixed_shunt_200pA": 0.06501719274431533,
+            "Rin6mature_200pA": 0.06501719274431533
+          },
+          "2": {
+            "relative": 0.0061561079369918574,
+            "matched_2mV": 0.012312215873983715,
+            "calibrated_200pA": 0.011963910082519904,
+            "P11_anchor_fixed_shunt_200pA": 0.011963910082519904,
+            "Rin6mature_200pA": 0.011963910082519904
+          },
+          "3": {
+            "relative": 0.001154172733641105,
+            "matched_2mV": 0.00230834546728221,
+            "calibrated_200pA": 0.002240845970761284,
+            "P11_anchor_fixed_shunt_200pA": 0.002240845970761284,
+            "Rin6mature_200pA": 0.002240845970761284
+          }
+        }
+      },
+      {
+        "day": 21,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.707160071665605,
+        "R_fixed_anchor_MOhm": 2.9033511433819745,
+        "g_age_fit_nS": 10.06196654734181,
+        "g_P11_anchor_nS": 33.64151116665024,
+        "R_homogeneous_anchor_MOhm": 2.8640670519576066,
+        "local_200pA_mean_mV": 1.9414320143331214,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.04081502274956987,
+            "matched_2mV": 0.08163004549913974,
+            "calibrated_200pA": 0.07964267797363629,
+            "P11_anchor_fixed_shunt_200pA": 0.023820629148962158,
+            "Rin6mature_200pA": 0.04926351214864101
+          },
+          "2": {
+            "relative": 0.011410479007954642,
+            "matched_2mV": 0.022820958015909283,
+            "calibrated_200pA": 0.022205197424803418,
+            "P11_anchor_fixed_shunt_200pA": 0.006641436306433903,
+            "Rin6mature_200pA": 0.013735173664826857
+          },
+          "3": {
+            "relative": 0.0035403467583639127,
+            "matched_2mV": 0.007080693516727825,
+            "calibrated_200pA": 0.006877415239979908,
+            "P11_anchor_fixed_shunt_200pA": 0.002056992081421621,
+            "Rin6mature_200pA": 0.004254071282461798
+          }
+        }
+      }
+    ]
+  },
+  {
+    "n": 31,
+    "sites": 29791,
+    "graphs": 64,
+    "amplitude": 1,
+    "boundary": "clamped",
+    "weight_SD_mean": 0.25966063423112773,
+    "max_linear_residual": 9.998909124114396e-11,
+    "max_symmetry_error": 8.201859330592143e-13,
+    "max_CG_iterations": 57,
+    "rows": [
+      {
+        "day": 7,
+        "R_target_MOhm": 13.18,
+        "R_test_MOhm": 13.18019126716704,
+        "R_fixed_anchor_MOhm": 19.930016379584725,
+        "g_age_fit_nS": 50.48079294403839,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 19.90013904002132,
+        "local_200pA_mean_mV": 2.636038253433408,
+        "local_equalized_current_pA": 151.74506828528072,
+        "axial": {
+          "1": {
+            "relative": 0.016076298455246114,
+            "matched_2mV": 0.03215259691049223,
+            "calibrated_200pA": 0.04240371697617933,
+            "P11_anchor_fixed_shunt_200pA": 0.06411946205938306,
+            "Rin6mature_200pA": 0.04240371697617933
+          },
+          "2": {
+            "relative": 0.0014106475397076574,
+            "matched_2mV": 0.0028212950794153147,
+            "calibrated_200pA": 0.003719944019250768,
+            "P11_anchor_fixed_shunt_200pA": 0.005624997675071025,
+            "Rin6mature_200pA": 0.003719944019250768
+          },
+          "3": {
+            "relative": 0.00010066009928207375,
+            "matched_2mV": 0.0002013201985641475,
+            "calibrated_200pA": 0.0002654123203705797,
+            "P11_anchor_fixed_shunt_200pA": 0.0004013349871110184,
+            "Rin6mature_200pA": 0.0002654123203705797
+          }
+        }
+      },
+      {
+        "day": 9,
+        "R_target_MOhm": 10.86,
+        "R_test_MOhm": 10.860454447880365,
+        "R_fixed_anchor_MOhm": 14.116166045539359,
+        "g_age_fit_nS": 43.39193177498159,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 14.059016048814646,
+        "local_200pA_mean_mV": 2.172090889576073,
+        "local_equalized_current_pA": 184.1620626151013,
+        "axial": {
+          "1": {
+            "relative": 0.02595753420046487,
+            "matched_2mV": 0.05191506840092974,
+            "calibrated_200pA": 0.056474027780509875,
+            "P11_anchor_fixed_shunt_200pA": 0.0734036275586671,
+            "Rin6mature_200pA": 0.056474027780509875
+          },
+          "2": {
+            "relative": 0.0038218548932415592,
+            "matched_2mV": 0.0076437097864831185,
+            "calibrated_200pA": 0.00830968899862742,
+            "P11_anchor_fixed_shunt_200pA": 0.010800740452837122,
+            "Rin6mature_200pA": 0.00830968899862742
+          },
+          "3": {
+            "relative": 0.00046638663945006934,
+            "matched_2mV": 0.0009327732789001387,
+            "calibrated_200pA": 0.00101371141796901,
+            "P11_anchor_fixed_shunt_200pA": 0.001317598519194795,
+            "Rin6mature_200pA": 0.00101371141796901
+          }
+        }
+      },
+      {
+        "day": 10,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700350459984996,
+        "R_fixed_anchor_MOhm": 15.048669174644575,
+        "g_age_fit_nS": 51.79059435423581,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 14.995413280169835,
+        "local_200pA_mean_mV": 1.9400700919969993,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.02435804908785505,
+            "matched_2mV": 0.0487160981757101,
+            "calibrated_200pA": 0.04732387774593822,
+            "P11_anchor_fixed_shunt_200pA": 0.07341604648179385,
+            "Rin6mature_200pA": 0.04732387774593822
+          },
+          "2": {
+            "relative": 0.0033386078665818687,
+            "matched_2mV": 0.006677215733163737,
+            "calibrated_200pA": 0.006482817405298878,
+            "P11_anchor_fixed_shunt_200pA": 0.01005713915743632,
+            "Rin6mature_200pA": 0.006482817405298878
+          },
+          "3": {
+            "relative": 0.00037774889665976804,
+            "matched_2mV": 0.0007554977933195361,
+            "calibrated_200pA": 0.0007332912534036642,
+            "P11_anchor_fixed_shunt_200pA": 0.0011375936907282904,
+            "Rin6mature_200pA": 0.0007332912534036642
+          }
+        }
+      },
+      {
+        "day": 11,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.700757334194195,
+        "R_fixed_anchor_MOhm": 9.700757334194195,
+        "g_age_fit_nS": 33.38414247377282,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 9.632090282152877,
+        "local_200pA_mean_mV": 1.9401514668388393,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03351796902950181,
+            "matched_2mV": 0.06703593805900362,
+            "calibrated_200pA": 0.06521118466333238,
+            "P11_anchor_fixed_shunt_200pA": 0.06521118466333238,
+            "Rin6mature_200pA": 0.06521118466333238
+          },
+          "2": {
+            "relative": 0.006705672083744384,
+            "matched_2mV": 0.013411344167488768,
+            "calibrated_200pA": 0.013031687433030245,
+            "P11_anchor_fixed_shunt_200pA": 0.013031687433030245,
+            "Rin6mature_200pA": 0.013031687433030245
+          },
+          "3": {
+            "relative": 0.0011416754520719079,
+            "matched_2mV": 0.0022833509041438158,
+            "calibrated_200pA": 0.0022174778864483304,
+            "P11_anchor_fixed_shunt_200pA": 0.0022174778864483304,
+            "Rin6mature_200pA": 0.0022174778864483304
+          }
+        }
+      },
+      {
+        "day": 12,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.701062529908002,
+        "R_fixed_anchor_MOhm": 6.99886609429406,
+        "g_age_fit_nS": 24.085108422549936,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 6.93218618791306,
+        "local_200pA_mean_mV": 1.9402125059816007,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.03802697384737411,
+            "matched_2mV": 0.07605394769474821,
+            "calibrated_200pA": 0.07405101394588663,
+            "P11_anchor_fixed_shunt_200pA": 0.05342436760469756,
+            "Rin6mature_200pA": 0.07405101394588663
+          },
+          "2": {
+            "relative": 0.009041449577163864,
+            "matched_2mV": 0.018082899154327727,
+            "calibrated_200pA": 0.017580178476532076,
+            "P11_anchor_fixed_shunt_200pA": 0.012683282340641233,
+            "Rin6mature_200pA": 0.017580178476532076
+          },
+          "3": {
+            "relative": 0.0018755335148632848,
+            "matched_2mV": 0.0037510670297265696,
+            "calibrated_200pA": 0.0036441104554842153,
+            "P11_anchor_fixed_shunt_200pA": 0.0026290564597559415,
+            "Rin6mature_200pA": 0.0036441104554842153
+          }
+        }
+      },
+      {
+        "day": 15,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.70168133494159,
+        "R_fixed_anchor_MOhm": 3.0719996020437943,
+        "g_age_fit_nS": 10.570958667198987,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 3.0282708084041268,
+        "local_200pA_mean_mV": 1.9403362669883182,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.04392189289886141,
+            "matched_2mV": 0.08784378579772283,
+            "calibrated_200pA": 0.08566141306566627,
+            "P11_anchor_fixed_shunt_200pA": 0.027124352755276332,
+            "Rin6mature_200pA": 0.08566141306566627
+          },
+          "2": {
+            "relative": 0.01343876721337676,
+            "matched_2mV": 0.02687753442675352,
+            "calibrated_200pA": 0.02615312603546029,
+            "P11_anchor_fixed_shunt_200pA": 0.008281285480257316,
+            "Rin6mature_200pA": 0.02615312603546029
+          },
+          "3": {
+            "relative": 0.0038051549884725814,
+            "matched_2mV": 0.007610309976945163,
+            "calibrated_200pA": 0.007397405790561397,
+            "P11_anchor_fixed_shunt_200pA": 0.0023423597271655687,
+            "Rin6mature_200pA": 0.007397405790561397
+          }
+        }
+      },
+      {
+        "day": 21,
+        "R_target_MOhm": 9.7,
+        "R_test_MOhm": 9.70175736077099,
+        "R_fixed_anchor_MOhm": 2.7033729979245096,
+        "g_age_fit_nS": 9.302416661891254,
+        "g_P11_anchor_nS": 33.38414247377282,
+        "R_homogeneous_anchor_MOhm": 2.663418903777124,
+        "local_200pA_mean_mV": 1.940351472154198,
+        "local_equalized_current_pA": 206.18556701030928,
+        "axial": {
+          "1": {
+            "relative": 0.044379072791339486,
+            "matched_2mV": 0.08875814558267897,
+            "calibrated_200pA": 0.08656603292592203,
+            "P11_anchor_fixed_shunt_200pA": 0.024121431535243452,
+            "Rin6mature_200pA": 0.05354599974799301
+          },
+          "2": {
+            "relative": 0.013923078900018076,
+            "matched_2mV": 0.027846157800036152,
+            "calibrated_200pA": 0.027098015834034293,
+            "P11_anchor_fixed_shunt_200pA": 0.007550801527903551,
+            "Rin6mature_200pA": 0.016761659278784098
+          },
+          "3": {
+            "relative": 0.004074670536664671,
+            "matched_2mV": 0.008149341073329342,
+            "calibrated_200pA": 0.007921782487076564,
+            "P11_anchor_fixed_shunt_200pA": 0.0022073869789392647,
+            "Rin6mature_200pA": 0.00490007164149066
+          }
+        }
+      }
+    ]
+  }
+]
