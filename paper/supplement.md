@@ -171,11 +171,46 @@ The inversion is thus explained within the parent physiology by the competition 
 
 ## Supplement H. Native-conductivity nonlinear shared-support stress tests
 
-A single-source nonlinear fit using six independently adjustable nonnegative glial path weights, fixed extracellular and local physiology and bounds 0–50 is a stronger comparison than equal-total-weight normalization. At 37 µm, high load and 1 ms timestep, we fit source 0 using K and voltage at seven sites and 15 time samples, with illustrative independent scale factors 1 µM and 10 µV. Two initializations converge to the same fitted weights (approximately 1.918, 4.708, 50, 50, 50, 1.262). Three weights reach the upper bound. The training K RMS discrepancy falls from 0.177 mM for the total-weight-matched path to 0.0109 mM, while the withheld source 2 K RMS discrepancy is 0.1021 mM (0.0667 mM for the total-weight-matched path). The fitted rival therefore reproduces the training source far better but generalizes worse in K; its held-out voltage RMS is 0.0492 mV versus 0.0796 mV for the total-weight-matched path. The comparison uses the independent graph as reference. These are synthetic model-discrimination and generalization results, not independent biological validation or a certified lower bound over all shared-support models. Broader fits allowing ECS weights, multiple training sources, wider conductance bounds and a third withheld source are required to assess sensitivity to the restriction.
+A single-source nonlinear fit using six independently adjustable nonnegative glial path weights, fixed extracellular and local physiology and bounds 0–50 is a stronger comparison than equal-total-weight normalization. At 37 µm, high load and 1 ms timestep, we fit source 0 using K and voltage at seven sites and 15 time samples, with illustrative independent scale factors 1 µM and 10 µV. Two initializations converge to the same fitted weights (approximately 1.918, 4.708, 50, 50, 50, 1.262). Three weights reach the upper bound. The training K RMS discrepancy falls from 0.177 mM for the total-weight-matched path to 0.0109 mM, while the withheld source 2 K RMS discrepancy is 0.1021 mM (0.0667 mM for the total-weight-matched path). The fitted rival therefore reproduces the training source far better but generalizes worse in K; its held-out voltage RMS is 0.0492 mV versus 0.0796 mV for the total-weight-matched path. The comparison uses the independent graph as reference. These are synthetic model-discrimination and generalization results, not independent biological validation or a certified lower bound over all shared-support models. The broader joint-source experiments below assess sensitivity to this restriction.
 
 Allowing all six extracellular path weights to vary in addition to the six glial weights further reduces single-source training K RMS discrepancy to 0.00286 mM and voltage RMS discrepancy to 0.00512 mV. The better of two obtained fits has held-out source-2 K RMS discrepancy 0.2865 mM and voltage RMS discrepancy 0.1902 mV. Both twelve-parameter optimizations exhausted their prescribed iteration budget; the values describe obtained candidates, not converged minima. The additional flexibility illustrates a severe risk of fitting only one stimulation site.
 
-A broader joint-source glial-only optimization fits sources 0 and 2 together and withholds source 4, with bounds 0–500. It yields training potassium RMS discrepancies 0.0422 and 0.0482 mM, and held-out potassium RMS discrepancy 0.0662 mM (maximum 0.187 mM). The held-out neuronal voltage RMS discrepancy is 0.0539 mV (maximum 0.156 mV). The fitted path weights span 2.59–217.46; the large weights are not empirically constrained. These comparisons show finite predictive separation for the fitted alternatives, not a certificate of separation from the entire shared-support cone. The joint fit allowing independent ECS weights is a further stress test.
+A broader joint-source glial-only optimization fits sources 0 and 2 together and withholds source 4, with bounds 0–500. It yields training potassium RMS discrepancies 0.0422 and 0.0482 mM, and held-out potassium RMS discrepancy 0.0662 mM (maximum 0.187 mM). The held-out neuronal voltage RMS discrepancy is 0.0539 mV (maximum 0.156 mV). The fitted path weights span 2.59–217.46; the large weights are not empirically constrained. These comparisons show finite predictive separation for the fitted alternatives, not a certificate of separation from the entire shared-support cone. The joint fit allowing independent ECS weights is a further stress test, not a replacement for the more informative reduced-mobility comparison in the main article.
+
+The reduced-mobility comparison uses the independent-support reference at $\mu=0.17988168474408803$, $d=37$ µm, neutral KCl rate 30 mM tissue/s and the identical timing, geometry and local EDNM equations of the main joint-source comparison. The objective is the sum of the squared distances of sources 0 and 2. Source 4 is not used for parameter or restart selection. The six rival glial weights have lower bound zero and upper bound either 0.9322643711725827 or 3.107547903908609; the six ECS weights lie in $[0.7,1.3]$. The fitting timestep is 1 ms. SciPy least_squares uses the default bounded trust-region reflective method, relative finite-difference step 0.002, Jacobian scaling, and ftol, xtol and gtol of $10^{-5}$, with max_nfev 45. Evaluation counts below include finite-difference evaluations, not just optimizer major iterations. The best evaluated weight vector is retained; reported optimality and active-mask values pertain to the optimizer's own terminal point. They do not prove that the retained point satisfies a first-order optimality condition.
+
+Table S5. Original joint-source optimization records. "T" and "U" denote total-weight-matched and ordinary uniform starts. Objective values are sums over the two training sources. A budget stop is not an optimizer convergence result.
+
+| Reference / cap | Start | Training $D^2$ | Evaluations | Termination | Reported optimality |
+|:--|:--:|--:|--:|:--|--:|
+| Reduced / 0.932 | T | 1051357.71458 | 156 | ftol, xtol | 1.164 |
+| Reduced / 0.932 | U | 1051357.71437 | 169 | ftol, xtol | 0.346 |
+| Reduced / 3.108 | T | 973086.73909 | 195 | ftol | 2532.98 |
+| Reduced / 3.108 | U | 973086.51892 | 208 | ftol | 58.01 |
+| Native / glial only, 500 | T | 493671.04870 | 63 | ftol | 3817.94 |
+| Native / glial + ECS, 500 | T | 126573.55939 | 268 + 445 | runtime budget | — |
+| Native / glial + ECS, 500 | U | 126734.68599 | 270 + 437 | runtime budget | — |
+
+At the lower cap the selected glial weights are approximately (0.932264, 0.459682, 0.932264, 0.766309, 0.932264, 0.932264); at the higher cap they are (3.107548, 0.312190, 1.071423, 0.652975, 0.849531, 3.107548). The corresponding extracellular vectors are (0.878753, 0.895536, 0.889534, 0.700000, 0.700000, 1.300000) and (0.821844, 0.924735, 0.877988, 0.700000, 0.700000, 1.300000). Thus the results depend partly on explicit conductance constraints, and changing those constraints is a sensitivity analysis rather than evidence of an independently measured edge distribution. The two starts yield almost identical training values and held-out responses at each cap, but the high-cap termination and reported optimality caution against calling the constrained minimum established.
+
+For the native twelve-weight fit, the original four-hour jobs were cancelled after 268 and 270 objective evaluations. A continuation uses the best training-evaluated vector from each log, checks that its recomputed objective agrees with the original, retains the same physical model and bounds and extends the iteration allowance to 60 optimizer function evaluations and the runtime budget to 285 minutes before graceful termination. The total-matched and uniform continuations reproduce starting objectives 128347.06474 and 129483.67147 and reach 126573.55939 and 126734.68599, reductions of about 1.38% and 2.12%. Their final training costs differ by approximately 0.127%. The final candidate vectors are distinct, with glial weights (90.763, 1.727, 5.735, 158.216, 3.604, 5.088) and (59.939, 1.749, 5.783, 104.284, 3.681, 5.076), respectively. Their extracellular weights remain near unity but not all within the reduced-mobility sensitivity bounds. Neither fit formally converges, and the final optimizer optimality is unavailable. These are two extended local search trajectories, not independent global optimization certificates.
+
+Table S6. Frozen-candidate refinement, source 4. Relative residuals use the independent-support reference norm. All candidates are chosen from the 1-ms optimization by training distance alone. Fine-step evaluations use unchanged weights and recheck baseline invariance, finite states, positivity, Newton convergence and ionic inventory. No refitting occurs.
+
+| Reference / rival | Step (ms) | Held-out $D^2$ ($10^6$) | Relative K (%) | Relative $V_m$ (%) | K RMS (mM) | $V_m$ RMS (mV) |
+|:--|--:|--:|--:|--:|--:|--:|
+| Reduced / cap 0.932 | 1 | 10.706968 | 5.64914 | 13.55425 | 0.302621 | 0.145961 |
+| Reduced / cap 0.932 | 0.25 | 10.699160 | 5.64858 | 13.55263 | 0.302756 | 0.146254 |
+| Reduced / cap 3.108 | 1 | 11.652681 | 5.88950 | 15.11567 | 0.315497 | 0.162776 |
+| Reduced / cap 3.108 | 0.25 | 11.644234 | 5.88899 | 15.11430 | 0.315642 | 0.163106 |
+| Native / glial only | 1 | 0.518648 | 1.28405 | 4.68864 | 0.066213 | 0.053926 |
+| Native / glial only | 0.25 | 0.518816 | 1.28474 | 4.68964 | 0.066284 | 0.054049 |
+| Native / glial + ECS | 1 | 19.669857 | 7.97338 | 8.97585 | 0.411155 | 0.103236 |
+| Native / glial + ECS | 0.25 | 19.660898 | 7.97364 | 8.96769 | 0.411386 | 0.103354 |
+
+For the native reference the ordinary path gives held-out $D^2=1.341218\times10^6$ and the total-weight-matched path $0.670266\times10^6$; the six-glial-weight fitted rival improves upon both, whereas the twelve-weight training-selected candidate does not. For the reduced reference the corresponding fixed controls give $3.809459\times10^6$ and $2.166659\times10^6$. Both bounded twelve-weight candidates predict K less accurately but voltage slightly more accurately than their total-weight-matched control at the withheld source. These adverse and favorable comparisons delimit precisely the claim: additional fitting flexibility need not transfer to a new intervention. We do not estimate the minimum over weights selected on source 4, which would violate the held-out protocol. The large illustrative whitened distances cannot be interpreted as independent experimental z-scores or p-values.
+
+The original and resumed optimization records, including unsuccessful or budget-limited jobs, are identified in the reproducibility archive and workflow provenance. The original native refinement run had six successful forward jobs and two missing-candidate failures; the completed resumed workflow supplies the two previously missing forward evaluations. The source model, solver revision, graph patch and time protocol are pinned in the associated driver snapshots and workflow run identifiers (main article, Code and data availability).
 
 ## Supplement I. Neutral-source early-time response
 
@@ -193,6 +228,21 @@ Table S4. Least-squares slopes of log absolute extracellular K topology contrast
 | 25 | Disabled | — | 3.307 | 2.954 | 2.668 | 2.559 |
 
 All six jobs completed; maximum relative inventory error was below $4.58\times10^{-11}$. The finite-window ordering is consistent across time resolutions. Neither the migration-off condition nor the full model without it is the strictly chemical two-compartment system of Proposition 2: extracellular migration, membrane-current pathways, local kinetics and capacitive constraints are retained. Therefore a fourth-order onset is not required in this diagnostic. The raw trajectories, exact input and analysis driver are identified by GitHub Actions run [45885207597](https://github.com/ipsissima/SMM/actions/runs/45885207597), commit `b605b58aea96e0541e2f6fb55e7e8d32b4dfc6b2`; the complete fit windows and quality diagnostics are in reproducibility/neutral_onset_results.json.
+
+## Supplement J. Edge-volume discretization sensitivity
+
+The inherited graph flux convention uses the previous-step volume fraction at the lower-index endpoint. Replacing this factor by the arithmetic mean of the two endpoint fractions preserves equal and opposite edge inventory transfers and removes this specific index dependence. We compare both conventions at central glial mobility 0.179881685, 37 µm, 0.5 ms, neutral KCl sources 0 and 2 and rates 3 and 30 mM tissue/s. Each condition uses its own unforced baseline and the same local kinetics. The comparison concerns the independent graph versus the total-glial-edge-weight-matched path, not a refitting of the twelve-weight models. Eight configurations were completed in run [45887612403](https://github.com/ipsissima/SMM/actions/runs/45887612403), commit 87c0aa2e1b1c0c9926d1e6093bbfc08022bbc5f4.
+
+Table S7. Symmetric edge-volume audit. Percent changes are relative to the corresponding original-convention statistics, not percentage points.
+
+| Source | Rate (mM tissue/s) | Change in relative K contrast (%) | Change in maximum K difference (%) | Change in maximum voltage difference (%) |
+|--:|--:|--:|--:|--:|
+| 0 | 3 | 0.00035 | 0.00238 | 0.00109 |
+| 0 | 30 | 0.00867 | 0.03785 | 0.01745 |
+| 2 | 3 | 0.00067 | 0.00150 | 0.00138 |
+| 2 | 30 | 0.01056 | 0.01627 | 0.01483 |
+
+The absolute maximum differences for the source-0 high-load condition are 0.81150981 and 0.81181700 mM K, and 0.59858773 and 0.59869215 mV voltage under the original and symmetric conventions, respectively. The complete per-site values and both rival controls are preserved in reproducibility/edge_volume_results.json. The changes are small for the specified comparison. This does not justify a general theorem about all variable-volume graph discretizations, and the same check would be needed for any materially different regime.
 
 # References {.unnumbered}
 
