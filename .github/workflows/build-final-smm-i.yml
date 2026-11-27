@@ -1,0 +1,53 @@
+name: Build final SMM-I manuscript and supplement
+on:
+  push:
+    branches: [research/smm-i-final-20261127]
+    paths: [.github/workflows/build-final-smm-i.yml, paper/manuscript.md, paper/supplement.md, reproducibility/plot_final_rivals.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install reproducible typesetting environment
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pandoc texlive-xetex texlive-fonts-recommended texlive-latex-extra tex-gyre fonts-texgyre lmodern poppler-utils python3-matplotlib
+          pandoc --version
+          xelatex --version
+          fc-match "TeX Gyre Termes"
+          fc-match "TeX Gyre Termes Math"
+      - name: Build canonical manuscript and independent supplement
+        run: |
+          set -euo pipefail
+          python3 reproducibility/plot_peak_refinement.py
+          python3 reproducibility/plot_final_rivals.py
+          mkdir -p build
+          cp paper/*.png build/
+          cd build
+          for pair in "manuscript SMM_Final" "supplement SMM_Supplement_Final"; do
+            read -r input output <<< "$pair"
+            pandoc "../paper/$input.md" -f markdown+tex_math_dollars -t latex -s -V mainfont="TeX Gyre Termes" -V mathfont="TeX Gyre Termes Math" -o "$output.tex"
+            xelatex -halt-on-error -interaction=nonstopmode "$output.tex" > "$output-build1.txt" 2>&1 || { tail -80 "$output-build1.txt"; exit 1; }
+            xelatex -halt-on-error -interaction=nonstopmode "$output.tex" > "$output-build2.txt" 2>&1 || { tail -80 "$output-build2.txt"; exit 1; }
+            pdfinfo "$output.pdf" > "$output-info.txt"
+            pdftotext -layout "$output.pdf" "$output-text.txt"
+            grep -E 'Overfull|Underfull|Missing character|Warning:' "$output.log" > "$output-warnings.txt" || true
+            mkdir -p "$output-pages"
+            pdftoppm -r 120 -png "$output.pdf" "$output-pages/page"
+          done
+          git -C .. rev-parse HEAD > SOURCE_COMMIT.txt
+          sha256sum *.pdf *.tex > SHA256SUMS
+          cp ../paper/manuscript.md ../paper/supplement.md .
+          # The compiled source and page renders accompany the PDFs for review.
+          ls -lh *.pdf *.tex
+          cat *-info.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_I_FINAL_DOCUMENTS
+          path: build/
+          retention-days: 90
