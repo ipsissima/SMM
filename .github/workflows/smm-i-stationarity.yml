@@ -1,0 +1,245 @@
+name: SMM-I independent-target stationarity gate
+on:
+  push:
+    branches: [research/smm-i-stationarity-20261127]
+    paths: [.github/workflows/smm-i-stationarity.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stationarity:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {case: native_four, mu: '1.0', kind: four}
+          - {case: native_all, mu: '1.0', kind: all}
+          - {case: reduced_four, mu: '0.17988168474408803', kind: four}
+          - {case: reduced_all, mu: '0.17988168474408803', kind: all}
+    env:
+      CASE: ${{ matrix.case }}
+      MU: ${{ matrix.mu }}
+      KIND: ${{ matrix.kind }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install exact pinned solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Apply identical neutral KCl protocol and graph correction
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = 0.001                # initial fitting resolution')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          s=s.replace(old,
+              '        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+              '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+              '            i = stimulus_protocol.get("kcl_site", 0)\n'
+              '            for ion in (1, 2):\n'
+              '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n'+old)
+          p.write_text(s)
+          # Avoid printing multi-megabyte logs for every optimization call;
+          # preserve convergence check in the actual Newton loop.
+          old='    alpha = [alpha_s[0:-1], alpha_d[0:-1]]'
+          assert s.count(old)==1
+          s=s.replace(old,'    if rsd >= tol and N_iter >= itermax: raise RuntimeError("Unconverged Newton step")\n'+old)
+          p.write_text(s)
+          PY
+      - name: Resume four-source and all-source fits with gradient-only termination
+        run: |
+          cat > /tmp/stationarity.py <<'PY'
+          import contextlib, json, os, tempfile, time, traceback, multiprocessing
+          from concurrent.futures import ProcessPoolExecutor
+          from pathlib import Path
+          import numpy as np
+          from scipy.optimize import least_squares
+          from ednm import model,solver
+          from ednm_graph_adapter import closed_path
+          N=7; dt=.001; d=37e-4
+          E=closed_path(N); G=E.copy()
+          for i,j,w in [(0,4,.8),(1,5,.5),(2,6,.6)]:G[i,j]=G[j,i]=w
+          mu=float(os.environ['MU']); G*=mu
+          cap=3.107547903908609*mu/.17988168474408803; deadline=time.monotonic()+265*60
+          out=Path('output');out.mkdir(exist_ok=True)
+          def path(weights):
+              a=np.zeros((N,N))
+              for i,w in enumerate(weights):a[i,i+1]=a[i+1,i]=w
+              return a
+          def simulate(g,e,source,rate):
+              solver.graph_glial=g;solver.graph_ecs=e
+              with tempfile.TemporaryDirectory() as tmp,open(os.devnull,'w') as sink:
+                  with contextlib.redirect_stdout(sink):
+                      solver.solve_system(model.Model(N,d,0,0),tmp+'/',.8,
+                          dict(j_stim=0.,stim_start=.08,stim_end=.28,N_stim=1,
+                               spike_train=np.zeros((2,N)),kcl_rate_tissue=rate,kcl_site=source))
+                  with np.load(Path(tmp)/'data.npz') as a:
+                      t,alpha,c,phi=[a[k] for k in ('t','alpha','c','phi')]
+              assert all(np.isfinite(x).all() for x in (t,alpha,c,phi))
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              mass=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.clip(np.rint(t/dt).astype(int)-round(.08/dt)+1,0,round(.28/dt)-round(.08/dt))
+              expected=mass[0]+(nsteps*dt*rate)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=float(np.max(abs(mass-expected)/np.maximum(abs(expected),1e-12)))
+              assert err<1e-7,err
+              return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],err
+          # Uniform initial state and no synapses imply spatially uniform baseline;
+          # confirm invariance numerically for shortcut and ordinary path before reusing.
+          b=simulate(E,E,0,0.); b2=simulate(G,E,0,0.)
+          assert np.max(abs(b[1]-b2[1]))<1e-7 and np.max(abs(b[2]-b2[2]))<1e-6
+          assert np.max(np.ptp(b[1],axis=1))<1e-7 and np.max(np.ptp(b[2],axis=1))<1e-6
+          t=b[0]
+          def response(g,e,src):
+              r=simulate(g,e,src,30.)
+              assert np.allclose(r[0],t,atol=1e-12,rtol=0)
+              return r[1]-b[1],r[2]-b[2],r[3]
+          case=os.environ['CASE']
+          kind=os.environ['KIND']
+          starts=json.loads('{"native_four":{"weights":[8.484794161013518,2.491212976825311,5.601603803291265,5.926446150412726,2.083176750889019,6.373035621076148,0.9382286170058994,0.9548584324175213,0.9590538701719004,0.9600416877504873,0.9633216488059119,0.9401192264382358],"D2":317671.6657690118,"source_job":140416377793},"native_all":{"weights":[3.712951976949784,3.3946843767035464,5.792035531732725,6.359034090757289,2.869839064793562,2.9891329914997042,0.9651465119489113,0.9647814495393735,0.9393046725514596,0.9387192833371958,0.9709715630536843,0.9692275727733868],"D2":826863.4870121912,"source_job":140416378128},"reduced_four":{"weights":[1.9869705126252795,0.3755490275265179,0.9237277759961309,0.9617559173217889,0.32260333843329764,1.4095525652022145,0.8323298550563013,0.908359634899564,0.8916721642373743,0.8945044489291909,0.92955511768258,0.8416878446503467],"D2":2214752.5327788317,"source_job":140416378187},"reduced_all":{"weights":[0.7411344936372212,0.5101603511433834,0.9065640874513012,0.9935355558182305,0.4368572877821808,0.5888864213225672,0.9048820678823435,0.9265556993729177,0.8557304971407159,0.8527261095938219,0.9432715554936473,0.9172825684464284],"D2":5069444.529133336,"source_job":140416378287}}')
+          prior=starts[case]
+          train=list(range(N)) if kind=='all' else [0,2,4,6]
+          test=[i for i in range(N) if i not in train]
+          ix=np.array([np.argmin(abs(t-x)) for x in np.linspace(.1,.8,15)])
+          def features(r):
+              return np.r_[r[0][ix].ravel()/.001,r[1][ix].ravel()/.01]
+          def score(r,z):
+              k=r[0]-z[0];v=r[1]-z[1];delta=features(r)-features(z)
+              return dict(D2=float(delta@delta),K_RMS_mM=float(np.sqrt(np.mean(k*k))),Vm_RMS_mV=float(np.sqrt(np.mean(v*v))),max_K_mM=float(np.max(abs(k))),max_Vm_mV=float(np.max(abs(v))),mass_error=r[2])
+          target={i:response(G,E,i) for i in range(N)}
+          target_train=np.concatenate([features(target[i]) for i in train])
+          lo=np.r_[np.zeros(6),np.full(6,.7)]
+          hi=np.r_[np.full(6,cap),np.full(6,1.3)]
+          span=hi-lo
+          x0=(np.array(prior['weights'])-lo)/span
+          assert np.all((x0>=0)&(x0<=1))
+          norm=float(np.sqrt(prior['D2']))
+          def evaluate(x):
+              weights=lo+span*x
+              g=path(weights[:6]);e=path(weights[6:])
+              predictions=[response(g,e,i) for i in train]
+              raw=np.concatenate([features(r) for r in predictions])-target_train
+              return raw/norm,max(r[2] for r in predictions)
+          # Isolate the solver's mutable graph globals in independent forked processes.
+          workers=min(4,len(os.sched_getaffinity(0)))
+          pool=ProcessPoolExecutor(max_workers=workers,mp_context=multiprocessing.get_context('fork'))
+          cache={}
+          history=[];best=[float('inf'),None]
+          def save_json(p,d):
+              q=p.with_suffix('.tmp')
+              q.write_text(json.dumps(d,indent=2))
+              q.replace(p)
+          def eval_many(xs):
+              unique={}
+              for x in xs:
+                  k=tuple(x)
+                  if k not in cache:unique[k]=x
+              if unique:
+                  for (k,x),(r,err) in zip(unique.items(),pool.map(evaluate,unique.values())):
+                      cache[k]=(r,err)
+              return [cache[tuple(x)][0] for x in xs]
+          def budget():
+              if time.monotonic()>deadline:raise TimeoutError('Soft optimization deadline; no stationarity claim')
+          def fun(x):
+              budget()
+              r=eval_many([x])[0];d2=float((r@r)*norm**2)
+              rec=dict(D2=d2,weights=(lo+span*x).tolist(),x=x.tolist(),mass_error=cache[tuple(x)][1])
+              history.append(rec)
+              if d2<best[0]:
+                  best[:]=[d2,x.copy()]
+                  save_json(out/'checkpoint.json',dict(**rec,case=case,prior=prior))
+              save_json(out/'trace.json',history)
+              print('STATIONARITY_EVAL',json.dumps(rec),flush=True)
+              return r
+          def numerical_jac(x,h):
+              # Second-order centered differences in dimensionless box coordinates;
+              # second-order one-sided differences close to an active bound.
+              xs=[x.copy()]
+              specs=[]
+              for j in range(len(x)):
+                  a=x.copy();b=x.copy()
+                  if x[j]>=h and x[j]<=1-h:
+                      a[j]+=h;b[j]-=h;co=(0.,1.,-1.)
+                  elif x[j]<h:
+                      a[j]+=h;b[j]+=2*h;co=(-3.,4.,-1.)
+                  else:
+                      a[j]-=h;b[j]-=2*h;co=(3.,-4.,1.)
+                  specs.append(co);xs.extend([a,b])
+              vals=eval_many(xs);base=vals[0]
+              return np.column_stack([(co[0]*base+co[1]*vals[2*j+1]+co[2]*vals[2*j+2])/(2*h) for j,co in enumerate(specs)])
+          def jac(x):
+              budget()
+              return numerical_jac(x,2e-4)
+          # Prespecified normalized objective: F=||r_raw||^2/(2 D2_prior).
+          # Parameter coordinates span the same fixed physical bounds as prior fits.
+          # No ftol or xtol termination is accepted.
+          result=None;error=None
+          try:
+              result=least_squares(fun,x0,jac=jac,bounds=(np.zeros(12),np.ones(12)),ftol=None,xtol=None,gtol=1e-8,max_nfev=120,x_scale=1.)
+          except Exception as e:
+              error=repr(e);print('STATIONARITY_STOP',error,flush=True);traceback.print_exc()
+          assert best[1] is not None
+          x=best[1];w=lo+span*x
+          # Audit the selected training iterate with independent differencing steps.
+          # Report projected-gradient residual and KKT sign violation at each step.
+          r=eval_many([x])[0];audits=[]
+          def audit(h):
+              J=numerical_jac(x,h);g=J.T@r
+              proj=x-np.clip(x-g,0,1)
+              kkt=g.copy()
+              kkt[(x<=1e-7)&(g>0)]=0
+              kkt[(x>=1-1e-7)&(g<0)]=0
+              return dict(step=h,gradient=g.tolist(),projected_gradient_inf=float(np.linalg.norm(proj,np.inf)),kkt_gradient_inf=float(np.linalg.norm(kkt,np.inf)),raw_weight_gradient=(g*norm**2/span).tolist())
+          for h in (1e-4,5e-5):
+              a=audit(h);audits.append(a)
+              print('GRADIENT_AUDIT',json.dumps(a),flush=True)
+              save_json(out/'gradient_audits.json',audits)
+          disagreement=float(np.max(np.abs(np.array(audits[0]['gradient'])-np.array(audits[1]['gradient']))))
+          threshold=1e-7
+          passed=all(a['projected_gradient_inf']<=threshold and a['kkt_gradient_inf']<=threshold for a in audits) and disagreement<=threshold
+          pool.shutdown()
+          fit={i:response(path(w[:6]),path(w[6:]),i) for i in range(N)}
+          scores={str(i):score(fit[i],target[i]) for i in range(N)}
+          summary=dict(case=case,kind=kind,mu=mu,dt_s=dt,prior=prior,weights=w.tolist(),source_train=train,source_test=test,bounds=[lo.tolist(),hi.tolist()],normalization_D2_prior=norm**2,train_D2=sum(scores[str(i)]['D2'] for i in train),heldout_D2=sum(scores[str(i)]['D2'] for i in test),scores=scores,termination_success=bool(result.success) if result is not None else False,termination_message=str(result.message) if result is not None else error,solver_optimality=float(result.optimality) if result is not None else None,terminal_x=result.x.tolist() if result is not None else None,nfev=int(result.nfev) if result is not None else None,unique_candidate_evaluations=len(cache),gradient_audits=audits,gradient_disagreement_inf=disagreement,stationarity_threshold=threshold,numerical_stationarity_gate=bool(passed),samples_s=t[ix].tolist(),noise_K_mM=.001,noise_Vm_mV=.01)
+          save_json(out/'summary.json',summary)
+          arrays={'t':t}
+          for i in range(N):
+              for label,v in [('target',target[i]),('fit',fit[i])]:
+                  arrays[f'{label}_K_{i}']=v[0];arrays[f'{label}_V_{i}']=v[1]
+          np.savez_compressed(out/'responses.npz',**arrays)
+          print('STATIONARITY_RESULT',json.dumps(summary),flush=True)
+          PY
+          python /tmp/stationarity.py
+      - name: Archive solver provenance and partial diagnostics
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+          cp /tmp/stationarity.py output/driver.py || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_I_STATIONARITY_${{ matrix.case }}
+          path: output/
+          retention-days: 90
