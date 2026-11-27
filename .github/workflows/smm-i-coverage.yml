@@ -1,0 +1,211 @@
+name: SMM-I four-source geometry discrimination and strength sensitivity
+on:
+  push:
+    branches: [research/smm-i-coverage-20261127]
+    paths: [.github/workflows/smm-i-coverage.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fit:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mu: '0.17988168474408803', kind: independent, start: uniform}
+          - {mu: '0.17988168474408803', kind: independent, start: total_matched}
+          - {mu: '0.17988168474408803', kind: shared, start: uniform}
+          - {mu: '0.17988168474408803', kind: all_sources, start: total_matched}
+          - {mu: '1.0', kind: independent, start: uniform}
+          - {mu: '1.0', kind: independent, start: total_matched}
+          - {mu: '1.0', kind: shared, start: uniform}
+          - {mu: '1.0', kind: all_sources, start: total_matched}
+          - {mu: '0.05', kind: strength_sweep, start: uniform}
+          - {mu: '0.119', kind: strength_sweep, start: uniform}
+          - {mu: '0.17988168474408803', kind: strength_sweep, start: uniform}
+          - {mu: '0.3107547903908609', kind: strength_sweep, start: uniform}
+          - {mu: '0.5', kind: strength_sweep, start: uniform}
+          - {mu: '1.0', kind: strength_sweep, start: uniform}
+          - {mu: '2.0', kind: strength_sweep, start: uniform}
+          - {mu: '4.0', kind: strength_sweep, start: uniform}
+    env:
+      START: ${{ matrix.start }}
+      MU: ${{ matrix.mu }}
+      KIND: ${{ matrix.kind }}
+      PYTHONPATH: ${{ github.workspace }}/validation/graph_extensions
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install exact pinned solver
+        run: |
+          git clone -q https://github.com/martejulie/electrodiffusive-network-model.git external-ednm
+          git -C external-ednm checkout -q 826c211c70d9027a4acb02202ca91a60de79a15d
+          test "$(git -C external-ednm rev-parse HEAD)" = 826c211c70d9027a4acb02202ca91a60de79a15d
+          python -m pip install 'numpy==1.26.4' 'scipy==1.12.0' 'numba==0.59.1'
+          python -m pip install -e external-ednm
+          python -c 'from ednm.aot_residual import residual; from ednm.aot_jacobian import jacobian'
+      - name: Apply identical neutral KCl protocol and graph correction
+        run: |
+          python validation/graph_extensions/patch_source_solver.py external-ednm
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('external-ednm/src/ednm/solver.py')
+          s=p.read_text()
+          old='dt = 5e-5                # time step'
+          assert s.count(old)==1
+          s=s.replace(old,'dt = 0.001                # initial fitting resolution')
+          old='        rsd = norm(Res, np.inf)'
+          assert s.count(old)==1
+          s=s.replace(old,
+              '        source_rate = stimulus_protocol.get("kcl_rate_tissue", 0.0)\n'
+              '        if round(0.08/dt) <= round(t/dt) < round(0.28/dt):\n'
+              '            i = stimulus_protocol.get("kcl_site", 0)\n'
+              '            for ion in (1, 2):\n'
+              '                Res[int(jc_s[ion][2] + N_unknowns_unit*i)] += dt*source_rate/model.gamma_m\n'+old)
+          p.write_text(s)
+          # Avoid printing multi-megabyte logs for every optimization call;
+          # preserve convergence check in the actual Newton loop.
+          old='    alpha = [alpha_s[0:-1], alpha_d[0:-1]]'
+          assert s.count(old)==1
+          s=s.replace(old,'    if rsd >= tol and N_iter >= itermax: raise RuntimeError("Unconverged Newton step")\n'+old)
+          p.write_text(s)
+          PY
+      - name: Four-source training, three-source holdout; negative control, all-source fit or strength sweep
+        run: |
+          cat > /tmp/fit.py <<'PY'
+          import contextlib, json, os, tempfile, time
+          from pathlib import Path
+          import numpy as np
+          from scipy.optimize import least_squares
+          from ednm import model,solver
+          from ednm_graph_adapter import closed_path
+          N=7; dt=.001; d=37e-4
+          E=closed_path(N); G=E.copy()
+          for i,j,w in [(0,4,.8),(1,5,.5),(2,6,.6)]:G[i,j]=G[j,i]=w
+          mu=float(os.environ['MU']); G*=mu
+          cap=3.107547903908609*mu/.17988168474408803; deadline=time.monotonic()+285*60
+          out=Path('output');out.mkdir(exist_ok=True)
+          def path(weights):
+              a=np.zeros((N,N))
+              for i,w in enumerate(weights):a[i,i+1]=a[i+1,i]=w
+              return a
+          def simulate(g,e,source,rate):
+              solver.graph_glial=g;solver.graph_ecs=e
+              with tempfile.TemporaryDirectory() as tmp,open(os.devnull,'w') as sink:
+                  with contextlib.redirect_stdout(sink):
+                      solver.solve_system(model.Model(N,d,0,0),tmp+'/',.8,
+                          dict(j_stim=0.,stim_start=.08,stim_end=.28,N_stim=1,
+                               spike_train=np.zeros((2,N)),kcl_rate_tissue=rate,kcl_site=source))
+                  with np.load(Path(tmp)/'data.npz') as a:
+                      t,alpha,c,phi=[a[k] for k in ('t','alpha','c','phi')]
+              assert all(np.isfinite(x).all() for x in (t,alpha,c,phi))
+              fr=np.concatenate([alpha,1-alpha.sum(axis=2,keepdims=True)],axis=2)
+              assert np.min(fr)>0 and np.min(c[:,:,:3,:,:])>0
+              mass=np.einsum('tldu,tlidu->ti',fr,c)
+              nsteps=np.clip(np.rint(t/dt).astype(int)-round(.08/dt)+1,0,round(.28/dt)-round(.08/dt))
+              expected=mass[0]+(nsteps*dt*rate)[:,None]*np.array([0.,1.,1.,0.])[None,:]
+              err=float(np.max(abs(mass-expected)/np.maximum(abs(expected),1e-12)))
+              assert err<1e-7,err
+              return t,c[:,0,1,2,:],phi[:,0,0,:]-phi[:,0,2,:],err
+          # Uniform initial state and no synapses imply spatially uniform baseline;
+          # confirm invariance numerically for shortcut and ordinary path before reusing.
+          b=simulate(E,E,0,0.); b2=simulate(G,E,0,0.)
+          assert np.max(abs(b[1]-b2[1]))<1e-7 and np.max(abs(b[2]-b2[2]))<1e-6
+          assert np.max(np.ptp(b[1],axis=1))<1e-7 and np.max(np.ptp(b[2],axis=1))<1e-6
+          t=b[0]
+          def response(g,e,src):
+              r=simulate(g,e,src,30.)
+              assert np.allclose(r[0],t,atol=1e-12,rtol=0)
+              return r[1]-b[1],r[2]-b[2],r[3]
+          kind=os.environ['KIND']
+          ix=np.array([np.argmin(abs(t-x)) for x in np.linspace(.1,.8,15)])
+          def features(r):return np.r_[r[0][ix].ravel()/.001,r[1][ix].ravel()/.01]
+          def score(r,z):
+              k=r[0]-z[0];v=r[1]-z[1];delta=features(r)-features(z)
+              return dict(D2=float(delta@delta),relative_K_residual=float(np.linalg.norm(k)/max(np.linalg.norm(z[0]),1e-30)),relative_Vm_residual=float(np.linalg.norm(v)/max(np.linalg.norm(z[1]),1e-30)),K_RMS_mM=float(np.sqrt(np.mean(k*k))),Vm_RMS_mV=float(np.sqrt(np.mean(v*v))),max_K_mM=float(np.max(abs(k))),max_Vm_mV=float(np.max(abs(v))),mass_error=r[2])
+          if kind=='strength_sweep':
+              # Preserve the sum of glial edge weights at 6*mu for every chord multiplier.
+              rows=[]; arrays={'t':t}
+              for source in (0,2):
+                  ctrl=response(mu*E,E,source)
+                  arrays[f'control_K_{source}']=ctrl[0]; arrays[f'control_V_{source}']=ctrl[1]
+                  for g in (0.,.05,.1,.25,.5,1.):
+                      graph=mu*E.copy()
+                      for i,j,v in [(0,4,.8),(1,5,.5),(2,6,.6)]:graph[i,j]=graph[j,i]=mu*g*v
+                      graph*=6/(6+1.9*g)
+                      result=response(graph,E,source)
+                      r=dict(mu=mu,chord=g,source=source,**score(result,ctrl))
+                      rows.append(r);print('STRENGTH_SWEEP',json.dumps(r),flush=True)
+                      arrays[f'K_{source}_{g}']=result[0];arrays[f'V_{source}_{g}']=result[1]
+              (out/'summary.json').write_text(json.dumps(rows,indent=2))
+              np.savez_compressed(out/'responses.npz',**arrays)
+              raise SystemExit(0)
+          train=list(range(N)) if kind=='all_sources' else [0,2,4,6]
+          test=[i for i in range(N) if i not in train]
+          ref_g,ref_e=G,E
+          if kind=='shared':
+              # Heterogeneous in-family negative control, distinct from either start.
+              a=np.array([.7,1.4,1.1,.9,1.8,1.2]);a*=7.9/a.sum()
+              ref_g=path(mu*a);ref_e=path([.8,1.12,.94,1.2,.9,1.04])
+          target={i:response(ref_g,ref_e,i) for i in range(N)}
+          target_train=np.concatenate([features(target[i]) for i in train])
+          start=np.r_[np.full(6,mu*(7.9/6 if os.environ['START']=='total_matched' else 1.)),np.ones(6)]
+          lower=np.r_[np.zeros(6),np.full(6,.7)];upper=np.r_[np.full(6,cap),np.full(6,1.3)]
+          history=[];cache={};best=[float('inf'),None]
+          def residual(w):
+              if best[1] is not None and time.monotonic()>deadline:raise TimeoutError('Graceful runtime budget; not convergence')
+              key=tuple(w)
+              if key in cache:return cache[key]
+              gl=path(w[:6]);ec=path(w[6:])
+              predictions=[response(gl,ec,i) for i in train]
+              z=np.concatenate([features(r) for r in predictions])-target_train
+              d2=float(z@z)
+              r=dict(eval=len(history)+1,D2=d2,weights=w.tolist(),mass_error=max(r[2] for r in predictions))
+              history.append(r)
+              if d2<best[0]:
+                  best[:]=[d2,w.copy()]
+                  (out/'checkpoint.tmp').write_text(json.dumps(dict(best_D2=d2,best_weights=w.tolist())))
+                  (out/'checkpoint.tmp').replace(out/'checkpoint.json')
+              print('FIT_EVAL',json.dumps(r),flush=True)
+              (out/'trace.json').write_text(json.dumps(history))
+              cache[key]=z
+              return z
+          opt=None
+          try:
+              opt=least_squares(residual,start,bounds=(lower,upper),diff_step=.002,max_nfev=55,ftol=1e-5,xtol=1e-5,gtol=1e-5,x_scale='jac')
+          except TimeoutError as exc: print('SOFT_BUDGET',str(exc),flush=True)
+          assert best[1] is not None
+          w=best[1]; fits={i:response(path(w[:6]),path(w[6:]),i) for i in range(N)}
+          scores={str(i):score(fits[i],target[i]) for i in range(N)}
+          controls={}
+          for label,ww in [('ordinary',np.full(6,mu)),('total_matched',np.full(6,mu*7.9/6))]:
+              controls[label]={str(i):score(response(path(ww),E,i),target[i]) for i in range(N)}
+          r=dict(kind=kind,mu=mu,dt_s=dt,start=os.environ['START'],weights=w.tolist(),source_train=train,source_test=test,train_D2=sum(scores[str(i)]['D2'] for i in train),scores=scores,controls=controls,success=bool(opt.success) if opt is not None else False,message=str(opt.message) if opt is not None else 'Budget stop; not convergence',optimality=float(opt.optimality) if opt is not None else None,terminal_weights=opt.x.tolist() if opt is not None else None,nfev=int(opt.nfev) if opt is not None else None,actual_solve_evaluations=len(history),bounds=[lower.tolist(),upper.tolist()],ref_glial=ref_g.tolist(),ref_ecs=ref_e.tolist(),samples_s=t[ix].tolist(),noise_K_mM=.001,noise_Vm_mV=.01)
+          (out/'summary.json').write_text(json.dumps(r,indent=2))
+          arrays={'t':t}
+          for i in range(N):
+              for prefix,v in [('target',target[i]),('fit',fits[i])]:
+                  arrays[f'{prefix}_K_{i}']=v[0];arrays[f'{prefix}_V_{i}']=v[1]
+          np.savez_compressed(out/'responses.npz',**arrays)
+          print('COVERAGE_FIT',json.dumps(r),flush=True)
+          PY
+          python /tmp/fit.py
+      - name: Archive solver provenance
+        if: always()
+        run: |
+          mkdir -p output
+          git -C external-ednm diff -- src/ednm/solver.py > output/source.diff
+          git -C external-ednm rev-parse HEAD > output/pinned_source_commit.txt
+          python -m pip freeze > output/versions.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SMM_I_COVERAGE_${{ matrix.mu }}_${{ matrix.kind }}_${{ matrix.start }}
+          path: output/
+          retention-days: 90
